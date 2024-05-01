@@ -20,7 +20,7 @@ public class IrisCompat {
             apiInstance = api.cast(api.getDeclaredMethod("getInstance").invoke(null));
             handleRenderingShadowPass = MethodHandles.lookup().findVirtual(api, "isRenderingShadowPass", MethodType.methodType(boolean.class));
 
-            Class<?> irisVertexFormatsClass = Class.forName("net.coderbot.iris.vertices.IrisVertexFormats");
+            Class<?> irisVertexFormatsClass = Class.forName("net.irisshaders.iris.vertices.IrisVertexFormats");
             Field terrainField = irisVertexFormatsClass.getDeclaredField("TERRAIN");
             terrainFormat = (VertexFormat) terrainField.get(null);
 
