@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Якщо ввімкнено, рамки будуть промальовуватись.",
   "sodium-extra.option.light_updates": "Оновлення світла",
   "sodium-extra.option.light_updates.tooltip": "Якщо ввімкнено, оновлення освітлення будуть оброблятися. Якщо вимкнено, це може вплинути на світло при промальовці нових чанків. Вимикайте це лише якщо ви впевнені в тому, що робите.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Лінійне змішування кольорів",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Вмикає лінійне змішування кольорів біомів, тобто грані блоків між біомами не будуть мати плавного переходу.",
   "sodium-extra.option.multi_dimension_fog": "Мультивимірний туман",

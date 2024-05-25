@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Eşya çerçevelerini işlemeyi aç/kapa",
   "sodium-extra.option.light_updates": "Işık Güncellemeleri",
   "sodium-extra.option.light_updates.tooltip": "Işık güncellemelerini işler",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Doğrusal Düz Renk Karışımını kullan",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Doğrusal Düz Renk Karışımı blok yüzleri olmadan doğrusal renk biyomu karışımını uygular.",
   "sodium-extra.option.multi_dimension_fog": "Çok Boyutlu Sis",

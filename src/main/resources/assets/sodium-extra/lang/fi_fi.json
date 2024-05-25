@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Jos käytössä, kehykset näytetään.",
   "sodium-extra.option.light_updates": "Valotason päivitykset",
   "sodium-extra.option.light_updates.tooltip": "Jos käytössä, valaistuksen päivitykset käsitellään. Jos pois päältä, tämä voi vaikuttaa valaistukseen uusi lohkoja luotaessa. Laita tämä pois päältä vain, jos tiedät mitä teet.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Käytä lineaarista tasovärin sekoitinta",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Käyttää lineaarista biomien värien sekoitusta käyttämättä sitä palikoihin.",
   "sodium-extra.option.multi_dimension_fog": "Moniulotteinen sumu",

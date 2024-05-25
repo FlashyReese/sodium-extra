@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Si está habilitado, se renderizan los marcos.",
   "sodium-extra.option.light_updates": "Actualizaciones de iluminación",
   "sodium-extra.option.light_updates.tooltip": "Si está habilitado, se procesarán las actualizaciones de iluminación. Si está deshabilitado, esto puede afectar la iluminación al generar nuevos chunks. Solo deshabilite esto si sabe lo que está haciendo.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Usar Blender de Color Plano Linear",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Aplica la mezcla del bioma de color lineal sin las caras de bloque de color lineal.",
   "sodium-extra.option.multi_dimension_fog": "Niebla multidimensión",

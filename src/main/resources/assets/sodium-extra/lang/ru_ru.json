@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Переключение видимости рамок.",
   "sodium-extra.option.light_updates": "Обновления света",
   "sodium-extra.option.light_updates.tooltip": "Обработка обновлений света. Отключение может привести к ошибкам освещения в новых чанках. Не трогайте, если не знаете, что делаете.",
+  "sodium-extra.option.limit_beacon_beam_height": "Ограничить высоту луча маяка",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "Переключение ограничения лучей маяка максимальной высотой мира.",
   "sodium-extra.option.linear_flat_color_blender": "Дискретное смешивание биомов",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Смешивание границы биомов в стиле несглаженного освещения блоков.",
   "sodium-extra.option.multi_dimension_fog": "Разный туман",

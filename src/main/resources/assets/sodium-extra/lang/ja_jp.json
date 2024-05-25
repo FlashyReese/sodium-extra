@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "有効にした場合、額縁は描画されます。",
   "sodium-extra.option.light_updates": "光の状態更新",
   "sodium-extra.option.light_updates.tooltip": "有効にした場合、光の状態更新の処理は実行されます。これを無効にした場合、新しいチャンクを生成したときの光の状態に影響を与える可能性があります。自分が何をしているのかを分かっている場合にのみ、無効にしてください。",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "線形フラットカラーブレンダーの使用",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "線形カラーブレンドを使用せずにバイオームの重なり度合いを適用します。",
   "sodium-extra.option.multi_dimension_fog": "ディメンションごとの霧",

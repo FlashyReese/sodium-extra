@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Si activé, les cadres d'objet sont rendus.",
   "sodium-extra.option.light_updates": "Mises à jour de l'éclairage",
   "sodium-extra.option.light_updates.tooltip": "Si activé, les mises à jour d'éclairage seront traitées. Si désactivé, cela peut affecter l'éclairage lors de la génération de nouveaux chunks. Désactivez cette option uniquement si vous savez ce que vous faites.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Utiliser le mélangeur de couleurs linéaires plat",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Applique le mélange linéaire de biome de couleur sans les faces de blocs fusionnés de couleurs linéaires.",
   "sodium-extra.option.multi_dimension_fog": "Brouillard multi-dimensionnel",

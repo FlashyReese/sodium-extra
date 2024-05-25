@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "활성화하면, 아이템 액자가 렌더링 됩니다.",
   "sodium-extra.option.light_updates": "빛 업데이트",
   "sodium-extra.option.light_updates.tooltip": "활성화하면, 빛 업데이트가 렌더링 됩니다. 비활성화하면, 새 청크를 생성할 때 조명 효과에 영향을 줄 수 있습니다. 이것이 어떠한 기능을 하는지 모르면 비활성화하지 마십시오.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "선형 평면 색상 혼합 사용",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "선형 색상 생물 군계 혼합을 적용하지만 선형 색상이 혼합된 블록 표면은 적용하지 않습니다.",
   "sodium-extra.option.multi_dimension_fog": "다중 차원 안개",

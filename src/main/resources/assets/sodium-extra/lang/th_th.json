@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "ถ้าเปิดตัวเลือกนี้ กรอบไอเท็มจะได้รับการเรนเดอร์",
   "sodium-extra.option.light_updates": "การอัพเดตของแสง",
   "sodium-extra.option.light_updates.tooltip": "ถ้าเปิดตัวเลือกนี้ การอัพเดตของแสงจะทำงาาน ถ้าปิดตัวเลือกนี้ จะส่งผลกับแสงขณะที่กำลังสร้างชังก์ใหม่อยู่ ปิดตัวเลือกนี้ได้ถ้าคุณรู้ตัวว่ากำลังทำอะไรอยู่",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "ใช้การกลืนกันของสีเรียบแบบเส้นตรง",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "เป็นการใส่การกลืนกันของสีไบโอมแบบเส้นตรงโดยที่ไม่มีการกลืนกันของสีผิวของบล็อก",
   "sodium-extra.option.multi_dimension_fog": "หมอกหลากมิติ",

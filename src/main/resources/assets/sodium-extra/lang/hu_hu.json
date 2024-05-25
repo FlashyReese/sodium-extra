@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Ha be van kapcsolva az eszközkeretek meg lesznek jelenítve.",
   "sodium-extra.option.light_updates": "Világítás Frissülése",
   "sodium-extra.option.light_updates.tooltip": "Ha be van kapcsolva a világítás frissülése fel lesznek dolgozva. Ha ki van kapcsolva befolyásolhatja a világítást új chunkok generálásánál. Csak akkor kapcsold ki ha tudod mit csinálsz.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Használjon Lineáris Lapos Színkeverőt",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Lineáris színbiom keverést alkalmaz, lineárisan színkevert blokkfelületek nélkül.",
   "sodium-extra.option.multi_dimension_fog": "Multi-Dimenzionális Köd",

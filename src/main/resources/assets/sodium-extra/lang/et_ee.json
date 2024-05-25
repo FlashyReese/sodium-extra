@@ -267,6 +267,8 @@
   "sodium-extra.option.item_frames.tooltip": "Lubamisel renderdatakse esemeraame.",
   "sodium-extra.option.light_updates": "Valguse uuendused",
   "sodium-extra.option.light_updates.tooltip": "Lubamisel töödeldakse valguse uuendusi. Keelamisel võib see mõjutada valgustust uute kamakate genereerimisel. Keela vaid siis, kui tead, mida teed.",
+  "sodium-extra.option.limit_beacon_beam_height": "Limit Beacon Beam Height",
+  "sodium-extra.option.limit_beacon_beam_height.tooltip": "If enabled, beacon beams will be limited to the maximum height of the world.",
   "sodium-extra.option.linear_flat_color_blender": "Lineaarse lameda värvi sulandumine",
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Rakendab lineaarse värvi bioomisulavust ilma lineaarse värvi sulanduvate plokikülgedeta.",
   "sodium-extra.option.multi_dimension_fog": "Mitme dimensiooni udu",
