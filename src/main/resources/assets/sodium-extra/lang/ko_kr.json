@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "투척용 즉시 치유 / 즉시 피해 물약 및 잔류형 물약을 사용할 때, 분광 화살로 활을 쏠 때 나타나는 입자.",
   "options.particles.minecraft.item": "아이템",
   "options.particles.minecraft.item.tooltip": "먹기, 달걀 던지기, 투척용 물약 던지기, 엔더의 눈 던지기, 도구가 손상될 때 나타나는 입자.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "슬라임",
   "options.particles.minecraft.item_slime.tooltip": "슬라임이 착지할 때 나타나는 입자.",

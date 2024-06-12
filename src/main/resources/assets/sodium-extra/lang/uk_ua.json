@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Ефекти від миттєвого зцілення чи шкоди, осідаючого зілля та спектральних стріл.",
   "options.particles.minecraft.item": "Предмет",
   "options.particles.minecraft.item.tooltip": "Чавкання, кидання яєць, вибухові зілля, очі Енду, ламання інструментів.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Слимак",
   "options.particles.minecraft.item_slime.tooltip": "Частинки слимака, що приземляється на землю.",

@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Thuốc hồi máu/sát thương tức thì dạng ném hoặc kéo dài, mũi tên ma quỷ.",
   "options.particles.minecraft.item": "Mảnh vật phẩm",
   "options.particles.minecraft.item.tooltip": "Xuất hiện khi ăn, ném trứng/thuốc, khi sử dụng mắt của ender hoặc khi công cụ bị hỏng.",
-  "options.particles.minecraft.item_cobweb.": "Vật phẩm mạng nhện",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Được sản xuất bởi các thực thể có hiệu ứng dệt.",
   "options.particles.minecraft.item_slime": "Mảnh chất nhờn",
   "options.particles.minecraft.item_slime.tooltip": "Xuất hiện khi quái vật chất nhờn tiếp đất.",

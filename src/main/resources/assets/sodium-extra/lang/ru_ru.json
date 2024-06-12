@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Частицы спектральных стрел, туманных зелий и эффектов мгновенного урона/лечения.",
   "options.particles.minecraft.item": "Разрушение предмета",
   "options.particles.minecraft.item.tooltip": "Появляются при поедании, разрушении инструмента, исчезновении ока Эндера и разбивании яйца или бутылочки с зельем.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Прыжки слизня",
   "options.particles.minecraft.item_slime.tooltip": "Разлетающаяся при его приземлении слизь.",

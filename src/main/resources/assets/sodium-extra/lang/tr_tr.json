@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Anında sağlık/hasar kalıcı iksirler, hayalet oklar.",
   "options.particles.minecraft.item": "Eşya",
   "options.particles.minecraft.item.tooltip": "Yemek yemek, yumurta atmak, iksir sıçratmak, ender'in gözleri, alet kırmak.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Balçık",
   "options.particles.minecraft.item_slime.tooltip": "Yere inen slimelar.",

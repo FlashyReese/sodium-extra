@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Posyen percikan dan berlarutan penyembuhan/kecederaan semerta, anak panah spektral.",
   "options.particles.minecraft.item": "Item",
   "options.particles.minecraft.item.tooltip": "Memakan, membaling telur, posyen percikan, mata ender, memecah alat.",
-  "options.particles.minecraft.item_cobweb.": "Item Sarang Labah-labah",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Dihasilkan oleh entiti dengan kesan penganyaman.",
   "options.particles.minecraft.item_slime": "Item Lelendir",
   "options.particles.minecraft.item_slime.tooltip": "Lelendir yang mendarat di atas tanah.",

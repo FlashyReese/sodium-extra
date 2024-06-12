@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Instant health/damage splash and lingering potions, spectral arrows.",
   "options.particles.minecraft.item": "Ese",
   "options.particles.minecraft.item.tooltip": "Söömine, visatud munad, pritsitavad võlujoogid, enderi silmad, tööriistade lõhkumine.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Limapall",
   "options.particles.minecraft.item_slime.tooltip": "Limused, kes maanduvad maa peale.",

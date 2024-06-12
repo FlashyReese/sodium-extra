@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Arrojadiza instantáneas de salud/daño y pociones persistentes, flechas espectrales.",
   "options.particles.minecraft.item": "Ítem",
   "options.particles.minecraft.item.tooltip": "Comer, arrojar huevos, salpicar pociones, ojos de ender, romper herramientas.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Item Slime",
   "options.particles.minecraft.item_slime.tooltip": "Slimes que aterrizan en el suelo.",

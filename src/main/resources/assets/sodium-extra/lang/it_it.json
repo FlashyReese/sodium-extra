@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Salute instantanea/danno lanciabile e pozioni ad area, frecce spettrali.",
   "options.particles.minecraft.item": "Oggetto",
   "options.particles.minecraft.item.tooltip": "Mangiare, lanciare uova, pozioni lanciabili, occhi dell'end, rompere strumenti.",
-  "options.particles.minecraft.item_cobweb.": "Oggetto Ragnatela",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Prodotto da entità con l'effetto di Tessitura.",
   "options.particles.minecraft.item_slime": "Slime",
   "options.particles.minecraft.item_slime.tooltip": "Slime che cadono a terra.",

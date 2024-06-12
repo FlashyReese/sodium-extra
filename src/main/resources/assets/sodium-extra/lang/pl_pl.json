@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Natychmiastowe rozpryski mikstur natychmiastowego leczenia/obrażeń i utrzymujące się mikstury, widmowe strzały.",
   "options.particles.minecraft.item": "Przedmiot",
   "options.particles.minecraft.item.tooltip": "Jedzenie, rzucanie jajkami, rozpryskiwanie mikstur, oczy endera, niszczenie narzędzi.",
-  "options.particles.minecraft.item_cobweb.": "Przedmiot Pajęczyna",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Wyprodukowane przez istoty z efektem tkania.",
   "options.particles.minecraft.item_slime": "Przedmiot Szlamu",
   "options.particles.minecraft.item_slime.tooltip": "Szlamy, które lądują na ziemi.",

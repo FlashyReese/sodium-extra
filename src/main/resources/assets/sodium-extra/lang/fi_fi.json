@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Välittömän vahingon/parannuksen heitettävät ja viipyvät taikajuomat, hehkunuolet.",
   "options.particles.minecraft.item": "Esine",
   "options.particles.minecraft.item.tooltip": "Syöminen; heitetyt kananmunat, taikajuomat ja äärensilmät; työkalujen hajoaminen.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Elävät limat",
   "options.particles.minecraft.item_slime.tooltip": "Elävät limat, jotka osuvat maahan.",

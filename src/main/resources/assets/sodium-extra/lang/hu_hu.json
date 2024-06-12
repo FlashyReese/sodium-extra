@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Azonnali élet/sebzés robbanó és idéző bájitala, sprektrálnyílak",
   "options.particles.minecraft.item": "Tárgy",
   "options.particles.minecraft.item.tooltip": "Evés, tojások eldobása, robbanó bájitalok, ender szeme, szerszámok töröse",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Nyálka Tárgy",
   "options.particles.minecraft.item_slime.tooltip": "Nyálkák amik a földön landolnak.",

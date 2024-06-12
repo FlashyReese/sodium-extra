@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Vida ou dano instantâneo e poções prolongadas, flechas espectrais.",
   "options.particles.minecraft.item": "Item",
   "options.particles.minecraft.item.tooltip": "Comendo, ovos lançados, poções arremessáveis, olhos de ender, ferramentas destruídas.",
-  "options.particles.minecraft.item_cobweb.": "Item Teia de aranha",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produzido por entidades sob o efeito de tecitura.",
   "options.particles.minecraft.item_slime": "Slime (item)",
   "options.particles.minecraft.item_slime.tooltip": "Slimes no chão.",

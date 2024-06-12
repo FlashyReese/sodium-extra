@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Vrhací, doznívající lektvary a přízračné šípy lečení/ublížení.",
   "options.particles.minecraft.item": "Předmět",
   "options.particles.minecraft.item.tooltip": "Jezení, házení vajec, vrhací lektvary, endová oka, rozbití nástrojů.",
-  "options.particles.minecraft.item_cobweb.": "Předmět pavučiny",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produkováno entitami s efektem snování.",
   "options.particles.minecraft.item_slime": "Sliz",
   "options.particles.minecraft.item_slime.tooltip": "Slizoun dopadající na zem.",

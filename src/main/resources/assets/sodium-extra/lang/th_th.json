@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "เกิดจากยาฟื้นฟูเลือดหรือเสียเลือดทันทีแบบปาและแบบระเหย และลูกธนูเรืองแสง",
   "options.particles.minecraft.item": "ไอเทม",
   "options.particles.minecraft.item.tooltip": "เกิดจากการกิน ไข่ที่ถูกปา ยาแบบปา ดวงตาแห่งเอนเดอร์ และอุปกรณ์ที่กำลังพัง",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "สไลม์แบบไอเทม",
   "options.particles.minecraft.item_slime.tooltip": "เกิดจากสไลม์ตกลงถึงพื้น",

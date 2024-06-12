@@ -130,7 +130,7 @@
   "options.particles.minecraft.instant_effect.tooltip": "Instant health/damage splash and lingering potions, spectral arrows.",
   "options.particles.minecraft.item": "Item",
   "options.particles.minecraft.item.tooltip": "Eating, thrown eggs, splash potions, eyes of ender, breaking tools.",
-  "options.particles.minecraft.item_cobweb.": "Item Cobweb",
+  "options.particles.minecraft.item_cobweb": "Item Cobweb",
   "options.particles.minecraft.item_cobweb.tooltip": "Produced by entities with the weaving effect.",
   "options.particles.minecraft.item_slime": "Item Slime",
   "options.particles.minecraft.item_slime.tooltip": "Slimes that land on the ground.",
