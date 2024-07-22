@@ -12,9 +12,9 @@ buildscript {
 
 plugins {
     id 'signing'
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.7-SNAPSHOT'
     id 'maven-publish'
-    id 'io.github.juuxel.loom-quiltflower' version '1.10.0'
+    id 'io.github.juuxel.loom-quiltflower' version '1.11.0'
 }
 
 apply plugin: 'de.guntram.mcmod.crowdin-translate'
