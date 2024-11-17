@@ -18,7 +18,7 @@ public class MixinGameRenderer {
         }
     }
 
-    @Inject(method = "setPostEffect", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "loadEffect", at = @At("HEAD"), cancellable = true)
     private void dontLoadShader(ResourceLocation identifier, CallbackInfo ci) {
         if (SodiumExtraClientMod.options().extraSettings.preventShaders) {
             ci.cancel();
