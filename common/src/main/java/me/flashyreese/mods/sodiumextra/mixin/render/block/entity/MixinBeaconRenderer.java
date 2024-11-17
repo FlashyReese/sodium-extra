@@ -33,7 +33,7 @@ public abstract class MixinBeaconRenderer {
     private void modifyMaxY(PoseStack matrices, MultiBufferSource vertexConsumers, float tickDelta, long worldTime, int yOffset, int maxY, int color, BeaconBlockEntity beaconBlockEntity, float f, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, int j) {
         if (maxY == 1024 && SodiumExtraClientMod.options().renderSettings.limitBeaconBeamHeight) {
             int lastSegment = beaconBlockEntity.getBlockPos().getY() + yOffset;
-            maxY = Objects.requireNonNull(beaconBlockEntity.getLevel()).getMaxBuildHeight() - lastSegment;
+            maxY = Objects.requireNonNull(beaconBlockEntity.getLevel()).getMaxY() - lastSegment;
         }
         renderBeaconBeam(matrices, vertexConsumers, tickDelta, worldTime, yOffset, maxY, color);
     }

@@ -9,6 +9,8 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.state.ArmorStandRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,24 +20,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntityRenderer.class)
-abstract class MixinLivingEntityRenderer<T extends LivingEntity, M extends EntityModel<T>> extends EntityRenderer<T> implements RenderLayerParent<T, M> {
+abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> extends EntityRenderer<T, S> implements RenderLayerParent<S, M> {
+
     protected MixinLivingEntityRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
     }
 
-    @Inject(method = "render(Lnet/minecraft/world/entity/LivingEntity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V", at = @At("HEAD"), cancellable = true)
-    private void onRender(T entity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, CallbackInfo ci) {
-        if (entity instanceof ArmorStand && !SodiumExtraClientMod.options().renderSettings.armorStand) {
+    @Inject(method = "render(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V", at = @At("HEAD"), cancellable = true)
+    private void onRender(S livingEntityRenderState, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, CallbackInfo ci) {
+        if (livingEntityRenderState instanceof ArmorStandRenderState && !SodiumExtraClientMod.options().renderSettings.armorStand) {
             ci.cancel();
-            if (this.shouldShowName(entity)) {
-                this.renderNameTag(entity, entity.getDisplayName(), poseStack, multiBufferSource, i, g);
+            if (livingEntityRenderState.nameTag != null) {
+                this.renderNameTag(livingEntityRenderState, livingEntityRenderState.nameTag, poseStack, multiBufferSource, i);
             }
         }
     }
 
-    @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At(value = "HEAD"), cancellable = true)
-    private <T extends LivingEntity> void shouldShowName(T entity, CallbackInfoReturnable<Boolean> cir) {
-        if (entity instanceof AbstractClientPlayer && !SodiumExtraClientMod.options().renderSettings.playerNameTag) {
+    @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At(value = "HEAD"), cancellable = true)
+    private <T extends LivingEntity> void shouldShowName(T livingEntity, double d, CallbackInfoReturnable<Boolean> cir) {
+        if (livingEntity instanceof AbstractClientPlayer && !SodiumExtraClientMod.options().renderSettings.playerNameTag) {
             cir.setReturnValue(false);
         }
     }

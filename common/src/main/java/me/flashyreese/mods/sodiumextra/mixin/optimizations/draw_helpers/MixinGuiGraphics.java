@@ -22,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Function;
+
 @Mixin(value = GuiGraphics.class, priority = 1500)
 public abstract class MixinGuiGraphics {
 
@@ -32,10 +34,6 @@ public abstract class MixinGuiGraphics {
     @Shadow
     @Final
     private MultiBufferSource.BufferSource bufferSource;
-
-    @Shadow
-    @Deprecated
-    protected abstract void flushIfUnmanaged();
 
     /**
      * @author FlashyReese
@@ -107,7 +105,6 @@ public abstract class MixinGuiGraphics {
 
             writer.push(stack, buffer, 4, ColorVertex.FORMAT);
         }
-        this.flushIfUnmanaged();
         ci.cancel();
     }
 
@@ -116,68 +113,35 @@ public abstract class MixinGuiGraphics {
      * @author FlashyReese
      * @reason Impl Sodium's vertex writer
      */
-    @Inject(method = "innerBlit(Lnet/minecraft/resources/ResourceLocation;IIIIIFFFF)V", at = @At(value = "HEAD"), cancellable = true)
-    public void drawTexturedQuad(ResourceLocation texture, int x1, int x2, int y1, int y2, int z, float u1, float u2, float v1, float v2, CallbackInfo ci) {
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+    @Inject(method = "innerBlit", at = @At(value = "HEAD"), cancellable = true)
+    public void innerBlit(Function<ResourceLocation, RenderType> function, ResourceLocation resourceLocation, int x1, int x2, int y1, int y2, float u1, float u2, float v1, float v2, int color, CallbackInfo ci) {
+        RenderType renderType = function.apply(resourceLocation);
         Matrix4f matrix4f = this.pose.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        VertexBufferWriter writer = VertexBufferWriter.of(bufferBuilder);
+        VertexConsumer vertexConsumer = this.bufferSource.getBuffer(renderType);
+        vertexConsumer.addVertex(matrix4f, (float)x1, (float)y1, 0.0F).setUv(u1, v1).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)x1, (float)y2, 0.0F).setUv(u1, v2).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)x2, (float)y2, 0.0F).setUv(u2, v2).setColor(color);
+        vertexConsumer.addVertex(matrix4f, (float)x2, (float)y1, 0.0F).setUv(u2, v1).setColor(color);
+
+        VertexBufferWriter writer = VertexBufferWriter.of(vertexConsumer);
         try (MemoryStack stack = MemoryStack.stackPush()) {
             final long buffer = stack.nmalloc(4 * TextureVertex.STRIDE);
             long ptr = buffer;
 
-            TextureVertex.write(ptr, matrix4f, x1, y1, z, u1, v1);
+            TextureVertex.write(ptr, matrix4f, x1, y1, 0.0F, u1, v1);
             ptr += TextureVertex.STRIDE;
 
-            TextureVertex.write(ptr, matrix4f, x1, y2, z, u1, v2);
+            TextureVertex.write(ptr, matrix4f, x1, y2, 0.0F, u1, v2);
             ptr += TextureVertex.STRIDE;
 
-            TextureVertex.write(ptr, matrix4f, x2, y2, z, u2, v2);
+            TextureVertex.write(ptr, matrix4f, x2, y2, 0.0F, u2, v2);
             ptr += TextureVertex.STRIDE;
 
-            TextureVertex.write(ptr, matrix4f, x2, y1, z, u2, v1);
+            TextureVertex.write(ptr, matrix4f, x2, y1, 0.0F, u2, v1);
             ptr += TextureVertex.STRIDE;
 
             writer.push(stack, buffer, 4, TextureVertex.FORMAT);
         }
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        ci.cancel();
-    }
-
-    /**
-     * @author FlashyReese
-     * @reason Impl Sodium's vertex writer
-     */
-    @Inject(method = "innerBlit(Lnet/minecraft/resources/ResourceLocation;IIIIIFFFFFFFF)V", at = @At(value = "HEAD"), cancellable = true)
-    public void drawTexturedQuad(ResourceLocation texture, int x1, int x2, int y1, int y2, int z, float u1, float u2, float v1, float v2, float red, float green, float blue, float alpha, CallbackInfo ci) {
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.enableBlend();
-        Matrix4f matrix4f = this.pose.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        VertexBufferWriter writer = VertexBufferWriter.of(bufferBuilder);
-        int color = ColorABGR.pack(red, green, blue, alpha);
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            final long buffer = stack.nmalloc(4 * TextureColorVertex.STRIDE);
-            long ptr = buffer;
-
-            TextureColorVertex.write(ptr, matrix4f, x1, y1, z, color, u1, v1);
-            ptr += TextureColorVertex.STRIDE;
-
-            TextureColorVertex.write(ptr, matrix4f, x1, y2, z, color, u1, v2);
-            ptr += TextureColorVertex.STRIDE;
-
-            TextureColorVertex.write(ptr, matrix4f, x2, y2, z, color, u2, v2);
-            ptr += TextureColorVertex.STRIDE;
-
-            TextureColorVertex.write(ptr, matrix4f, x2, y1, z, color, u2, v1);
-            ptr += TextureColorVertex.STRIDE;
-
-            writer.push(stack, buffer, 4, TextureColorVertex.FORMAT);
-        }
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        RenderSystem.disableBlend();
         ci.cancel();
     }
 }

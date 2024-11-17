@@ -1,28 +1,29 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FogRenderer.class)
 public abstract class MixinFogRenderer {
     @Shadow
     @Nullable
-    protected static FogRenderer.MobEffectFogFunction getPriorityFogFunction(Entity entity, float f) {
+    private static FogRenderer.MobEffectFogFunction getPriorityFogFunction(Entity entity, float f) {
         return null;
     }
 
-    @Inject(method = "setupFog", at = @At(value = "TAIL"))
-    private static void applyFog(Camera camera, FogRenderer.FogMode fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci) {
+    @Inject(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogParameters;<init>(FFLcom/mojang/blaze3d/shaders/FogShape;FFFF)V", shift = At.Shift.AFTER), cancellable = true)
+    private static void applyFog(Camera camera, FogRenderer.FogMode fogMode, Vector4f vector4f, float f, boolean thickFog, float tickDelta, CallbackInfoReturnable<FogParameters> cir) {
         Entity entity = camera.getEntity();
         SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.putIfAbsent(entity.level().dimensionType().effectsLocation(), 0);
         int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.get(entity.level().dimensionType().effectsLocation()) : SodiumExtraClientMod.options().renderSettings.fogDistance;
@@ -30,15 +31,14 @@ public abstract class MixinFogRenderer {
         if (fogDistance == 0 || mobEffectFogFunction != null) {
             return;
         }
-        if (camera.getFluidInCamera() == FogType.NONE && (thickFog || fogType == FogRenderer.FogMode.FOG_TERRAIN)) {
+        if (camera.getFluidInCamera() == FogType.NONE && (thickFog || fogMode == FogRenderer.FogMode.FOG_TERRAIN)) {
             float fogStart = (float) SodiumExtraClientMod.options().renderSettings.fogStart / 100;
             if (fogDistance == 33) {
-                RenderSystem.setShaderFogColor(1f, 1f, 1f, 0f);
-                //RenderSystem.setShaderFogStart(Short.MAX_VALUE - 1 * fogStart);
-                //RenderSystem.setShaderFogEnd(Short.MAX_VALUE);
+                cir.setReturnValue(FogParameters.NO_FOG);
             } else {
-                RenderSystem.setShaderFogStart(fogDistance * 16 * fogStart);
-                RenderSystem.setShaderFogEnd((fogDistance + 1) * 16);
+                FogParameters ci = cir.getReturnValue();
+                FogParameters newFogParameters = new FogParameters(fogDistance * 16 * fogStart, (fogDistance + 1) * 16, ci.shape(), ci.red(), ci.green(), ci.blue(), ci.alpha());
+                cir.setReturnValue(newFogParameters);
             }
         }
     }
