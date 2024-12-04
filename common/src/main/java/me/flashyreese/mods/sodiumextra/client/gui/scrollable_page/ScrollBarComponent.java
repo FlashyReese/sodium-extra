@@ -95,4 +95,9 @@ public class ScrollBarComponent extends AbstractWidget {
         this.updateThumbPosition();
         this.onSetOffset.run();
     }
+
+    @Override
+    public boolean isMouseOver(double x, double y) {
+        return this.dim.containsCursor(x, y);
+    }
 }

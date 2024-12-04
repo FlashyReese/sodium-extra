@@ -1,9 +1,9 @@
 package me.flashyreese.mods.sodiumextra.mixin.sky;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.renderer.FogParameters;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SkyRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,21 +23,21 @@ public class MixinSkyRenderer {
     }
 
     @Inject(method = "renderEndSky", at = @At(value = "HEAD"), cancellable = true)
-    public void preRenderEndSky(PoseStack stack, CallbackInfo ci) {
+    public void preRenderEndSky(CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sky) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderSun", at = @At(value = "HEAD"), cancellable = true)
-    private void renderSun(float f, Tesselator tesselator, PoseStack poseStack, CallbackInfo ci) {
+    private void renderSun(float f, MultiBufferSource multiBufferSource, PoseStack poseStack, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sun) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderMoon", at = @At(value = "HEAD"), cancellable = true)
-    private void renderMoon(int i, float f, Tesselator tesselator, PoseStack poseStack, CallbackInfo ci) {
+    private void renderMoon(int i, float f, MultiBufferSource multiBufferSource, PoseStack poseStack, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.moon) {
             ci.cancel();
         }
