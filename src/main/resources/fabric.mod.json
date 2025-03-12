@@ -54,7 +54,7 @@
     "sodium-extra.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14",
+    "fabricloader": ">=0.16",
     "fabric-api": "*",
     "sodium": ">=0.5.6",
     "minecraft": ">=1.20.1"
