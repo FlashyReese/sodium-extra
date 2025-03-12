@@ -32,7 +32,6 @@ public class SodiumExtraGameOptions {
     public final DetailSettings detailSettings = new DetailSettings();
     public final RenderSettings renderSettings = new RenderSettings();
     public final ExtraSettings extraSettings = new ExtraSettings();
-    public final SuperSecretSettings superSecretSettings = new SuperSecretSettings();
     private File file;
 
     public static SodiumExtraGameOptions load(File file) {
@@ -262,20 +261,6 @@ public class SodiumExtraGameOptions {
             this.preventShaders = false;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
-        }
-    }
-
-    public static class SuperSecretSettings {
-        public boolean fetchSodiumExtraCrowdinTranslations;
-        public String sodiumExtraCrowdinProjectIdentifier;
-        public boolean fetchSodiumCrowdinTranslations;
-        public String sodiumCrowdinProjectIdentifier;
-
-        public SuperSecretSettings() {
-            this.fetchSodiumExtraCrowdinTranslations = false;
-            this.sodiumExtraCrowdinProjectIdentifier = "sodium-extra";
-            this.fetchSodiumCrowdinTranslations = false;
-            this.sodiumCrowdinProjectIdentifier = "sodium-fabric";
         }
     }
 }

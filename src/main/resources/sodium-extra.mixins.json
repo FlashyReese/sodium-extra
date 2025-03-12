@@ -24,6 +24,8 @@
     "particle.MixinWorldRenderer",
     "particle.MixinFireworkParticle",
     "prevent_shaders.MixinGameRenderer",
+    "profiler.MixinBlockEntityRenderDispatcher",
+    "profiler.MixinEntityRenderDispatcher",
     "reduce_resolution_on_mac.MixinWindow",
     "render.block.entity.MixinBeaconBlockEntityRenderer",
     "render.block.entity.MixinEnchantingTableBlockEntityRenderer",
