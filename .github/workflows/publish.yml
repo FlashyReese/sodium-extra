@@ -21,11 +21,10 @@ jobs:
           java-version: 21
           check-latest: true
       - name: Upload assets to releases
-        run: ./gradlew build publishAllPublicationsToFlashyReeseReleasesRepository
+        run: ./gradlew build publishAllPublicationsToFlashyReeseReleasesRepository -Pbuild.release
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          BUILD_RELEASE: ${{ github.event.prerelease == false }}
       - name: Publish to Modrinth & CurseForge
         uses: Kir-Antipov/mc-publish@v3.3
         with:

@@ -26,7 +26,7 @@ sourceCompatibility = JavaVersion.VERSION_21
 targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
-version = "${project.mod_version}${getVersionType(project.version_type, project.revision)}+mc${project.minecraft_version}-${getVersionMetadata()}"
+version = createVersionString()
 group = project.maven_group
 
 loom {
@@ -131,22 +131,28 @@ publishing {
     }
 }
 
-static def getVersionMetadata() {
-    def build_id = System.getenv("GITHUB_RUN_NUMBER")
+def createVersionString() {
+    def builder = new StringBuilder()
 
-    // CI builds only
-    if (build_id != null) {
-        return "build.${build_id}"
-    }
-    // No tracking information could be found about the build
-    return "unknown"
-}
+    def isReleaseBuild = project.hasProperty("build.release")
+    def buildId = System.getenv("GITHUB_RUN_NUMBER")
 
-static def getVersionType(String version_type, String revision) {
-    version_type = version_type.trim().toLowerCase()
-    revision = revision.trim().toLowerCase()
-    if (version_type != "release") {
-        return "-${version_type}${revision}"
+    if (isReleaseBuild) {
+        builder.append(mod_version)
+    } else {
+        builder.append(mod_version.split('-')[0])
+        builder.append("-snapshot")
     }
-    return ""
+
+    builder.append("+mc").append(minecraft_version)
+
+    if (!isReleaseBuild) {
+        if (buildId != null) {
+            builder.append("-build.${buildId}")
+        } else {
+            builder.append("-local")
+        }
+    }
+
+    return builder.toString()
 }

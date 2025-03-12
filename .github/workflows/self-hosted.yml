@@ -18,8 +18,11 @@ jobs:
           distribution: 'temurin'
           java-version: 21
           check-latest: true
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build and Publish with Gradle
+        run: ./gradlew build publishAllPublicationsToFlashyReeseSnapshotsRepository
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
       - name: Upload Auild Artifacts
         uses: actions/upload-artifact@v4
         with:
