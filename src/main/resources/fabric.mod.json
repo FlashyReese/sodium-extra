@@ -5,7 +5,12 @@
   "name": "Sodium Extra",
   "description": "Features that shouldn't be in Sodium.",
   "authors": [
-    "FlashyReese"
+    {
+      "name": "FlashyReese",
+      "contact": {
+        "homepage": "https://flashyreese.me"
+      }
+    }
   ],
   "contributors": [
     "AMereBagatelle",
@@ -36,7 +41,7 @@
       "links": {
         "modmenu.crowdin": "https://crowdin.com/project/sodium-extra",
         "modmenu.curseforge": "https://curseforge.com/minecraft/mc-mods/sodium-extra",
-        "modmenu.discord": "https://discord.gg/MPHVG6MH4e",
+        "modmenu.discord": "https://flashyreese.me/discord",
         "modmenu.donate": "https://ko-fi.com/flashyreese",
         "modmenu.github_releases": "https://github.com/FlashyReese/sodium-extra-fabric/releases",
         "modmenu.kofi": "https://ko-fi.com/flashyreese",
@@ -49,12 +54,13 @@
     "sodium-extra.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14",
+    "fabricloader": ">=0.16",
     "fabric-api": "*",
     "sodium": ">=0.5.6",
     "minecraft": ">=1.20.1"
   },
   "breaks": {
+    "iris": "<1.7.0",
     "reeses-sodium-options": "<1.4.2"
   },
   "recommends": {

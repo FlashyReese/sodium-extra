@@ -11,15 +11,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
-      - name: Set up JDK 17
+        uses: gradle/wrapper-validation-action@v2
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: 17
+          java-version: 21
           check-latest: true
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build and Publish with Gradle
+        run: ./gradlew build publishAllPublicationsToFlashyReeseSnapshotsRepository
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
       - name: Upload Auild Artifacts
         uses: actions/upload-artifact@v4
         with:

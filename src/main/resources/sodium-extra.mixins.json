@@ -24,6 +24,8 @@
     "particle.MixinWorldRenderer",
     "particle.MixinFireworkParticle",
     "prevent_shaders.MixinGameRenderer",
+    "profiler.MixinBlockEntityRenderDispatcher",
+    "profiler.MixinEntityRenderDispatcher",
     "reduce_resolution_on_mac.MixinWindow",
     "render.block.entity.MixinBeaconBlockEntityRenderer",
     "render.block.entity.MixinEnchantingTableBlockEntityRenderer",
@@ -42,11 +44,7 @@
     "stars.MixinWorldRenderer",
     "steady_debug_hud.MixinDebugHud",
     "sun_moon.MixinWorldRenderer",
-    "toasts.MixinToastManager",
-    "toasts.MixinAdvancementToast",
-    "toasts.MixinRecipeToast",
-    "toasts.MixinSystemToast",
-    "toasts.MixinTutorialToast"
+    "toasts.MixinToastManager"
   ],
   "injectors": {
     "defaultRequire": 1

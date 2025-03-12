@@ -1,6 +1,5 @@
 package me.flashyreese.mods.sodiumextra.client;
 
-import de.guntram.mcmod.crowdintranslate.CrowdinTranslate;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraHud;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraGameOptions;
 import net.caffeinemc.caffeineconfig.CaffeineConfig;
@@ -56,6 +55,7 @@ public class SodiumExtraClientMod implements ClientModInitializer {
                     .addMixinOption("optimizations.fast_weather", false)
                     .addMixinOption("particle", true)
                     .addMixinOption("prevent_shaders", true)
+                    .addMixinOption("profiler", true)
                     .addMixinOption("reduce_resolution_on_mac", true)
                     .addMixinOption("render", true)
                     .addMixinOption("render.block", true)
@@ -92,13 +92,6 @@ public class SodiumExtraClientMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        if (SodiumExtraClientMod.options().superSecretSettings.fetchSodiumExtraCrowdinTranslations) {
-            CrowdinTranslate.downloadTranslations(SodiumExtraClientMod.options().superSecretSettings.sodiumExtraCrowdinProjectIdentifier, "sodium-extra");
-        }
-        if (SodiumExtraClientMod.options().superSecretSettings.fetchSodiumCrowdinTranslations) {
-            CrowdinTranslate.downloadTranslations(SodiumExtraClientMod.options().superSecretSettings.sodiumCrowdinProjectIdentifier, "sodium");
-        }
-
         getClientTickHandler().onClientInitialize();
         SodiumExtraHud sodiumExtraHud = new SodiumExtraHud();
         HudRenderCallback.EVENT.register(sodiumExtraHud);

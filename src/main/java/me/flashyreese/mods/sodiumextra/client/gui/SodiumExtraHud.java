@@ -48,7 +48,7 @@ public class SodiumExtraHud implements HudRenderCallback, ClientTickEvents.Start
     }
     @Override
     public void onHudRender(DrawContext drawContext, float tickDelta) {
-        if (!this.client.hasReducedDebugInfo()) {
+        if (!this.client.hasReducedDebugInfo() && !this.client.options.hudHidden) {
             SodiumExtraGameOptions.OverlayCorner overlayCorner = SodiumExtraClientMod.options().extraSettings.overlayCorner;
             // Calculate starting position based on the overlay corner
             int x;
