@@ -246,7 +246,7 @@ public class SodiumExtraGameOptionPages {
                         .setEnabled(() -> SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog_falloff").isEnabled())
                         .setName(Component.translatable("sodium-extra.option.fog_start"))
                         .setTooltip(Component.translatable("sodium-extra.option.fog_start.tooltip"))
-                        .setControl(option -> new SliderControlExtended(option, 20, 100, 1, ControlValueFormatter.percentage(), false))
+                        .setControl(option -> new SliderControlExtended(option, 0, 100, 1, ControlValueFormatter.percentage(), false))
                         .setBinding((options, value) -> options.renderSettings.fogStart = value, options -> options.renderSettings.fogStart)
                         .build()
                 )
