@@ -17,7 +17,7 @@ base {
 }
 
 repositories {
-    maven("https://maven.pkg.github.com/ims212/Forge_Fabric_API") {
+    maven("https://maven.pkg.github.com/ims212/FRAPI-Testing") {
         credentials {
             username = "IMS212"
             // Read only token

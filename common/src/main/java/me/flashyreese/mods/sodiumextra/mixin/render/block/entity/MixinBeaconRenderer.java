@@ -4,37 +4,38 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
-import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBeamOwner;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Coerce;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Objects;
 
 @Mixin(value = BeaconRenderer.class, priority = 999)
-public abstract class MixinBeaconRenderer {
+public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwner> {
 
     @Shadow
-    protected static void renderBeaconBeam(PoseStack poseStack, MultiBufferSource multiBufferSource, float f, long l, int i, int j, int k) {
+    private static void renderBeaconBeam(PoseStack poseStack, MultiBufferSource multiBufferSource, float tickDelta, float g, long worldTime, int yOffset, int maxY, int color) {
     }
 
-    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V", at = @At(value = "HEAD"), cancellable = true)
-    public void render(BeaconBlockEntity beaconBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, CallbackInfo ci) {
+    // Todo: Fix neo
+    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MutliBufferSource;IILnet/minecraft/world/phys/Vec3;)V", at = @At(value = "HEAD"), cancellable = true, require = 0)
+    public void render(T blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, Vec3 vec3, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().renderSettings.beaconBeam)
             ci.cancel();
     }
 
+    // Todo: Fix neo
     @Coerce
-    @Redirect(method = "render(Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BeaconRenderer;renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;FJIII)V"))
-    private void modifyMaxY(PoseStack matrices, MultiBufferSource vertexConsumers, float tickDelta, long worldTime, int yOffset, int maxY, int color, BeaconBlockEntity beaconBlockEntity, float f, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, int j) {
-        if (maxY == 1024 && SodiumExtraClientMod.options().renderSettings.limitBeaconBeamHeight) {
+    @Redirect(method = "render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MutliBufferSource;IILnet/minecraft/world/phys/Vec3;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BeaconRenderer;renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;FFJIII)V"), require = 0)
+    private void modifyMaxY(PoseStack poseStack, MultiBufferSource multiBufferSource, float tickDelta, float g, long worldTime, int yOffset, int maxY, int color, BlockEntity beaconBlockEntity, float f, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i, int j) {
+        if (maxY == 2048 && SodiumExtraClientMod.options().renderSettings.limitBeaconBeamHeight) {
             int lastSegment = beaconBlockEntity.getBlockPos().getY() + yOffset;
             maxY = Objects.requireNonNull(beaconBlockEntity.getLevel()).getMaxY() - lastSegment;
         }
-        renderBeaconBeam(matrices, vertexConsumers, tickDelta, worldTime, yOffset, maxY, color);
+        renderBeaconBeam(poseStack, multiBufferSource, tickDelta, g, worldTime, yOffset, maxY, color);
     }
 }

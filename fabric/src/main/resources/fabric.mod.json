@@ -50,14 +50,14 @@
   ],
   "depends": {
     "fabricloader": ">=0.16",
-    "sodium": ">=0.6.2",
-    "minecraft": ">=1.21.4"
+    "sodium": ">=0.6.11",
+    "minecraft": ">=1.21.5"
   },
   "breaks": {
     "iris": "<1.7.0",
     "reeses-sodium-options": "<1.4.2"
   },
   "recommends": {
-    "reeses-sodium-options": ">=1.4.2"
+    "reeses-sodium-options": ">=1.8.0"
   }
 }

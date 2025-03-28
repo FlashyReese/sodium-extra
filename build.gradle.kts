@@ -1,12 +1,12 @@
 plugins {
     id("java")
-    id("fabric-loom") version ("1.8.9") apply (false)
+    id("fabric-loom") version ("1.10-SNAPSHOT") apply (false)
 }
 
-val MINECRAFT_VERSION by extra { "1.21.4" }
-val NEOFORGE_VERSION by extra { "21.4.2-beta" }
-val FABRIC_LOADER_VERSION by extra { "0.16.9" }
-val FABRIC_API_VERSION by extra { "0.110.5+1.21.4" }
+val MINECRAFT_VERSION by extra { "1.21.5" }
+val NEOFORGE_VERSION by extra { "21.5.4-beta" }
+val FABRIC_LOADER_VERSION by extra { "0.16.10" }
+val FABRIC_API_VERSION by extra { "0.119.5+1.21.5" }
 
 // This value can be set to null to disable Parchment.
 val PARCHMENT_VERSION by extra { null }
@@ -14,8 +14,8 @@ val PARCHMENT_VERSION by extra { null }
 // https://semver.org/
 val MAVEN_GROUP by extra { "me.flashyreese.mods" }
 val ARCHIVE_NAME by extra { "sodium-extra" }
-val MOD_VERSION by extra { "0.6.1" }
-val SODIUM_VERSION by extra { "mc1.21.4-0.6.2" }
+val MOD_VERSION by extra { "0.6.2" }
+val SODIUM_VERSION by extra { "mc1.21.5-0.6.12" }
 
 allprojects {
     apply(plugin = "java")

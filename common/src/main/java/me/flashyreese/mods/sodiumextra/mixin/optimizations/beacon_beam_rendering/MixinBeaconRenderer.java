@@ -16,19 +16,22 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBeamOwner;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = BeaconRenderer.class, priority = 1500)
-public abstract class MixinBeaconRenderer {
+public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwner> {
 
     /**
      * @author FlashyReese
@@ -121,16 +124,17 @@ public abstract class MixinBeaconRenderer {
         return ptr;
     }
 
-    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V", at = @At(value = "HEAD"), cancellable = true)
-    public void render(BeaconBlockEntity beaconBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, CallbackInfo ci) {
+    // Todo: Fix neo
+    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MutliBufferSource;IILnet/minecraft/world/phys/Vec3;)V", at = @At(value = "HEAD"), cancellable = true, require = 0)
+    public void render(T blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, Vec3 vec3, CallbackInfo ci) {
         Frustum frustum = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getCullingFrustum();
         AABB box = new AABB(
-                beaconBlockEntity.getBlockPos().getX() - 1.0,
-                beaconBlockEntity.getBlockPos().getY() - 1.0,
-                beaconBlockEntity.getBlockPos().getZ() - 1.0,
-                beaconBlockEntity.getBlockPos().getX() + 1.0,
-                beaconBlockEntity.getBlockPos().getY() + (beaconBlockEntity.getBeamSections().isEmpty() ? 1.0 : 1024.0), // todo: probably want to limit this to max height vanilla overshoots as well
-                beaconBlockEntity.getBlockPos().getZ() + 1.0);
+                blockEntity.getBlockPos().getX() - 1.0,
+                blockEntity.getBlockPos().getY() - 1.0,
+                blockEntity.getBlockPos().getZ() - 1.0,
+                blockEntity.getBlockPos().getX() + 1.0,
+                blockEntity.getBlockPos().getY() + (blockEntity.getBeamSections().isEmpty() ? 1.0 : 2048.0), // todo: probably want to limit this to max height vanilla overshoots as well
+                blockEntity.getBlockPos().getZ() + 1.0);
 
         if (!frustum.isVisible(box)) {
             ci.cancel();
