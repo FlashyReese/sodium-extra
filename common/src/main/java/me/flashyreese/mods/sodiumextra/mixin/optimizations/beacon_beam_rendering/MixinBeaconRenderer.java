@@ -124,8 +124,7 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
         return ptr;
     }
 
-    // Todo: Fix neo
-    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MutliBufferSource;IILnet/minecraft/world/phys/Vec3;)V", at = @At(value = "HEAD"), cancellable = true, require = 0)
+    @Inject(method = {"render", "render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MutliBufferSource;IILnet/minecraft/world/phys/Vec3;)V"}, at = @At(value = "HEAD"), cancellable = true, require = 1)
     public void render(T blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, Vec3 vec3, CallbackInfo ci) {
         Frustum frustum = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getCullingFrustum();
         AABB box = new AABB(

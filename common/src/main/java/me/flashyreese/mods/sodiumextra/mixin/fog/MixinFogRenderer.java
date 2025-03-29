@@ -22,7 +22,7 @@ public abstract class MixinFogRenderer {
         return null;
     }
 
-    @Inject(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogParameters;<init>(FFLcom/mojang/blaze3d/shaders/FogShape;FFFF)V", shift = At.Shift.AFTER), cancellable = true)
+    @Inject(method = "setupFog", at = @At(value = "TAIL"), cancellable = true)
     private static void applyFog(Camera camera, FogRenderer.FogMode fogMode, Vector4f vector4f, float f, boolean thickFog, float tickDelta, CallbackInfoReturnable<FogParameters> cir) {
         Entity entity = camera.getEntity();
         SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.putIfAbsent(entity.level().dimensionType().effectsLocation(), 0);
@@ -37,8 +37,10 @@ public abstract class MixinFogRenderer {
                 cir.setReturnValue(FogParameters.NO_FOG);
             } else {
                 FogParameters ci = cir.getReturnValue();
-                FogParameters newFogParameters = new FogParameters(fogDistance * 16 * fogStart, (fogDistance + 1) * 16, ci.shape(), ci.red(), ci.green(), ci.blue(), ci.alpha());
-                cir.setReturnValue(newFogParameters);
+                if (ci != null) {
+                    FogParameters newFogParameters = new FogParameters(fogDistance * 16 * fogStart, (fogDistance + 1) * 16, ci.shape(), ci.red(), ci.green(), ci.blue(), ci.alpha());
+                    cir.setReturnValue(newFogParameters);
+                }
             }
         }
     }

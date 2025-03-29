@@ -49,4 +49,11 @@ public class MixinSkyRenderer {
             ci.cancel();
         }
     }
+
+    @Inject(method = "renderSunriseAndSunset", at = @At(value = "HEAD"), cancellable = true)
+    private void renderSunriseAndSunset(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, float f, int i, CallbackInfo ci) {
+        if (!SodiumExtraClientMod.options().detailSettings.sun) {
+            ci.cancel();
+        }
+    }
 }

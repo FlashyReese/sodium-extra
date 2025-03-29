@@ -32,10 +32,14 @@ public class SodiumExtraHud {
             this.textList.add(text);
         }
 
-        if (SodiumExtraClientMod.options().extraSettings.showCoords && !this.client.showOnlyReducedInfo() && this.client.player != null) {
+        if (SodiumExtraClientMod.options().extraSettings.showCoords && this.client.player != null) {
             Vec3 pos = this.client.player.position();
 
             Component text = Component.translatable("sodium-extra.overlay.coordinates", String.format("%.2f", pos.x), String.format("%.2f", pos.y), String.format("%.2f", pos.z));
+            if (this.client.showOnlyReducedInfo()) {
+                text = Component.literal("Cords not available due to reducedDebugInfo: true."); // Todo: Localize?
+            }
+
             this.textList.add(text);
         }
 
