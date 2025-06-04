@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Jos käytössä, V-sync voi vaihtua kesken kuvan ja poistaa itsensä käytöstä, mikä yleensä helpottaa reagoivuutta huomattavasti. Saattaa aiheuttaa ongelmia joidenkin näytönohjainten ajurien kanssa.",
   "sodium-extra.option.use_fast_random": "Käytä nopeaa satunnaisgeneraattoria",
   "sodium-extra.option.use_fast_random.tooltip": "Jos käytössä, nopeampaa satunnaislukugeneraattoria käytetään palikoide piirtämiseen. Tämä voi vaikuttaa satunnaisten tekstuurien kiertoihin verrattuna tavalliseen.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(max. %s / avg. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Valotason päivitykset pois päältä",

@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Se abilitato, il V-Sync sarà in grado di scambiare mid-frame e di disabilitarsi a volte, solitamente migliorando la reattività. Può causare problemi con alcuni driver GPU.",
   "sodium-extra.option.use_fast_random": "Usa Random Veloce",
   "sodium-extra.option.use_fast_random.tooltip": "Se abilitata, verrà utilizzata una funzione random veloce per il rendering dei blocchi. Questo può influenzare la rotazione delle texture ruotate casualmente rispetto alla vanilla.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(max. %s / med. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Aggiornamenti della luce disabilitati",

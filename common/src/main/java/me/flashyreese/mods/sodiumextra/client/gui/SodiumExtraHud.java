@@ -34,8 +34,31 @@ public class SodiumExtraHud {
 
         if (SodiumExtraClientMod.options().extraSettings.showCoords && this.client.player != null) {
             Vec3 pos = this.client.player.position();
+            var facing = this.client.player.getViewVector(1.0f);
 
-            Component text = Component.translatable("sodium-extra.overlay.coordinates", String.format("%.2f", pos.x), String.format("%.2f", pos.y), String.format("%.2f", pos.z));
+            var xDecor = facing.x > 0 ? "+" : facing.x < 0 ? "-" : "";
+            var yDecor = facing.y > 0 ? "+" : facing.y < 0 ? "-" : "";
+            var zDecor = facing.z > 0 ? "+" : facing.z < 0 ? "-" : "";
+
+            if (Math.abs(facing.y) > Math.abs(facing.x)
+                    && Math.abs(facing.y) > Math.abs(facing.z)) {
+                yDecor = "*" + yDecor;
+            }
+
+            if (Math.abs(facing.x) > Math.abs(facing.z)) {
+                xDecor = "*" + xDecor;
+            } else if (Math.abs(facing.x) == Math.abs(facing.z)) {
+                xDecor = "*" + xDecor;
+                zDecor = "*" + xDecor;
+            } else {
+                zDecor = "*" + xDecor;
+            }
+
+            Component text = Component.translatable("sodium-extra.overlay.coordinates"
+                    , xDecor, String.format("%.2f", pos.x)
+                    , yDecor, String.format("%.2f", pos.y)
+                    , zDecor, String.format("%.2f", pos.z)
+            );
             if (this.client.showOnlyReducedInfo()) {
                 text = Component.literal("Cords not available due to reducedDebugInfo: true."); // Todo: Localize?
             }

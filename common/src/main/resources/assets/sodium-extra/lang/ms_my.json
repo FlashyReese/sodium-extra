@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Jika didayakan, V-Sync akan dapat menukar pada pertengahan bingkai dan menyahdayakan dirinya pada masa-masa tertentu, terutamanya membantu tahap keresponsifan. Boleh menyebabkan masalah dengan sesetengah pemacu GPU.",
   "sodium-extra.option.use_fast_random": "Guna Rawak Pantas",
   "sodium-extra.option.use_fast_random.tooltip": "Jika didayakan, fungsi rawak yang pantas akan digunakan untuk memaparkan blok. Ini boleh menjejaskan putaran tekstur yang diputar secara rawak jika dibandingkan dengan vanila.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s BPS",
   "sodium-extra.overlay.fps_extended": "(maks. %s / purata %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Kemas kini cahaya dinyahdayakan",

@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Pokud je zvoleno, V-Sync bude moci změnit snímek uprostřed vykreslování a vypnout sám sebe. Obvykle znatelně pomáhá zlepšit reakci. Může způsobovat problémy s některými GPU.",
   "sodium-extra.option.use_fast_random": "Použít rychlý náhodný výběr",
   "sodium-extra.option.use_fast_random.tooltip": "Při povolení bude pro vykreslování bloků použita rychlá náhodná funkce. Toto může ovlivnit rotaci náhodně otočených textur při porovnání s vanillou.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(max. %s / prům. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Aktualizace světel zakázány",
