@@ -19,14 +19,14 @@ Features that shouldn't be in Sodium.
 [[dependencies.sodium_extra]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.5,)"
+versionRange = "[1.21.6,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.sodium_extra]]
 modId = "sodium"
 type = "required"
-versionRange = "[0.6.11,)"
+versionRange = "[0.6.13,)"
 ordering = "NONE"
 side = "CLIENT"
 
