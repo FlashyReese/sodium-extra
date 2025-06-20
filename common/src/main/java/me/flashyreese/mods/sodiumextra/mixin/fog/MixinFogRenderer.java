@@ -1,13 +1,11 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.FogParameters;
-import net.minecraft.client.renderer.FogRenderer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.material.FogType;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Vector4f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,33 +13,48 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FogRenderer.class)
-public abstract class MixinFogRenderer {
+public class MixinFogRenderer {
+
     @Shadow
-    @Nullable
-    private static FogRenderer.MobEffectFogFunction getPriorityFogFunction(Entity entity, float f) {
-        return null;
+    @Final
+    public static int FOG_UBO_SIZE;
+    @Shadow
+    @Final
+    private GpuBuffer emptyBuffer;
+
+    @Inject(method = "getBuffer", at = @At(value = "HEAD"), cancellable = true)
+    public void getBuffer(FogRenderer.FogMode fogMode, CallbackInfoReturnable<GpuBufferSlice> cir) {
+        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
+                ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(Minecraft.getInstance().level.dimensionType().effectsLocation(), 0)
+                : SodiumExtraClientMod.options().renderSettings.fogDistance;
+        if (fogDistance == 33) {
+            cir.setReturnValue(this.emptyBuffer.slice(0, FOG_UBO_SIZE));
+        }
     }
 
-    @Inject(method = "setupFog", at = @At(value = "TAIL"), cancellable = true)
-    private static void applyFog(Camera camera, FogRenderer.FogMode fogMode, Vector4f vector4f, float f, boolean thickFog, float tickDelta, CallbackInfoReturnable<FogParameters> cir) {
-        Entity entity = camera.getEntity();
-        SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.putIfAbsent(entity.level().dimensionType().effectsLocation(), 0);
-        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.get(entity.level().dimensionType().effectsLocation()) : SodiumExtraClientMod.options().renderSettings.fogDistance;
-        FogRenderer.MobEffectFogFunction mobEffectFogFunction = getPriorityFogFunction(entity, tickDelta);
-        if (fogDistance == 0 || mobEffectFogFunction != null) {
-            return;
-        }
-        if (camera.getFluidInCamera() == FogType.NONE && (thickFog || fogMode == FogRenderer.FogMode.FOG_TERRAIN)) {
-            float fogStart = (float) SodiumExtraClientMod.options().renderSettings.fogStart / 100;
-            if (fogDistance == 33) {
-                cir.setReturnValue(FogParameters.NO_FOG);
-            } else {
-                FogParameters ci = cir.getReturnValue();
-                if (ci != null) {
-                    FogParameters newFogParameters = new FogParameters(fogDistance * 16 * fogStart, (fogDistance + 1) * 16, ci.shape(), ci.red(), ci.green(), ci.blue(), ci.alpha());
-                    cir.setReturnValue(newFogParameters);
-                }
-            }
-        }
+    /*@ModifyVariable(method = "updateBuffer(Ljava/nio/ByteBuffer;ILorg/joml/Vector4f;FFFFFF)V",
+            at = @At("HEAD"), ordinal = 2, argsOnly = true)
+    private float overrideEnvironmentalStart(float original) {
+        System.out.println("rd start: " + original);
+        if (SodiumExtraClientMod.options().renderSettings.fogDistance == 0) return original;
+
+        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
+                ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(Minecraft.getInstance().level.dimensionType().effectsLocation(), 0)
+                : SodiumExtraClientMod.options().renderSettings.fogDistance;
+        float fogStart = SodiumExtraClientMod.options().renderSettings.fogStart / 100.0F;
+
+        return fogDistance * 0.16F * fogStart;
     }
+
+    @ModifyVariable(method = "updateBuffer(Ljava/nio/ByteBuffer;ILorg/joml/Vector4f;FFFFFF)V",
+            at = @At("HEAD"), ordinal = 3, argsOnly = true)
+    private float overrideEnvironmentalEnd(float original) {
+        System.out.println("rd end: " + original);
+        if (SodiumExtraClientMod.options().renderSettings.fogDistance == 0) return original;
+
+        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
+                ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(Minecraft.getInstance().level.dimensionType().effectsLocation(), 0)
+                : SodiumExtraClientMod.options().renderSettings.fogDistance;
+        return (fogDistance + 1) * 0.16F;
+    }*/
 }

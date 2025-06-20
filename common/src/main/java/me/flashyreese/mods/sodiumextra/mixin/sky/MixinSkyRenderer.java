@@ -2,7 +2,6 @@ package me.flashyreese.mods.sodiumextra.mixin.sky;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SkyRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,7 +43,7 @@ public class MixinSkyRenderer {
     }
 
     @Inject(method = "renderStars", at = @At(value = "HEAD"), cancellable = true)
-    private void renderStars(FogParameters fogParameters, float f, PoseStack poseStack, CallbackInfo ci) {
+    private void renderStars(float f, PoseStack poseStack, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.stars) {
             ci.cancel();
         }
