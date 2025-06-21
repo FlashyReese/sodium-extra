@@ -24,6 +24,8 @@ public class MixinFogRenderer {
 
     @Inject(method = "getBuffer", at = @At(value = "HEAD"), cancellable = true)
     public void getBuffer(FogRenderer.FogMode fogMode, CallbackInfoReturnable<GpuBufferSlice> cir) {
+        if (Minecraft.getInstance().level == null) return;
+
         int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
                 ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(Minecraft.getInstance().level.dimensionType().effectsLocation(), 0)
                 : SodiumExtraClientMod.options().renderSettings.fogDistance;
