@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Jeśli ta opcja jest włączona, V-Sync będzie w stanie zamienić środkową klatkę i czasami się wyłączyć, zwykle w szczególności poprawiając szybkość reakcji. Może powodować problemy z niektórymi sterownikami GPU.",
   "sodium-extra.option.use_fast_random": "Użyj szybkiej losowości",
   "sodium-extra.option.use_fast_random.tooltip": "Jeśli ta opcja jest włączona, do renderowania bloków zostanie użyta szybka funkcja losowa. Może to wpłynąć na rotację losowo obracanych tekstur w porównaniu z domyślnym ustawieniem.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(maks. %s / śr. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Aktualizacje oświetlenia wyłączone",

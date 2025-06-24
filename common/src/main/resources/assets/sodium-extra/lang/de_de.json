@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "If enabled, V-Sync will be able to swap mid-frame and disable itself at times, usually notably helping responsiveness. May cause issues with some GPU drivers.",
   "sodium-extra.option.use_fast_random": "Schnellen Zufallsgenerator verwenden",
   "sodium-extra.option.use_fast_random.tooltip": "Falls aktiviert wird eine schnelle Zufallsgeneratorfunktion für das Block-Rendering genutzt. Dies kann die Rotation von einigen zufällig gedrehten Texturen im Vergleich zum Vanilla-Verhalten verändern.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(Max. %s / Dsl. %s / Min. %s)",
   "sodium-extra.overlay.light_updates": "Schatten Aktualisierung deaktiviert",

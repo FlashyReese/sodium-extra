@@ -330,7 +330,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "启用后，垂直同步将能够交换中间帧，并有时禁用自己，通常有助于响应。可能会与一些GPU驱动程序发生问题。",
   "sodium-extra.option.use_fast_random": "快速随机纹理",
   "sodium-extra.option.use_fast_random.tooltip": "启用后, 将使用快速随机函数来渲染方块。与原版相比, 这会影响随机旋转纹理的旋转方向。",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(最大 %s / 平均 %s / 最小 %s)",
   "sodium-extra.overlay.light_updates": "光照更新已禁用",

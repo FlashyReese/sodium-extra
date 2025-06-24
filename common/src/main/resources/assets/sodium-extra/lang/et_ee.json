@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Lubamisel saab V-Sync keset kaadrit vahetuda ning end vajadusel keelata, tõstes jõudlust üldjuhul märgatavalt. Võib põhjustada teatud graafikakaardidraiveritega probleeme.",
   "sodium-extra.option.use_fast_random": "Kasuta kiiret juhuslikkust",
   "sodium-extra.option.use_fast_random.tooltip": "Lubamisel kasutatakse plokkide renderdamiseks kiiret juhuslikkuse meetodit. See võib muuta juhuslikult pööratud tekstuuride pöördenurga vanillist erinevaks.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s k/s",
   "sodium-extra.overlay.fps_extended": "(max. %s / kesk. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Valguse uuendused keelatud",

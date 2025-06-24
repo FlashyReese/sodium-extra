@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Si está habilitado, V-Sync podrá cambiar la fotograma media y deshabilitarse a sí mismo a veces, lo que generalmente ayuda notablemente a la tiempo de respuesta. Puede causar problemas con algunos controladores de GPU.",
   "sodium-extra.option.use_fast_random": "Utilice aleatorio rápido",
   "sodium-extra.option.use_fast_random.tooltip": "Si está habilitada, se utilizará una función aleatoria rápida para la representación de bloques. Esto puede afectar la rotación de texturas rotadas aleatoriamente en comparación con vainilla.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(max. %s / prom. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Actualizaciones de iluminación deshabilitado",

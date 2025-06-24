@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Khi bật, V-Sync sẽ có thể tự hoán đổi giữa các khung hình hoặc tự vô hiệu hóa, giúp cải thiện đáng kể tốc độ phản hồi. Có thể gây ra vấn đề với một số trình điều khiển GPU.",
   "sodium-extra.option.use_fast_random": "Sử dụng tạo ngẫu nhiên nhanh",
   "sodium-extra.option.use_fast_random.tooltip": "Khi bật, một hàm ngẫu nhiên nhanh hơn sẽ được sử dụng. Việc này có thể ảnh hưởng đến chiều xoay của các hoạ tiết so với cách mặc định.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(cao %s / t.bình %s / thấp %s)",
   "sodium-extra.overlay.light_updates": "Cập nhật chiếu sáng bị tắt",

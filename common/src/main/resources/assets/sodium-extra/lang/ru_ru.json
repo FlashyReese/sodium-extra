@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Вертикальная синхронизация сможет переключаться между кадрами и время от времени отключаться, что обычно заметно улучшает быстродействие. Может привести к проблемам с некоторыми графическими драйверами.",
   "sodium-extra.option.use_fast_random": "Использовать быстрый рандом",
   "sodium-extra.option.use_fast_random.tooltip": "Если включено, для рендеринга блоков будет использоваться функция быстрого рандома. Это может повлиять на видимое положение случайно повёрнутых текстур по сравнению с немодифицированной игрой.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(макс. %s / сред. %s / мин. %s)",
   "sodium-extra.overlay.light_updates": "Обновления света отключены",

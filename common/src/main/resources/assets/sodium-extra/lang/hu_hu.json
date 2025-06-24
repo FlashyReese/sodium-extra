@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Ha be van kapcsolva V-Sync dinamikusan ki-be fog kapcsolódni a képkockák közben sokszor nagyon segítve a érzékenységet. Problémákat okozhaz néhány GPU-val.",
   "sodium-extra.option.use_fast_random": "Gyors Random használata",
   "sodium-extra.option.use_fast_random.tooltip": "Ha be van kapcsolva egy gyors random folyamat lesz használva a blokkok megjelenítésére. Ez befolyásolhatja a random elforgatott textúrákat a vanillához mérve.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(max. %s / átl. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "A Világítás Frissülése ki van kapcsolva.",

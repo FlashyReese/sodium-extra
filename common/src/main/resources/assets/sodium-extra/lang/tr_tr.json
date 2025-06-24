@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Etkinleştirilirse, V-Sync kare ortasında geçiş yapabilir ve zaman zaman kendini devre dışı bırakabilir, genellikle yanıt verme hızına önemli ölçüde yardımcı olur. Bazı GPU sürücülerinde sorunlara neden olabilir.",
   "sodium-extra.option.use_fast_random": "Hızlı Olasılık Dağılımı Kullan",
   "sodium-extra.option.use_fast_random.tooltip": "Etkin ise, bir hızlı olasılık dağılım fonksiyonu blok görüntülemesi için kullanılacak. Bu ayar, vanillaya göre rastgele döndürülmüş dokuların rotasyonunu etkileyecektir.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(mak. %s / ort. %s / min. %s)",
   "sodium-extra.overlay.light_updates": "Işık güncellemeleri devre dışı",

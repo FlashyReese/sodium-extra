@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "有効にした場合、垂直同期が描画をフレームの途中でスワップし、時にはそれ自体を無効にすることが出来ます。通常は顕著に応答性を向上させます。一部のGPUドライバーで問題が発生する可能性があります。",
   "sodium-extra.option.use_fast_random": "高速な乱数を使う",
   "sodium-extra.option.use_fast_random.tooltip": "有効にした場合、高速な乱数関数がブロックレンダリングに使用されます。バニラと比較したとき、ランダムに回転するテクスチャの向きに影響を与える可能性があります。",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(最大 %s / 平均 %s / 最小 %s)",
   "sodium-extra.overlay.light_updates": "光の状態更新が無効",

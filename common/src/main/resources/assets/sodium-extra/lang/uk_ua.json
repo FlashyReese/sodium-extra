@@ -336,7 +336,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Якщо ввімкнено, V-Sync зможе змінювати середину кадру і вимикати себе час від часу. Зазвичай, сильно збільшує швидкодію. Цей параметр може створювати проблеми з певними драйверами відеокарт.",
   "sodium-extra.option.use_fast_random": "Швидка випадковість",
   "sodium-extra.option.use_fast_random.tooltip": "Якщо ввімкнено, для промальовки блоків використовуватиметься функція швидкої випадковості. Це може вплинути на положення випадково повернутих текстур у порівнянні з ваніллю.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "%s FPS",
   "sodium-extra.overlay.fps_extended": "(макс.: %s / серед.: %s / мін.: %s)",
   "sodium-extra.overlay.light_updates": "Оновлення світла вимкнено",

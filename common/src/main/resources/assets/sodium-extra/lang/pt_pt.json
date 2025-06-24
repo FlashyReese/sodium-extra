@@ -330,7 +330,7 @@
   "sodium-extra.option.use_adaptive_sync.tooltip": "Ao ativar, a sincronização vertical poderá alternar o meio do quadro e ser desativada às vezes, otimizando a capacidade de resposta. Pode causar problemas em algumas placas gráficas.",
   "sodium-extra.option.use_fast_random": "Aleatoriedade rápida",
   "sodium-extra.option.use_fast_random.tooltip": "Ao ativar, uma função rápida aleatória será usada na renderização de blocos. Pode afetar a rotação de texturas giradas aleatoriamente em comparação com o padrão.",
-  "sodium-extra.overlay.coordinates": "X: %s, Y: %s, Z: %s",
+  "sodium-extra.overlay.coordinates": "%sX: %s, %sY: %s, %sZ: %s",
   "sodium-extra.overlay.fps": "FPS: %s",
   "sodium-extra.overlay.fps_extended": "(máx. %s / méd. %s / mín. %s)",
   "sodium-extra.overlay.light_updates": "Atualizações de luz desativadas",
