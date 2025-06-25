@@ -1,8 +1,8 @@
 package me.flashyreese.mods.sodiumextra.client.gui;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import me.flashyreese.mods.sodiumextra.client.FrameCounter;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import me.flashyreese.mods.sodiumextra.mixin.gui.MinecraftClientAccessor;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,17 +17,19 @@ public class SodiumExtraHud {
 
     private final Minecraft client = Minecraft.getInstance();
 
+    private final FrameCounter stats = FrameCounter.getInstance();
+
     public void onStartTick(Minecraft client) {
         // Clear the textList to start fresh (this might not be ideal but hey it's still better than whatever the fuck debug hud is doing)
         this.textList.clear();
         if (SodiumExtraClientMod.options().extraSettings.showFps) {
-            int currentFPS = MinecraftClientAccessor.getFPS();
+            int currentFPS = FrameCounter.getInstance().getSmoothFps();
 
             Component text = Component.translatable("sodium-extra.overlay.fps", currentFPS);
 
             if (SodiumExtraClientMod.options().extraSettings.showFPSExtended)
-                text = Component.literal(String.format("%s %s", text.getString(), Component.translatable("sodium-extra.overlay.fps_extended", SodiumExtraClientMod.getClientTickHandler().getHighestFps(), SodiumExtraClientMod.getClientTickHandler().getAverageFps(),
-                        SodiumExtraClientMod.getClientTickHandler().getLowestFps()).getString()));
+                text = Component.literal(String.format("%s %s", text.getString(), Component.translatable("sodium-extra.overlay.fps_extended", this.stats.getAverageFps(), this.stats.getOnePercentLowFps(),
+                        this.stats.getPointOnePercentLowFps()).getString()));
 
             this.textList.add(text);
         }

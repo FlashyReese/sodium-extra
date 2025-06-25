@@ -87,6 +87,7 @@ tasks.named("compileTestJava").configure {
 dependencies {
     compileOnly(project(":common"))
     implementation("maven.modrinth:sodium:$SODIUM_VERSION-neoforge")
+    runtimeOnly("maven.modrinth:reeses-sodium-options:mc1.21.6-1.8.4+fabric");
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code

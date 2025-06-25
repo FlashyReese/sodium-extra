@@ -35,7 +35,7 @@ public class MixinParticleEngine {
     public void addParticle(ParticleOptions particleOptions, double d, double e, double f, double g, double h, double i, CallbackInfoReturnable<Particle> cir) {
         if (SodiumExtraClientMod.options().particleSettings.particles) {
             ResourceLocation particleTypeId = BuiltInRegistries.PARTICLE_TYPE.getKey(particleOptions.getType());
-            if (!SodiumExtraClientMod.options().particleSettings.otherMap.getOrDefault(particleTypeId, true)) {
+            if (!SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(particleTypeId, k -> true)) {
                 cir.setReturnValue(null);
             }
         } else {

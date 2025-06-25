@@ -40,7 +40,7 @@ dependencies {
     addEmbeddedFabricModule("fabric-resource-loader-v0")
     compileOnly(project(":common"))
     modImplementation("maven.modrinth:sodium:$SODIUM_VERSION-fabric")
-
+    modRuntimeOnly("maven.modrinth:reeses-sodium-options:mc1.21.6-1.8.4+fabric");
 }
 
 loom {

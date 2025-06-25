@@ -4,7 +4,6 @@ import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
-import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,10 +19,7 @@ public abstract class MixinOcclusionCuller {
 
     @Inject(method = "isWithinRenderDistance", at = @At(value = "HEAD"), cancellable = true)
     private static void isWithinRenderDistance(CameraTransform camera, RenderSection section, float maxDistance, CallbackInfoReturnable<Boolean> cir) {
-        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl ?
-                SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(Minecraft.getInstance().level.dimensionType().effectsLocation(), 0) :
-                SodiumExtraClientMod.options().renderSettings.fogDistance;
-        if (fogDistance == 33) {
+        if (!SodiumExtraClientMod.options().renderSettings.globalFog) {
             int ox = section.getOriginX() - camera.intX;
             int oz = section.getOriginZ() - camera.intZ;
             float dx = nearestToZero(ox, ox + 16) - camera.fracX;

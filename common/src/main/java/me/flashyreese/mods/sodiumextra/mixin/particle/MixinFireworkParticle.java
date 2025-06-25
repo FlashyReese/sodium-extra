@@ -19,7 +19,7 @@ public class MixinFireworkParticle {
 
     @Inject(method = "createParticle", at = @At(value = "HEAD"), cancellable = true)
     public void addExplosionParticle(double x, double y, double z, double velocityX, double velocityY, double velocityZ, IntList colors, IntList targetColors, boolean trail, boolean flicker, CallbackInfo ci) {
-        if (!SodiumExtraClientMod.options().particleSettings.otherMap.getOrDefault(this.fireworkIdentifier, true) || !SodiumExtraClientMod.options().particleSettings.particles) {
+        if (!SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(this.fireworkIdentifier, k -> true) || !SodiumExtraClientMod.options().particleSettings.particles) {
             ci.cancel();
         }
     }
