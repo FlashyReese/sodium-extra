@@ -2,6 +2,7 @@ package me.flashyreese.mods.sodiumextra.client.gui;
 
 import com.google.common.collect.ImmutableList;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.gui.options.control.DynamicSliderControl;
 import me.flashyreese.mods.sodiumextra.client.gui.options.control.SliderControlExtended;
 import me.flashyreese.mods.sodiumextra.client.gui.options.storage.SodiumExtraOptionsStorage;
 import me.flashyreese.mods.sodiumextra.common.util.ControlValueFormatterExtended;
@@ -271,6 +272,7 @@ public class SodiumExtraGameOptionPages {
                                             config.environmentEndMultiplier = val;
                                             if (environmentEndRef.get() != null) {
                                                 environmentEndRef.get().setValue(val);
+                                                environmentEndRef.get().applyChanges();
                                             }
                                         }
                                     },
@@ -294,6 +296,7 @@ public class SodiumExtraGameOptionPages {
                                             config.environmentStartMultiplier = val;
                                             if (environmentStartRef.get() != null) {
                                                 environmentStartRef.get().setValue(val);
+                                                environmentStartRef.get().applyChanges();
                                             }
                                         }
                                     },
@@ -318,6 +321,7 @@ public class SodiumExtraGameOptionPages {
                                             config.renderDistanceEndMultiplier = val;
                                             if (renderDistanceEndRef.get() != null) {
                                                 renderDistanceEndRef.get().setValue(val);
+                                                renderDistanceEndRef.get().applyChanges();
                                             }
                                         }
                                     },
@@ -341,6 +345,7 @@ public class SodiumExtraGameOptionPages {
                                             config.renderDistanceStartMultiplier = val;
                                             if (renderDistanceStartRef.get() != null) {
                                                 renderDistanceStartRef.get().setValue(val);
+                                                renderDistanceStartRef.get().applyChanges();
                                             }
                                         }
                                     },
@@ -539,14 +544,6 @@ public class SodiumExtraGameOptionPages {
                         .setTooltip(Component.translatable("sodium-extra.option.cloud_height.tooltip"))
                         .setControl(option -> new SliderControl(option, -64, 319, 1, ControlValueFormatter.number()))
                         .setBinding((options, value) -> options.extraSettings.cloudHeight = value, options -> options.extraSettings.cloudHeight)
-                        .build()
-                )
-                .add(OptionImpl.createBuilder(int.class, sodiumExtraOpts)
-                        .setEnabled(() -> SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.sodium.cloud").isEnabled())
-                        .setName(Component.translatable("sodium-extra.option.cloud_distance"))
-                        .setTooltip(Component.translatable("sodium-extra.option.cloud_distance.tooltip"))
-                        .setControl(option -> new SliderControl(option, 100, 300, 10, ControlValueFormatter.percentage()))
-                        .setBinding((options, value) -> options.extraSettings.cloudDistance = value, options -> options.extraSettings.cloudDistance)
                         .build()
                 )
                 .build());

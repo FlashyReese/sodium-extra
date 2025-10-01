@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.10-SNAPSHOT")
+    id("fabric-loom") version ("1.11-SNAPSHOT")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -41,6 +41,10 @@ dependencies {
     compileOnly(project(":common"))
     modImplementation("maven.modrinth:sodium:$SODIUM_VERSION-fabric")
     modRuntimeOnly("maven.modrinth:reeses-sodium-options:mc1.21.6-1.8.4+fabric");
+}
+
+tasks.test {
+    failOnNoDiscoveredTests = false
 }
 
 loom {

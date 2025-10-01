@@ -36,7 +36,6 @@
     "sky.MixinSkyRenderer",
     "sky_colors.MixinBiome",
     "sodium.accessibility.MixinSodiumGameOptionPages",
-    "sodium.cloud.MixinCloudRenderer",
     "sodium.fog.MixinOcclusionCuller",
     "sodium.scrollable_page.MixinSodiumOptionsGUI",
     "sodium.vsync.MixinSodiumGameOptionsPages",
