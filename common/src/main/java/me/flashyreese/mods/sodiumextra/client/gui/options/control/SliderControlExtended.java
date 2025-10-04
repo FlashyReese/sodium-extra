@@ -6,9 +6,11 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.ControlElement;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
 
 public class SliderControlExtended implements Control<Integer> {
     private final Option<Integer> option;
@@ -134,9 +136,9 @@ public class SliderControlExtended implements Control<Integer> {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (this.option.isAvailable() && button == 0 && this.getSliderBounds().containsCursor(mouseX, mouseY)) {
-                this.setValueFromMouse(mouseX);
+        public boolean mouseClicked(@NotNull MouseButtonEvent mouseButtonEvent, boolean bl) {
+            if (this.option.isAvailable() && mouseButtonEvent.button() == 0 && this.getSliderBounds().containsCursor(mouseButtonEvent.x(), mouseButtonEvent.y())) {
+                this.setValueFromMouse(mouseButtonEvent.x());
 
                 return true;
             }
@@ -159,9 +161,9 @@ public class SliderControlExtended implements Control<Integer> {
         }
 
         @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-            if (this.option.isAvailable() && button == 0) {
-                this.setValueFromMouse(mouseX);
+        public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double d, double e) {
+            if (this.option.isAvailable() && mouseButtonEvent.button() == 0) {
+                this.setValueFromMouse(mouseButtonEvent.x());
 
                 return true;
             }

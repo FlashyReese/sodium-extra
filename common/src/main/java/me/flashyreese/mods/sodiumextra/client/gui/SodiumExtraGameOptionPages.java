@@ -493,10 +493,10 @@ public class SodiumExtraGameOptionPages {
         List<OptionGroup> groups = new ArrayList<>();
         groups.add(OptionGroup.createBuilder()
                 .add(OptionImpl.createBuilder(boolean.class, sodiumExtraOpts)
-                        .setEnabled(() -> SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.reduce_resolution_on_mac").isEnabled() && Minecraft.ON_OSX)
+                        .setEnabled(() -> SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.reduce_resolution_on_mac").isEnabled() && System.getProperty("os.name").toLowerCase().contains("mac"))
                         .setName(Component.translatable("sodium-extra.option.reduce_resolution_on_mac"))
                         .setTooltip(Component.translatable("sodium-extra.option.reduce_resolution_on_mac.tooltip"))
-                        .setEnabled(() -> Minecraft.ON_OSX)
+                        .setEnabled(() -> System.getProperty("os.name").toLowerCase().contains("mac"))
                         .setImpact(OptionImpact.HIGH)
                         .setControl(TickBoxControl::new)
                         .setBinding((opts, value) -> opts.extraSettings.reduceResolutionOnMac = value, opts -> opts.extraSettings.reduceResolutionOnMac)

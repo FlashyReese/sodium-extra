@@ -29,14 +29,14 @@ public class MixinSkyRenderer {
     }
 
     @Inject(method = "renderSun", at = @At(value = "HEAD"), cancellable = true)
-    private void renderSun(float f, MultiBufferSource multiBufferSource, PoseStack poseStack, CallbackInfo ci) {
+    private void renderSun(float f, PoseStack poseStack, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sun) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderMoon", at = @At(value = "HEAD"), cancellable = true)
-    private void renderMoon(int i, float f, MultiBufferSource multiBufferSource, PoseStack poseStack, CallbackInfo ci) {
+    private void renderMoon(int i, float f, PoseStack poseStack, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.moon) {
             ci.cancel();
         }
@@ -50,7 +50,7 @@ public class MixinSkyRenderer {
     }
 
     @Inject(method = "renderSunriseAndSunset", at = @At(value = "HEAD"), cancellable = true)
-    private void renderSunriseAndSunset(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, float f, int i, CallbackInfo ci) {
+    private void renderSunriseAndSunset(PoseStack poseStack, float f, int i, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sun) {
             ci.cancel();
         }

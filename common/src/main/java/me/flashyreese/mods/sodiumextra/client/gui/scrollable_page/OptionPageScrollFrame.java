@@ -10,6 +10,7 @@ import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -141,34 +142,34 @@ public class OptionPageScrollFrame extends AbstractFrame {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.dim.containsCursor(mouseX, mouseY) && super.mouseClicked(mouseX, mouseY, button)) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
+        if (this.dim.containsCursor(mouseButtonEvent.x(), mouseButtonEvent.y()) && super.mouseClicked(mouseButtonEvent, bl)) {
             return true;
         }
         if (this.canScroll) {
-            return this.scrollBar.mouseClicked(mouseX, mouseY, button);
+            return this.scrollBar.mouseClicked(mouseButtonEvent, bl);
         }
         return false;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double d, double e) {
+        if (super.mouseDragged(mouseButtonEvent, d, e)) {
             return true;
         }
         if (this.canScroll) {
-            return this.scrollBar.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            return this.scrollBar.mouseDragged(mouseButtonEvent, d, e);
         }
         return false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (super.mouseReleased(mouseX, mouseY, button)) {
+    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
+        if (super.mouseReleased(mouseButtonEvent)) {
             return true;
         }
         if (this.canScroll) {
-            return this.scrollBar.mouseReleased(mouseX, mouseY, button);
+            return this.scrollBar.mouseReleased(mouseButtonEvent);
         }
         return false;
     }

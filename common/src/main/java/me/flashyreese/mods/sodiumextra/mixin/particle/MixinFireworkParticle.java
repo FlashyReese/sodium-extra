@@ -23,11 +23,4 @@ public class MixinFireworkParticle {
             ci.cancel();
         }
     }
-
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/Particle;setColor(FFF)V"))
-    public void tick(Particle instance, float red, float green, float blue) {
-        if (instance != null) {
-            instance.setColor(red, green, blue);
-        }
-    }
 }

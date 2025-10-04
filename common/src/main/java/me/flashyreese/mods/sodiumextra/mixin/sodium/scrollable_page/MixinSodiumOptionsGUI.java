@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.client.gui.prompt.ScreenPrompt;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -48,10 +49,10 @@ public abstract class MixinSodiumOptionsGUI extends Screen {
     // Fixes issue introduce with Sodium 20006a85fb7a64889f507eb13521e55693ae0d7e
     // This override prevents focused element from staying focused because we are using a ParentElement for scroll frames
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean repeated) {
         if (this.prompt != null) {
-            return this.prompt.mouseClicked(mouseX, mouseY, button);
+            return this.prompt.mouseClicked(event, repeated);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, repeated);
     }
 }

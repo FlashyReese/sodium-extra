@@ -17,7 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ParticleEngine.class)
 public class MixinParticleEngine {
-    @Inject(method = "destroy", at = @At(value = "HEAD"), cancellable = true)
+    //Todo:
+    /*@Inject(method = "destroy", at = @At(value = "HEAD"), cancellable = true)
     public void addBlockBreakParticles(BlockPos pos, BlockState state, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().particleSettings.particles || !SodiumExtraClientMod.options().particleSettings.blockBreak) {
             ci.cancel();
@@ -29,7 +30,7 @@ public class MixinParticleEngine {
         if (!SodiumExtraClientMod.options().particleSettings.particles || !SodiumExtraClientMod.options().particleSettings.blockBreaking) {
             ci.cancel();
         }
-    }
+    }*/
 
     @Inject(method = "createParticle", at = @At(value = "HEAD"), cancellable = true)
     public void addParticle(ParticleOptions particleOptions, double d, double e, double f, double g, double h, double i, CallbackInfoReturnable<Particle> cir) {

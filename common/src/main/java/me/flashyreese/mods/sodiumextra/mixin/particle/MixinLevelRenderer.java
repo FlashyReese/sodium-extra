@@ -20,7 +20,7 @@ public class MixinLevelRenderer {
         }
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/phys/Vec3;IFLjava/util/List;Ljava/util/List;)V", at = @At(value = "HEAD"), cancellable = true, locals = LocalCapture.NO_CAPTURE)
+    @Inject(method = "render", at = @At(value = "HEAD"), cancellable = true, locals = LocalCapture.NO_CAPTURE)
     private void renderWeather(CallbackInfo ci) {
         if (!(SodiumExtraClientMod.options().detailSettings.rainSnow)) {
             ci.cancel();

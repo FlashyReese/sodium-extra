@@ -37,7 +37,7 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
      * @author FlashyReese
      * @reason Use optimized vertex writer, also avoids unnecessary allocations
      */
-    @Inject(method = "renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/resources/ResourceLocation;FFJIIIFF)V", at = @At(value = "HEAD"), cancellable = true)
+    /*@Inject(method = "renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/resources/ResourceLocation;FFJIIIFF)V", at = @At(value = "HEAD"), cancellable = true)
     private static void optimizeRenderBeam(PoseStack poseStack, MultiBufferSource multiBufferSource, ResourceLocation resourceLocation, float tickDelta, float heightScale, long worldTime, int yOffset, int maxY, int color, float innerRadius, float outerRadius, CallbackInfo ci) {
         ci.cancel();
         if (IrisCompat.isIrisPresent()) {
@@ -138,5 +138,5 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
         if (!frustum.isVisible(box)) {
             ci.cancel();
         }
-    }
+    }*/
 }

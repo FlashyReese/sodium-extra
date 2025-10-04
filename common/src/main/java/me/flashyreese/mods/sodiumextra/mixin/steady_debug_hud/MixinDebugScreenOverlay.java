@@ -17,8 +17,6 @@ import java.util.List;
 
 @Mixin(DebugScreenOverlay.class)
 public abstract class MixinDebugScreenOverlay {
-    @Shadow protected abstract void renderLines(GuiGraphics guiGraphics, List<String> list, boolean bl);
-
     @Unique
     private final List<String> leftTextCache = new ArrayList<>();
     @Unique
@@ -27,6 +25,9 @@ public abstract class MixinDebugScreenOverlay {
     private long nextTime = 0L;
     @Unique
     private boolean rebuild = true;
+
+    @Shadow
+    protected abstract void renderLines(GuiGraphics guiGraphics, List<String> list, boolean bl);
 
     @Inject(method = "render", at = @At(value = "HEAD"))
     public void preRender(GuiGraphics guiGraphics, CallbackInfo ci) {
@@ -43,7 +44,7 @@ public abstract class MixinDebugScreenOverlay {
         }
     }
 
-    @Redirect(method = "drawGameInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V", ordinal = 0))
     public void sodiumExtra$redirectDrawLeftText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left) {
         if (this.rebuild) {
             this.leftTextCache.clear();
@@ -52,7 +53,7 @@ public abstract class MixinDebugScreenOverlay {
         this.renderLines(guiGraphics, this.leftTextCache, left);
     }
 
-    @Redirect(method = "drawSystemInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V", ordinal = 1))
     public void sodiumExtra$redirectDrawRightText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left) {
         if (this.rebuild) {
             this.rightTextCache.clear();
