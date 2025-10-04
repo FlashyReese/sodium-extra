@@ -126,7 +126,8 @@ public class SodiumExtraGameOptionPages {
                         .setBinding((opts, value) -> opts.particleSettings.rainSplash = value, opts -> opts.particleSettings.rainSplash)
                         .build()
                 )
-                .add(OptionImpl.createBuilder(boolean.class, sodiumExtraOpts)
+                // todo:
+                /*.add(OptionImpl.createBuilder(boolean.class, sodiumExtraOpts)
                         .setEnabled(() -> SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
                         .setName(parseVanillaString("subtitles.block.generic.break"))
                         .setTooltip(Component.translatable("sodium-extra.option.block_break.tooltip"))
@@ -141,7 +142,7 @@ public class SodiumExtraGameOptionPages {
                         .setControl(TickBoxControl::new)
                         .setBinding((opts, value) -> opts.particleSettings.blockBreaking = value, opts -> opts.particleSettings.blockBreaking)
                         .build()
-                )
+                )*/
                 .build());
 
         Map<String, List<ResourceLocation>> otherParticles = BuiltInRegistries.PARTICLE_TYPE.keySet().stream()
