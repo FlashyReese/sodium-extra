@@ -8,7 +8,7 @@ import java.util.Map;
 public class CaffeineConfigNeoForge implements CaffeineConfigPlatform {
     @Override
     public void applyModOverrides(CaffeineConfig config, String jsonKey) {
-        for (ModInfo meta : FMLLoader.getLoadingModList().getMods()) {
+        for (ModInfo meta : FMLLoader.getCurrent().getLoadingModList().getMods()) {
             meta.getConfigElement(jsonKey).ifPresent(override -> {
                 if (override instanceof Map<?, ?> overrides && overrides.keySet().stream().allMatch(key -> key instanceof String)) {
                     overrides.forEach((key, value) -> {

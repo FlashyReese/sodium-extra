@@ -22,6 +22,7 @@
     "optimizations.beacon_beam_rendering.LevelRendererAccessor",
     "optimizations.beacon_beam_rendering.MixinBeaconRenderer",
     "optimizations.beacon_beam_rendering.MixinVertexSerializerRegistryImpl",
+    "particle.MixinClientLevel",
     "particle.MixinFireworkParticle",
     "particle.MixinLevelRenderer",
     "particle.MixinParticleEngine",
