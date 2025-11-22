@@ -25,34 +25,34 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-#      - name: Publish NeoForge to Modrinth, CurseForge & GitHub
-#        uses: Kir-Antipov/mc-publish@v3.3.0
-#        with:
-#          modrinth-id: PtjYWJkn
-#          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-#
-#          curseforge-id: 447673
-#          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-#
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
-#
-#          name: '[NeoForge] ${{ github.event.release.name }}'
-#          version: '${{ github.event.release.tag_name }}+neoforge'
-#          version-type: release
-#
-#          game-versions: '1.21.5'
-#
-#          loaders: neoforge
-#
-#          dependencies: |
-#            sodium
-#            reeses-sodium-options(optional)
-#            irisshaders(optional)
-#            iris(optional)
-#
-#          files: |
-#            neoforge/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
-#            neoforge/build/libs/*-@(dev|sources|javadoc|dev-shadow).jar
+      - name: Publish NeoForge to Modrinth, CurseForge & GitHub
+        uses: Kir-Antipov/mc-publish@v3.3.0
+        with:
+          modrinth-id: PtjYWJkn
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          curseforge-id: 447673
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+          name: '[NeoForge] ${{ github.event.release.name }}'
+          version: '${{ github.event.release.tag_name }}+neoforge'
+          version-type: release
+
+          game-versions: '1.21.5'
+
+          loaders: neoforge
+
+          dependencies: |
+            sodium
+            reeses-sodium-options(optional)
+            irisshaders(optional)
+            iris(optional)
+
+          files: |
+            neoforge/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
+            neoforge/build/libs/*-@(dev|sources|javadoc|dev-shadow).jar
       - name: Publish Fabric to Modrinth, CurseForge & GitHub
         uses: Kir-Antipov/mc-publish@v3.3.0
         with:
