@@ -2,22 +2,31 @@ package me.flashyreese.mods.sodiumextra.mixin.animation;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.renderer.texture.AbstractTexture;
+import me.flashyreese.mods.sodiumextra.common.util.AnimationStateExtended;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 @Mixin(TextureAtlas.class)
-public abstract class MixinSpriteAtlasTexture extends AbstractTexture {
+public class MixinTextureAtlas {
+    @Shadow
+    @Final
+    private Identifier location;
     @Unique
     private final Map<Supplier<Boolean>, List<Identifier>> animatedSprites = Map.of(
             () -> SodiumExtraClientMod.options().animationSettings.water, List.of(
@@ -74,12 +83,18 @@ public abstract class MixinSpriteAtlasTexture extends AbstractTexture {
             )
     );
 
+    @Redirect(method = "cycleAnimationFrames", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;tick()V"))
+    public void cycleAnimationFrames(SpriteContents.AnimationState instance) {
+        if (instance instanceof AnimationStateExtended extended && SodiumExtraClientMod.options().animationSettings.animation && this.shouldAnimate(extended.sodium_extra$getSprite().contents().name())) {
+            instance.tick();
+        }
+    }
+
     @Redirect(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
-    public SpriteContents.AnimationState sodiumExtra$tickAnimatedSprites(TextureAtlasSprite instance, GpuBufferSlice gpuBufferSlice, int i) {
-        SpriteContents.AnimationState tickableAnimation = instance.createAnimationState(gpuBufferSlice, i);
-        if (tickableAnimation != null && SodiumExtraClientMod.options().animationSettings.animation && this.shouldAnimate(instance.contents().name()))
-            return tickableAnimation;
-        return null;
+    public SpriteContents.AnimationState upload(TextureAtlasSprite instance, GpuBufferSlice gpuBufferSlice, int i) {
+        SpriteContents.AnimationState state = instance.createAnimationState(gpuBufferSlice, i);
+        ((AnimationStateExtended) state).sodium_extra$setSprite(instance);
+        return state;
     }
 
     @Unique
@@ -90,7 +105,6 @@ public abstract class MixinSpriteAtlasTexture extends AbstractTexture {
                     return supplierListEntry.getKey().get();
                 }
             }
-            System.out.println(identifier);
         }
         return true;
     }

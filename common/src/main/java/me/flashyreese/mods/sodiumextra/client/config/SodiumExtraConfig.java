@@ -17,10 +17,7 @@ import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.material.FogType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SodiumExtraConfig implements ConfigEntryPoint {
@@ -93,7 +90,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.animation = value, () -> SodiumExtraClientMod.options().animationSettings.animation)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                 )
@@ -104,7 +100,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.water = value, () -> SodiumExtraClientMod.options().animationSettings.water)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                         .addOption(builder.createBooleanOption(id("animate_lava"))
@@ -113,7 +108,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.lava = value, () -> SodiumExtraClientMod.options().animationSettings.lava)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                         .addOption(builder.createBooleanOption(id("animate_fire"))
@@ -122,7 +116,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.fire = value, () -> SodiumExtraClientMod.options().animationSettings.fire)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                         .addOption(builder.createBooleanOption(id("animate_portal"))
@@ -131,7 +124,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.portal = value, () -> SodiumExtraClientMod.options().animationSettings.portal)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                         .addOption(builder.createBooleanOption(id("block_animations"))
@@ -140,7 +132,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.blockAnimations = value, () -> SodiumExtraClientMod.options().animationSettings.blockAnimations)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                         .addOption(builder.createBooleanOption(id("animate_sculk_sensor"))
@@ -149,7 +140,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setBinding(value -> SodiumExtraClientMod.options().animationSettings.sculkSensor = value, () -> SodiumExtraClientMod.options().animationSettings.sculkSensor)
                                 .setDefaultValue(true)
-                                .setFlags(OptionFlag.REQUIRES_ASSET_RELOAD)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.animation").isEnabled())
                         )
                 );
@@ -311,7 +301,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .filter(type -> type != FogType.NONE)
                 .forEach(fogType -> {
                     // Environment Start
-                    IntegerOptionBuilder envStart = builder.createIntegerOption(id(fogType.name().toLowerCase() + "_environment_start"))
+                    IntegerOptionBuilder envStart = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_environment_start"))
                             .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                             .setName(Component.translatable("sodium-extra.option.fog_type.environment_start", fogTypeName(fogType)))
                             .setTooltip(Component.translatable("sodium-extra.option.fog_type.environment_start.tooltip"))
@@ -326,7 +316,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                             .setValueFormatter(ControlValueFormatterImpls.percentage());
 
                     // Environment End
-                    IntegerOptionBuilder envEnd = builder.createIntegerOption(id(fogType.name().toLowerCase() + "_environment_end"))
+                    IntegerOptionBuilder envEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_environment_end"))
                             .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                             .setName(Component.translatable("sodium-extra.option.fog_type.environment_end", fogTypeName(fogType)))
                             .setTooltip(Component.translatable("sodium-extra.option.fog_type.environment_end.tooltip"))
@@ -341,7 +331,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                             .setValueFormatter(ControlValueFormatterImpls.percentage());
 
                     // Render Start
-                    IntegerOptionBuilder renderStart = builder.createIntegerOption(id(fogType.name().toLowerCase() + "_render_distance_start"))
+                    IntegerOptionBuilder renderStart = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_render_distance_start"))
                             .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                             .setName(Component.translatable("sodium-extra.option.fog_type.render_distance_start", fogTypeName(fogType)))
                             .setTooltip(Component.translatable("sodium-extra.option.fog_type.render_distance_start.tooltip"))
@@ -356,7 +346,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                             .setValueFormatter(ControlValueFormatterImpls.percentage());
 
                     // Render End
-                    IntegerOptionBuilder renderEnd = builder.createIntegerOption(id(fogType.name().toLowerCase() + "_render_distance_end"))
+                    IntegerOptionBuilder renderEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_render_distance_end"))
                             .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                             .setName(Component.translatable("sodium-extra.option.fog_type.render_distance_end", fogTypeName(fogType)))
                             .setTooltip(Component.translatable("sodium-extra.option.fog_type.render_distance_end.tooltip"))
@@ -371,7 +361,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                             .setValueFormatter(ControlValueFormatterImpls.percentage());
 
                     // Sky End
-                    IntegerOptionBuilder skyEnd = builder.createIntegerOption(id(fogType.name().toLowerCase() + "_sky_end"))
+                    IntegerOptionBuilder skyEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_sky_end"))
                             .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                             .setName(Component.translatable("sodium-extra.option.fog_type.sky_end", fogTypeName(fogType)))
                             .setTooltip(Component.translatable("sodium-extra.option.fog_type.sky_end.tooltip"))
@@ -386,7 +376,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                             .setValueFormatter(ControlValueFormatterImpls.percentage());
 
 
-                    IntegerOptionBuilder cloudEnd = builder.createIntegerOption(id(fogType.name().toLowerCase() + "_cloud_end"))
+                    IntegerOptionBuilder cloudEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_cloud_end"))
                             .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                             .setName(Component.translatable("sodium-extra.option.fog_type.cloud_end", fogTypeName(fogType)))
                             .setTooltip(Component.translatable("sodium-extra.option.fog_type.cloud_end.tooltip"))
@@ -402,7 +392,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
 
                     // Add group
                     fogGroups.add(builder.createOptionGroup()
-                            .addOption(builder.createBooleanOption(id(fogType.name().toLowerCase() + "_fog"))
+                            .addOption(builder.createBooleanOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_fog"))
                                     .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                                     .setName(fogTypeName(fogType))
                                     .setTooltip(fogTypeTooltip(fogType))
