@@ -671,9 +671,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
-                .setColorTheme(builder.createColorTheme()
-                        .setBaseThemeRGB(0xffffffff)
-                )
                 .setIcon(Identifier.parse("sodium-extra:textures/icon.png"))
                 .addPage(this.createAnimationsPage(builder))
                 .addPage(this.createParticlesPage(builder))

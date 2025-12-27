@@ -40,7 +40,7 @@ public class SodiumExtraHud {
 
             Component text = Component.translatable("sodium-extra.overlay.coordinates", String.format("%.2f", pos.x), String.format("%.2f", pos.y), String.format("%.2f", pos.z));
             if (this.client.showOnlyReducedInfo()) {
-                text = Component.literal("Cords not available due to reducedDebugInfo: true."); // Todo: Localize?
+                text = Component.translatable("sodium-extra.overlay.coordinates_unavailable");
             }
 
             this.textList.add(text);
