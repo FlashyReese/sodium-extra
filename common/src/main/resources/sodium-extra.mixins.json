@@ -6,7 +6,6 @@
   "refmap": "sodium-extra.refmap.json",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "adaptive_sync.MixinWindow",
     "animation.MixinSpriteContentsAnimationState",
     "animation.MixinTextureAtlas",
     "biome_colors.MixinBiomeColors",
@@ -27,6 +26,7 @@
     "particle.MixinLevelRenderer",
     "particle.MixinParticleEngine",
     "prevent_shaders.MixinGameRenderer",
+    "reduce_resolution_on_mac.MixinGlBackend",
     "reduce_resolution_on_mac.MixinWindow",
     "render.block.entity.MixinBeaconRenderer",
     "render.block.entity.MixinEnchantingTableBlockEntityRenderer",

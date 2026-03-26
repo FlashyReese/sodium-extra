@@ -6,7 +6,7 @@ import net.caffeinemc.caffeineconfig.CaffeineConfig;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +81,7 @@ public class SodiumExtraClientMod {
         hud.onStartTick(client);
     }
 
-    public static void onHudRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
+    public static void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
         if (hud == null) {
             hud = new SodiumExtraHud();
         }
