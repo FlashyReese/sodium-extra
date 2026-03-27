@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.14-SNAPSHOT")
+    id("net.fabricmc.fabric-loom") version ("1.15.4")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -19,27 +19,19 @@ base {
 
 dependencies {
     minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
-    mappings(loom.layered {
-        officialMojangMappings()
-        if (PARCHMENT_VERSION != null) {
-            parchment("org.parchmentmc.data:parchment-${MINECRAFT_VERSION}:${PARCHMENT_VERSION}@zip")
-        }
-    })
-    modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+    compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, FABRIC_API_VERSION)
-        modImplementation(module)
+        implementation(module)
     }
 
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
-    addEmbeddedFabricModule("fabric-block-view-api-v2")
-    //addEmbeddedFabricModule("fabric-renderer-api-v1")
-    addEmbeddedFabricModule("fabric-rendering-fluids-v1")
-    addEmbeddedFabricModule("fabric-resource-loader-v0")
+    addEmbeddedFabricModule("fabric-block-getter-api-v2")
+    addEmbeddedFabricModule("fabric-rendering-v1")
     compileOnly(project(":common"))
-    modImplementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    implementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
 }
 
 tasks.test {

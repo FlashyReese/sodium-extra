@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.client.renderer.blockentity.state.BeaconRenderState;
-import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,15 +27,15 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
     private static void submitBeaconBeam(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, float f, float g, int i, int j, int k) {
     }
 
-    @Inject(method = {"submit(Lnet/minecraft/client/renderer/blockentity/state/BeaconRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V"}, at = @At(value = "HEAD"), cancellable = true, require = 1)
-    public void render(BeaconRenderState beaconRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, CallbackInfo ci) {
+    @Inject(method = {"submit(Lnet/minecraft/client/renderer/blockentity/state/BeaconRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V"}, at = @At(value = "HEAD"), cancellable = true, require = 1)
+    public void render(BeaconRenderState beaconRenderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo ci) {
         this.sodium_extra$beaconRenderState = beaconRenderState;
         if (!SodiumExtraClientMod.options().renderSettings.beaconBeam)
             ci.cancel();
     }
 
     @Coerce
-    @Redirect(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/BeaconRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BeaconRenderer;submitBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;FFIII)V"))
+    @Redirect(method = "submit(Lnet/minecraft/client/renderer/blockentity/state/BeaconRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/BeaconRenderer;submitBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;FFIII)V"))
     private void modifyMaxY(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, float f, float g, int yOffset, int maxY, int color) {
         if (maxY == 2048 && SodiumExtraClientMod.options().renderSettings.limitBeaconBeamHeight) {
             int lastSegment = this.sodium_extra$beaconRenderState.blockPos.getY() + yOffset;

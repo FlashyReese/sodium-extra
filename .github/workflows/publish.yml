@@ -11,48 +11,48 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v2
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: gradle/actions/wrapper-validation@v3
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: 21
+          java-version: 25
           check-latest: true
       - name: Upload assets to releases
         run: ./gradlew build publishAllPublicationsToFlashyReeseReleasesRepository -Pbuild.release
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-      - name: Publish NeoForge to Modrinth, CurseForge & GitHub
-        uses: Kir-Antipov/mc-publish@v3.3.0
-        with:
-          modrinth-id: PtjYWJkn
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-
-          curseforge-id: 447673
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-          name: '[NeoForge] ${{ github.event.release.name }}'
-          version: '${{ github.event.release.tag_name }}+neoforge'
-          version-type: release
-
-          game-versions: '1.21.11'
-
-          loaders: neoforge
-
-          dependencies: |
-            sodium
-            reeses-sodium-options(optional)
-            irisshaders(optional)
-            iris(optional)
-
-          files: |
-            neoforge/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
-            neoforge/build/libs/*-@(dev|sources|javadoc|dev-shadow).jar
+#      - name: Publish NeoForge to Modrinth, CurseForge & GitHub
+#        uses: Kir-Antipov/mc-publish@v3.3.0
+#        with:
+#          modrinth-id: PtjYWJkn
+#          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+#
+#          curseforge-id: 447673
+#          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+#
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#
+#          name: '[NeoForge] ${{ github.event.release.name }}'
+#          version: '${{ github.event.release.tag_name }}+neoforge'
+#          version-type: release
+#
+#          game-versions: '26.1'
+#
+#          loaders: neoforge
+#
+#          dependencies: |
+#            sodium
+#            reeses-sodium-options(optional)
+#            irisshaders(optional)
+#            iris(optional)
+#
+#          files: |
+#            neoforge/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
+#            neoforge/build/libs/*-@(dev|sources|javadoc|dev-shadow).jar
       - name: Publish Fabric to Modrinth, CurseForge & GitHub
         uses: Kir-Antipov/mc-publish@v3.3.0
         with:

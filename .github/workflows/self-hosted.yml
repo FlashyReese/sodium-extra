@@ -9,14 +9,14 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v2
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: gradle/actions/wrapper-validation@v3
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: 21
+          java-version: 25
           check-latest: true
       - name: Build and Publish with Gradle
         run: ./gradlew build publishAllPublicationsToFlashyReeseSnapshotsRepository
@@ -24,12 +24,12 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
       - name: Upload Build Artifacts - Fabric
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'Sodium Extra Fabric Artifacts'
           path: fabric/build/libs
       - name: Upload Build Artifacts - NeoForge
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 'Sodium Extra NeoForge Artifacts'
           path: neoforge/build/libs
