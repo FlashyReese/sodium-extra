@@ -13,6 +13,7 @@
     "fog.MixinFogEnvironment",
     "fog.MixinFogRenderer",
     "fps.MixinGameRenderer",
+    "gui.MixinDebugOptionsScreen",
     "gui.MixinDebugScreenEntries",
     "instant_sneak.MixinCamera",
     "light_updates.MixinLevelLightEngine",

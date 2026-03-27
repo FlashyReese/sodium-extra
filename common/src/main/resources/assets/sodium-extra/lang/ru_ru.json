@@ -302,6 +302,8 @@
   "sodium-extra.option.item_frame_name_tag": "Название предмета в рамке",
   "sodium-extra.option.item_frame_name_tag.tooltip": "Shows name tags for item frames.",
   "sodium-extra.option.item_frames.tooltip": "Renders item frames.",
+  "sodium-extra.option.light_updates_warning": "Light Updates Warning",
+  "sodium-extra.option.light_updates_warning.tooltip": "Disables warning messages about light updates in the debug HUD. Only disable if you understand the impact of light updates on performance and visual correctness.",
   "sodium-extra.option.light_updates": "Обновления света",
   "sodium-extra.option.light_updates.tooltip": "Processes lighting updates. Disabling this may cause incorrect lighting when generating chunks. Only disable if you understand the impact.",
   "sodium-extra.option.limit_beacon_beam_height": "Ограничить высоту луча маяка",

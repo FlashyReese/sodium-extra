@@ -83,9 +83,9 @@ public class SodiumExtraClientMod {
     public static final DebugEntryCategory SODIUM_EXTRA_DEBUG_CATEGORY = new DebugEntryCategory(Component.literal("Sodium Extra"), 0F);
 
     public static void init() {
-        Identifier fps = Identifier.fromNamespaceAndPath("sodium-extra", "fps");
-        Identifier fpsExtended = Identifier.fromNamespaceAndPath("sodium-extra", "fps_extended");
-        Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "light_updates_warning");
+        Identifier fps = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps");
+        Identifier fpsExtended = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps_extended");
+        Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.light_updates_warning");
         DebugScreenEntries.register(fps, new SodiumExtraDebugEntryFps(false));
         DebugScreenEntries.register(fpsExtended, new SodiumExtraDebugEntryFps(true));
         DebugScreenEntries.register(lightUpdatesWarning, new SodiumExtraDebugEntryLightUpdates());

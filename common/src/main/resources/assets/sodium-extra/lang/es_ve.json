@@ -302,6 +302,8 @@
   "sodium-extra.option.item_frame_name_tag": "Etiqueta de Nombre de Marco de Objeto",
   "sodium-extra.option.item_frame_name_tag.tooltip": "Muestra las etiquetas de nombre en los marcos para objetos (item frames).",
   "sodium-extra.option.item_frames.tooltip": "Renderiza los marcos para objetos (item frames).",
+  "sodium-extra.option.light_updates_warning": "Light Updates Warning",
+  "sodium-extra.option.light_updates_warning.tooltip": "Disables warning messages about light updates in the debug HUD. Only disable if you understand the impact of light updates on performance and visual correctness.",
   "sodium-extra.option.light_updates": "Actualizaciones de Luz",
   "sodium-extra.option.light_updates.tooltip": "Procesa las actualizaciones de iluminación.",
   "sodium-extra.option.limit_beacon_beam_height": "Limitar Altura del Haz de Baliza",
