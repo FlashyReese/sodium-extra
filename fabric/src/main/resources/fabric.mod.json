@@ -58,8 +58,8 @@
   ],
   "depends": {
     "fabricloader": ">=0.18",
-    "sodium": ">=0.8.1",
-    "minecraft": ">=1.21.11"
+    "sodium": ">=0.8.7",
+    "minecraft": ">=26.1"
   },
   "breaks": {
     "iris": "<1.7.0",
