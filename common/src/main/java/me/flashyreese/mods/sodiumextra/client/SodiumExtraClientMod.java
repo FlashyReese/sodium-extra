@@ -1,20 +1,26 @@
 package me.flashyreese.mods.sodiumextra.client;
 
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
-import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraHud;
+import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryFps;
+import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryLightUpdates;
 import net.caffeinemc.caffeineconfig.CaffeineConfig;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.debug.DebugEntryCategory;
+import net.minecraft.client.gui.components.debug.DebugScreenEntries;
+import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
+import net.minecraft.client.gui.components.debug.DebugScreenProfile;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SodiumExtraClientMod {
     private static SodiumExtraGameOptions CONFIG;
     private static CaffeineConfig MIXIN_CONFIG;
     private static Logger LOGGER;
-    private static SodiumExtraHud hud;
 
     public static Logger logger() {
         if (LOGGER == null) {
@@ -74,17 +80,22 @@ public class SodiumExtraClientMod {
         return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve("sodium-extra-options.json").toFile());
     }
 
-    public static void onTick(Minecraft client) {
-        if (hud == null) {
-            hud = new SodiumExtraHud();
-        }
-        hud.onStartTick(client);
-    }
+    public static final DebugEntryCategory SODIUM_EXTRA_DEBUG_CATEGORY = new DebugEntryCategory(Component.literal("Sodium Extra"), 0F);
 
-    public static void onHudRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
-        if (hud == null) {
-            hud = new SodiumExtraHud();
-        }
-        hud.onHudRender(guiGraphics, deltaTracker);
+    public static void init() {
+        Identifier fps = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps");
+        Identifier fpsExtended = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps_extended");
+        Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.light_updates_warning");
+        DebugScreenEntries.register(fps, new SodiumExtraDebugEntryFps(false));
+        DebugScreenEntries.register(fpsExtended, new SodiumExtraDebugEntryFps(true));
+        DebugScreenEntries.register(lightUpdatesWarning, new SodiumExtraDebugEntryLightUpdates());
+
+        // Cursed hack to inject our settings
+        Map<Identifier, DebugScreenEntryStatus> defaultProfile = new HashMap<>(DebugScreenEntries.PROFILES.get(DebugScreenProfile.DEFAULT));
+        Map<Identifier, DebugScreenEntryStatus> performanceProfile = new HashMap<>(DebugScreenEntries.PROFILES.get(DebugScreenProfile.PERFORMANCE));
+        defaultProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
+        performanceProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
+        DebugScreenEntries.PROFILES.put(DebugScreenProfile.DEFAULT, Map.copyOf(defaultProfile));
+        DebugScreenEntries.PROFILES.put(DebugScreenProfile.PERFORMANCE, Map.copyOf(performanceProfile));
     }
 }

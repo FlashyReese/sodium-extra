@@ -535,41 +535,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setDefaultValue(false)
                         ))
                 .addOptionGroup(builder.createOptionGroup()
-                        .addOption(builder.createEnumOption(id("overlay_corner"), SodiumExtraGameOptions.OverlayCorner.class)
-                                .setName(Component.translatable("sodium-extra.option.overlay_corner"))
-                                .setTooltip(Component.translatable("sodium-extra.option.overlay_corner.tooltip"))
-                                .setDefaultValue(SodiumExtraGameOptions.OverlayCorner.TOP_LEFT)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.overlayCorner = value, () -> SodiumExtraClientMod.options().extraSettings.overlayCorner)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
-                        .addOption(builder.createEnumOption(id("text_contrast"), SodiumExtraGameOptions.TextContrast.class)
-                                .setName(Component.translatable("sodium-extra.option.text_contrast"))
-                                .setTooltip(Component.translatable("sodium-extra.option.text_contrast.tooltip"))
-                                .setDefaultValue(SodiumExtraGameOptions.TextContrast.NONE)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.textContrast = value, () -> SodiumExtraClientMod.options().extraSettings.textContrast)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
-                        .addOption(builder.createBooleanOption(id("show_fps"))
-                                .setName(Component.translatable("sodium-extra.option.show_fps"))
-                                .setTooltip(Component.translatable("sodium-extra.option.show_fps.tooltip"))
-                                .setDefaultValue(false)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showFps = value, () -> SodiumExtraClientMod.options().extraSettings.showFps)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
-                        .addOption(builder.createBooleanOption(id("show_fps_extended"))
-                                .setName(Component.translatable("sodium-extra.option.show_fps_extended"))
-                                .setTooltip(Component.translatable("sodium-extra.option.show_fps_extended.tooltip"))
-                                .setDefaultValue(true)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showFPSExtended = value, () -> SodiumExtraClientMod.options().extraSettings.showFPSExtended)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
-                        .addOption(builder.createBooleanOption(id("show_coordinates"))
-                                .setName(Component.translatable("sodium-extra.option.show_coordinates"))
-                                .setTooltip(Component.translatable("sodium-extra.option.show_coordinates.tooltip"))
-                                .setDefaultValue(false)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showCoords = value, () -> SodiumExtraClientMod.options().extraSettings.showCoords)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
                         .addOption(builder.createIntegerOption(id("cloud_height"))
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled())
                                 .setName(Component.translatable("sodium-extra.option.cloud_height"))
@@ -676,39 +641,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .addPage(this.createParticlesPage(builder))
                 .addPage(this.createDetailsPage(builder))
                 .addPage(this.createRenderPage(builder))
-                .addPage(this.createExtraPage(builder))
-                .registerOptionReplacement(Identifier.parse("sodium:general.vsync"),
-                        builder.createEnumOption(Identifier.parse("sodium:general.vsync"), SodiumExtraGameOptions.VerticalSyncOption.class)
-                                .setDefaultValue(SodiumExtraGameOptions.VerticalSyncOption.ON)
-                                .setName(Component.translatable("options.vsync"))
-                                .setTooltip(Component.literal(Component.translatable("sodium.options.v_sync.tooltip").getString() + "\n- " + Component.translatable("sodium-extra.option.use_adaptive_sync.name").getString() + ": " + Component.translatable("sodium-extra.option.use_adaptive_sync.tooltip").getString()))
-                                .setBinding((value) -> {
-                                    switch (value) {
-                                        case OFF -> {
-                                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
-                                            Minecraft.getInstance().options.enableVsync().set(false);
-                                        }
-                                        case ON -> {
-                                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
-                                            Minecraft.getInstance().options.enableVsync().set(true);
-                                        }
-                                        case ADAPTIVE -> {
-                                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = true;
-                                            Minecraft.getInstance().options.enableVsync().set(true);
-                                        }
-                                    }
-                                }, () -> {
-                                    if (Minecraft.getInstance().options.enableVsync().get() && !SodiumExtraClientMod.options().extraSettings.useAdaptiveSync) {
-                                        return SodiumExtraGameOptions.VerticalSyncOption.ON;
-                                    } else if (!Minecraft.getInstance().options.enableVsync().get() && !SodiumExtraClientMod.options().extraSettings.useAdaptiveSync) {
-                                        return SodiumExtraGameOptions.VerticalSyncOption.OFF;
-                                    } else {
-                                        return SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE;
-                                    }
-                                })
-                                .setStorageHandler(() -> {
-                                    SodiumExtraClientMod.options().afterSave();
-                                    Minecraft.getInstance().options.save();
-                                }));
+                .addPage(this.createExtraPage(builder));
     }
 }
