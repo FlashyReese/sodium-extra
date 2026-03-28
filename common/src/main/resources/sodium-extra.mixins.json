@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "me.flashyreese.mods.sodiumextra.mixin",
+  "plugin": "me.flashyreese.mods.sodiumextra.mixin.SodiumExtraMixinConfigPlugin",
   "compatibilityLevel": "JAVA_25",
   "client": [
     "animation.MixinSpriteContentsAnimationState",

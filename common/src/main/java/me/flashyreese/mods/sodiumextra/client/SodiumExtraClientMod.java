@@ -1,15 +1,14 @@
 package me.flashyreese.mods.sodiumextra.client;
 
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
+import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryCoords;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryFps;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryLightUpdates;
 import net.caffeinemc.caffeineconfig.CaffeineConfig;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
-import net.minecraft.client.gui.components.debug.DebugEntryCategory;
 import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,13 +79,13 @@ public class SodiumExtraClientMod {
         return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve("sodium-extra-options.json").toFile());
     }
 
-    public static final DebugEntryCategory SODIUM_EXTRA_DEBUG_CATEGORY = new DebugEntryCategory(Component.literal("Sodium Extra"), 0F);
-
     public static void init() {
         Identifier fps = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps");
+        Identifier coordinates = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_coordinates");
         Identifier fpsExtended = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps_extended");
         Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.light_updates_warning");
         DebugScreenEntries.register(fps, new SodiumExtraDebugEntryFps(false));
+        DebugScreenEntries.register(coordinates, new SodiumExtraDebugEntryCoords());
         DebugScreenEntries.register(fpsExtended, new SodiumExtraDebugEntryFps(true));
         DebugScreenEntries.register(lightUpdatesWarning, new SodiumExtraDebugEntryLightUpdates());
 
