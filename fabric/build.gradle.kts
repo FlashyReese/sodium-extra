@@ -82,6 +82,10 @@ tasks {
     }
 }
 
+tasks.named("validateAccessWidener").configure {
+    dependsOn(":common:genSourcesWithVineflower")
+}
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {

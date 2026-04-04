@@ -13,7 +13,6 @@
     "fog.MixinFogRenderer",
     "fps.MixinGameRenderer",
     "gui.MixinDebugOptionsScreen",
-    "gui.MixinDebugScreenEntries",
     "gui.MixinGui",
     "gui.MixinMinecraftClient",
     "instant_sneak.MixinCamera",

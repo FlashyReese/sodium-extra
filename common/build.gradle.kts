@@ -1,3 +1,5 @@
+import net.fabricmc.loom.task.AbstractRemapJarTask
+
 plugins {
     id("java")
     id("idea")
@@ -27,6 +29,14 @@ dependencies {
     addDependentFabricModule("fabric-rendering-v1")
 
     implementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+}
+
+tasks.withType<AbstractRemapJarTask>().forEach {
+    it.targetNamespace = "named"
+}
+
+tasks.named("compileJava") {
+    mustRunAfter("genSourcesWithVineflower")
 }
 
 loom {

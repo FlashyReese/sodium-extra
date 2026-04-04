@@ -17,6 +17,7 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,7 +114,9 @@ public class SodiumExtraClientMod {
         Map<Identifier, DebugScreenEntryStatus> performanceProfile = new HashMap<>(DebugScreenEntries.PROFILES.get(DebugScreenProfile.PERFORMANCE));
         defaultProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
         performanceProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
-        DebugScreenEntries.PROFILES.put(DebugScreenProfile.DEFAULT, Map.copyOf(defaultProfile));
-        DebugScreenEntries.PROFILES.put(DebugScreenProfile.PERFORMANCE, Map.copyOf(performanceProfile));
+        Map<DebugScreenProfile, Map<Identifier, DebugScreenEntryStatus>> modifiedProfiles = new HashMap<>(DebugScreenEntries.PROFILES);
+        modifiedProfiles.put(DebugScreenProfile.DEFAULT, Map.copyOf(defaultProfile));
+        modifiedProfiles.put(DebugScreenProfile.PERFORMANCE, Map.copyOf(performanceProfile));
+        DebugScreenEntries.PROFILES = Collections.unmodifiableMap(modifiedProfiles);
     }
 }
