@@ -14,6 +14,8 @@
     "fps.MixinGameRenderer",
     "gui.MixinDebugOptionsScreen",
     "gui.MixinDebugScreenEntries",
+    "gui.MixinGui",
+    "gui.MixinMinecraftClient",
     "instant_sneak.MixinCamera",
     "light_updates.MixinLevelLightEngine",
     "optimizations.beacon_beam_rendering.LevelRendererAccessor",

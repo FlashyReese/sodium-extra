@@ -4,8 +4,12 @@ import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryCoords;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryFps;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryLightUpdates;
+import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraHud;
 import net.caffeinemc.caffeineconfig.CaffeineConfig;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
@@ -20,6 +24,7 @@ public class SodiumExtraClientMod {
     private static SodiumExtraGameOptions CONFIG;
     private static CaffeineConfig MIXIN_CONFIG;
     private static Logger LOGGER;
+    private static SodiumExtraHud hud;
 
     public static Logger logger() {
         if (LOGGER == null) {
@@ -77,6 +82,20 @@ public class SodiumExtraClientMod {
 
     private static SodiumExtraGameOptions loadConfig() {
         return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve("sodium-extra-options.json").toFile());
+    }
+
+    public static void onTick(Minecraft client) {
+        if (hud == null) {
+            hud = new SodiumExtraHud();
+        }
+        hud.onStartTick(client);
+    }
+
+    public static void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
+        if (hud == null) {
+            hud = new SodiumExtraHud();
+        }
+        hud.onHudRender(guiGraphics, deltaTracker);
     }
 
     public static void init() {
