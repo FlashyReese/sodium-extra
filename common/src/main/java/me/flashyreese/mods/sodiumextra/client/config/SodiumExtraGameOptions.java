@@ -240,6 +240,11 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     }
 
     public static class ExtraSettings {
+        public OverlayCorner overlayCorner;
+        public TextContrast textContrast;
+        public boolean showFps;
+        public boolean showFPSExtended;
+        public boolean showCoords;
         public boolean reduceResolutionOnMac;
         public boolean useAdaptiveSync;
         public int cloudHeight;
@@ -254,6 +259,11 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public int steadyDebugHudRefreshInterval;
 
         public ExtraSettings() {
+            this.overlayCorner = OverlayCorner.TOP_LEFT;
+            this.textContrast = TextContrast.NONE;
+            this.showFps = false;
+            this.showFPSExtended = true;
+            this.showCoords = false;
             this.reduceResolutionOnMac = false;
             this.useAdaptiveSync = false;
             this.cloudHeight = 192;

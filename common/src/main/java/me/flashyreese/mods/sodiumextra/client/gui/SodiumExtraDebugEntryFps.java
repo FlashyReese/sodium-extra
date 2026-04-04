@@ -1,7 +1,6 @@
 package me.flashyreese.mods.sodiumextra.client.gui;
 
 import me.flashyreese.mods.sodiumextra.client.FrameCounter;
-import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.gui.components.debug.DebugEntryCategory;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
@@ -38,6 +37,6 @@ public class SodiumExtraDebugEntryFps implements DebugScreenEntry {
 
     @Override
     public @NonNull DebugEntryCategory category() {
-        return SodiumExtraClientMod.SODIUM_EXTRA_DEBUG_CATEGORY;
+        return SodiumExtraDebugEntryCategory.SODIUM_EXTRA_DEBUG_CATEGORY;
     }
 }
