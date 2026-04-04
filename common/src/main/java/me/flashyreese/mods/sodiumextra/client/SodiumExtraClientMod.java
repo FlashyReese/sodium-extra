@@ -11,6 +11,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.debug.DebugScreenEntries;
+import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.resources.Identifier;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class SodiumExtraClientMod {
     private static SodiumExtraGameOptions CONFIG;
@@ -99,24 +101,15 @@ public class SodiumExtraClientMod {
         hud.onHudRender(guiGraphics, deltaTracker);
     }
 
-    public static void init() {
+    public static void registerAll(BiConsumer<Identifier, DebugScreenEntry> register) {
         Identifier fps = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps");
         Identifier coordinates = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_coordinates");
         Identifier fpsExtended = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps_extended");
         Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.light_updates_warning");
-        DebugScreenEntries.register(fps, new SodiumExtraDebugEntryFps(false));
-        DebugScreenEntries.register(coordinates, new SodiumExtraDebugEntryCoords());
-        DebugScreenEntries.register(fpsExtended, new SodiumExtraDebugEntryFps(true));
-        DebugScreenEntries.register(lightUpdatesWarning, new SodiumExtraDebugEntryLightUpdates());
 
-        // Cursed hack to inject our settings
-        Map<Identifier, DebugScreenEntryStatus> defaultProfile = new HashMap<>(DebugScreenEntries.PROFILES.get(DebugScreenProfile.DEFAULT));
-        Map<Identifier, DebugScreenEntryStatus> performanceProfile = new HashMap<>(DebugScreenEntries.PROFILES.get(DebugScreenProfile.PERFORMANCE));
-        defaultProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
-        performanceProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
-        Map<DebugScreenProfile, Map<Identifier, DebugScreenEntryStatus>> modifiedProfiles = new HashMap<>(DebugScreenEntries.PROFILES);
-        modifiedProfiles.put(DebugScreenProfile.DEFAULT, Map.copyOf(defaultProfile));
-        modifiedProfiles.put(DebugScreenProfile.PERFORMANCE, Map.copyOf(performanceProfile));
-        DebugScreenEntries.PROFILES = Collections.unmodifiableMap(modifiedProfiles);
+        register.accept(fps, new SodiumExtraDebugEntryFps(false));
+        register.accept(coordinates, new SodiumExtraDebugEntryCoords());
+        register.accept(fpsExtended, new SodiumExtraDebugEntryFps(true));
+        register.accept(lightUpdatesWarning, new SodiumExtraDebugEntryLightUpdates());
     }
 }
