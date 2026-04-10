@@ -1,6 +1,7 @@
 package me.flashyreese.mods.sodiumextra.client.config;
 
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.hud.HudEditorScreen;
 import me.flashyreese.mods.sodiumextra.common.util.ControlValueFormatterExtended;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
@@ -535,25 +536,14 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setDefaultValue(false)
                         ))
                 .addOptionGroup(builder.createOptionGroup()
-                        .addOption(builder.createEnumOption(id("overlay_corner"), SodiumExtraGameOptions.OverlayCorner.class)
-                                .setName(Component.translatable("sodium-extra.option.overlay_corner"))
-                                .setTooltip(Component.translatable("sodium-extra.option.overlay_corner.tooltip"))
-                                .setDefaultValue(SodiumExtraGameOptions.OverlayCorner.TOP_LEFT)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.overlayCorner = value, () -> SodiumExtraClientMod.options().extraSettings.overlayCorner)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
-                        .addOption(builder.createEnumOption(id("text_contrast"), SodiumExtraGameOptions.TextContrast.class)
-                                .setName(Component.translatable("sodium-extra.option.text_contrast"))
-                                .setTooltip(Component.translatable("sodium-extra.option.text_contrast.tooltip"))
-                                .setDefaultValue(SodiumExtraGameOptions.TextContrast.NONE)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.textContrast = value, () -> SodiumExtraClientMod.options().extraSettings.textContrast)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                        )
                         .addOption(builder.createBooleanOption(id("show_fps"))
                                 .setName(Component.translatable("sodium-extra.option.show_fps"))
-                                .setTooltip(Component.translatable("sodium-extra.option.show_fps.tooltip"))
+                                .setTooltip(Component.translatable("sodium-extra.option.show_fps.tooltip_modular"))
                                 .setDefaultValue(false)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showFps = value, () -> SodiumExtraClientMod.options().extraSettings.showFps)
+                                .setBinding((value) -> {
+                                    SodiumExtraClientMod.options().extraSettings.fpsWidget.enabled = value;
+                                    SodiumExtraClientMod.options().extraSettings.showFps = value;
+                                }, () -> SodiumExtraClientMod.options().extraSettings.fpsWidget.enabled)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                         )
                         .addOption(builder.createBooleanOption(id("show_fps_extended"))
@@ -565,10 +555,18 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         )
                         .addOption(builder.createBooleanOption(id("show_coordinates"))
                                 .setName(Component.translatable("sodium-extra.option.show_coordinates"))
-                                .setTooltip(Component.translatable("sodium-extra.option.show_coordinates.tooltip"))
+                                .setTooltip(Component.translatable("sodium-extra.option.show_coordinates.tooltip_modular"))
                                 .setDefaultValue(false)
-                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showCoords = value, () -> SodiumExtraClientMod.options().extraSettings.showCoords)
+                                .setBinding((value) -> {
+                                    SodiumExtraClientMod.options().extraSettings.coordinatesWidget.enabled = value;
+                                    SodiumExtraClientMod.options().extraSettings.showCoords = value;
+                                }, () -> SodiumExtraClientMod.options().extraSettings.coordinatesWidget.enabled)
                                 .setStorageHandler(SodiumExtraClientMod.options())
+                        )
+                        .addOption(builder.createExternalButtonOption(id("open_hud_editor"))
+                                .setName(Component.translatable("sodium-extra.option.hud.editor"))
+                                .setTooltip(Component.translatable("sodium-extra.option.hud.editor.tooltip"))
+                                .setScreenConsumer(currentScreen -> Minecraft.getInstance().setScreen(new HudEditorScreen(currentScreen)))
                         )
                         .addOption(builder.createIntegerOption(id("cloud_height"))
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled())

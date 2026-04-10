@@ -1,33 +1,27 @@
 package me.flashyreese.mods.sodiumextra.client;
 
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
+import me.flashyreese.mods.sodiumextra.client.hud.HudManager;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryCoords;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryFps;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryLightUpdates;
-import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraHud;
 import net.caffeinemc.caffeineconfig.CaffeineConfig;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
-import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
-import net.minecraft.client.gui.components.debug.DebugScreenProfile;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class SodiumExtraClientMod {
     private static SodiumExtraGameOptions CONFIG;
     private static CaffeineConfig MIXIN_CONFIG;
     private static Logger LOGGER;
-    private static SodiumExtraHud hud;
+    private static HudManager hudManager;
 
     public static Logger logger() {
         if (LOGGER == null) {
@@ -88,17 +82,18 @@ public class SodiumExtraClientMod {
     }
 
     public static void onTick(Minecraft client) {
-        if (hud == null) {
-            hud = new SodiumExtraHud();
-        }
-        hud.onStartTick(client);
+        hudManager().tick();
     }
 
     public static void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
-        if (hud == null) {
-            hud = new SodiumExtraHud();
+        hudManager().render(guiGraphics, deltaTracker);
+    }
+
+    public static HudManager hudManager() {
+        if (hudManager == null) {
+            hudManager = new HudManager();
         }
-        hud.onHudRender(guiGraphics, deltaTracker);
+        return hudManager;
     }
 
     public static void registerAll(BiConsumer<Identifier, DebugScreenEntry> register) {

@@ -52,6 +52,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         }
 
         config.file = file;
+        config.extraSettings.migrateHudSettingsIfNeeded();
         config.writeChanges();
 
         return config;
@@ -112,6 +113,55 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         @Override
         public Component getLocalizedName() {
             return this.text;
+        }
+    }
+
+    public enum HudHorizontalAnchor implements TextProvider {
+        LEFT("sodium-extra.option.hud.anchor.left"),
+        RIGHT("sodium-extra.option.hud.anchor.right");
+
+        private final Component text;
+
+        HudHorizontalAnchor(String text) {
+            this.text = Component.translatable(text);
+        }
+
+        @Override
+        public Component getLocalizedName() {
+            return this.text;
+        }
+    }
+
+    public enum HudBackgroundMode implements TextProvider {
+        NONE("sodium-extra.option.hud.background.none"),
+        SHADOW("sodium-extra.option.hud.background.shadow"),
+        BACKGROUND("sodium-extra.option.hud.background.background");
+
+        private final Component text;
+
+        HudBackgroundMode(String text) {
+            this.text = Component.translatable(text);
+        }
+
+        @Override
+        public Component getLocalizedName() {
+            return this.text;
+        }
+    }
+
+    public static class HudWidgetSettings {
+        public boolean enabled;
+        public int x;
+        public int y;
+        public HudHorizontalAnchor anchor;
+        public HudBackgroundMode backgroundMode;
+
+        public HudWidgetSettings(boolean enabled, int x, int y, HudHorizontalAnchor anchor, HudBackgroundMode backgroundMode) {
+            this.enabled = enabled;
+            this.x = x;
+            this.y = y;
+            this.anchor = anchor;
+            this.backgroundMode = backgroundMode;
         }
     }
 
@@ -257,6 +307,9 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean preventShaders;
         public boolean steadyDebugHud;
         public int steadyDebugHudRefreshInterval;
+        public HudWidgetSettings fpsWidget;
+        public HudWidgetSettings coordinatesWidget;
+        public boolean hudSettingsMigrated;
 
         public ExtraSettings() {
             this.overlayCorner = OverlayCorner.TOP_LEFT;
@@ -276,6 +329,54 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.preventShaders = false;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
+            this.fpsWidget = new HudWidgetSettings(false, 2, 2, HudHorizontalAnchor.LEFT, HudBackgroundMode.NONE);
+            this.coordinatesWidget = new HudWidgetSettings(false, 2, 14, HudHorizontalAnchor.LEFT, HudBackgroundMode.NONE);
+            this.hudSettingsMigrated = false;
+        }
+
+        public void migrateHudSettingsIfNeeded() {
+            if (this.fpsWidget == null) {
+                this.fpsWidget = new HudWidgetSettings(false, 2, 2, HudHorizontalAnchor.LEFT, HudBackgroundMode.NONE);
+            }
+
+            if (this.coordinatesWidget == null) {
+                this.coordinatesWidget = new HudWidgetSettings(false, 2, 14, HudHorizontalAnchor.LEFT, HudBackgroundMode.NONE);
+            }
+
+            if (this.hudSettingsMigrated) {
+                return;
+            }
+
+            OverlayCorner overlayCorner = this.overlayCorner == null ? OverlayCorner.TOP_LEFT : this.overlayCorner;
+            TextContrast textContrast = this.textContrast == null ? TextContrast.NONE : this.textContrast;
+
+            HudHorizontalAnchor anchor = (overlayCorner == OverlayCorner.TOP_RIGHT || overlayCorner == OverlayCorner.BOTTOM_RIGHT)
+                    ? HudHorizontalAnchor.RIGHT
+                    : HudHorizontalAnchor.LEFT;
+
+            HudBackgroundMode backgroundMode = switch (textContrast) {
+                case NONE -> HudBackgroundMode.NONE;
+                case SHADOW -> HudBackgroundMode.SHADOW;
+                case BACKGROUND -> HudBackgroundMode.BACKGROUND;
+            };
+
+            int baseX = anchor == HudHorizontalAnchor.RIGHT ? -2 : 2;
+            int firstY = (overlayCorner == OverlayCorner.BOTTOM_LEFT || overlayCorner == OverlayCorner.BOTTOM_RIGHT) ? -14 : 2;
+            int secondY = (overlayCorner == OverlayCorner.BOTTOM_LEFT || overlayCorner == OverlayCorner.BOTTOM_RIGHT) ? -2 : 14;
+
+            this.fpsWidget.enabled = this.showFps;
+            this.fpsWidget.x = baseX;
+            this.fpsWidget.y = firstY;
+            this.fpsWidget.anchor = anchor;
+            this.fpsWidget.backgroundMode = backgroundMode;
+
+            this.coordinatesWidget.enabled = this.showCoords;
+            this.coordinatesWidget.x = baseX;
+            this.coordinatesWidget.y = secondY;
+            this.coordinatesWidget.anchor = anchor;
+            this.coordinatesWidget.backgroundMode = backgroundMode;
+
+            this.hudSettingsMigrated = true;
         }
     }
 }
