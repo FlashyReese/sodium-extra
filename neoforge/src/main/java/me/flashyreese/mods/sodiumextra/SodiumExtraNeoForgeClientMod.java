@@ -20,7 +20,7 @@ public class SodiumExtraNeoForgeClientMod {
         SodiumExtraClientMod.registerAll(event::register);
 
         Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.light_updates_warning");
-        event.includeInProfile(lightUpdatesWarning, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.ALWAYS_ON);
-        event.includeInProfile(lightUpdatesWarning, DebugScreenProfile.PERFORMANCE, DebugScreenEntryStatus.ALWAYS_ON);
+        event.includeInProfile(lightUpdatesWarning, DebugScreenProfile.DEFAULT, DebugScreenEntryStatus.IN_OVERLAY);
+        event.includeInProfile(lightUpdatesWarning, DebugScreenProfile.PERFORMANCE, DebugScreenEntryStatus.IN_OVERLAY);
     }
 }

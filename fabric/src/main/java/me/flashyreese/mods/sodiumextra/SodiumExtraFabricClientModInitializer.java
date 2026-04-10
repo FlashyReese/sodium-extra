@@ -23,8 +23,8 @@ public class SodiumExtraFabricClientModInitializer implements ClientModInitializ
         Map<Identifier, DebugScreenEntryStatus> performanceProfile =
                 new HashMap<>(DebugScreenEntries.PROFILES.get(DebugScreenProfile.PERFORMANCE));
 
-        defaultProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
-        performanceProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.ALWAYS_ON);
+        defaultProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.IN_OVERLAY);
+        performanceProfile.put(lightUpdatesWarning, DebugScreenEntryStatus.IN_OVERLAY);
 
         Map<DebugScreenProfile, Map<Identifier, DebugScreenEntryStatus>> modifiedProfiles =
                 new HashMap<>(DebugScreenEntries.PROFILES);
