@@ -17,6 +17,18 @@ public interface ControlValueFormatterExtended extends ControlValueFormatter {
         };
     }
 
+    static ControlValueFormatter fogDistance() {
+        return (v) -> {
+            if (v == 0) {
+                return Component.translatable("options.gamma.default");
+            } else if (v == 33) {
+                return Component.translatable("options.off");
+            } else {
+                return Component.translatable("options.chunks", v);
+            }
+        };
+    }
+
     static ControlValueFormatter ticks() {
         return (v) -> Component.translatable("sodium-extra.units.ticks", v);
     }

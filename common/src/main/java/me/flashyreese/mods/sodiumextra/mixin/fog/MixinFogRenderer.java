@@ -1,40 +1,48 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
-import com.llamalad7.mixinextras.sugar.Local;
-import me.flashyreese.mods.sodiumextra.client.fog.FogEnvironmentExtended;
+import com.mojang.blaze3d.systems.RenderSystem;
+import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.fog.FogOverrideState;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.fog.FogData;
-import net.minecraft.client.renderer.fog.FogRenderer;
-import net.minecraft.client.renderer.fog.environment.FogEnvironment;
+import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.material.FogType;
-import org.joml.Vector4f;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
-@Mixin(value = FogRenderer.class, priority = 1300)
-public class MixinFogRenderer {
-
+@Mixin(FogRenderer.class)
+public abstract class MixinFogRenderer {
     @Shadow
-    @Final
-    private static List<FogEnvironment> FOG_ENVIRONMENTS;
+    @Nullable
+    protected static FogRenderer.MobEffectFogFunction getPriorityFogFunction(Entity entity, float f) {
+        return null;
+    }
 
-    @Inject(method = "setupFog", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/fog/FogData;renderDistanceEnd:F", ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
-    public void postFogSetup(Camera camera, int renderDistanceInChunks, DeltaTracker deltaTracker, float darkenWorldAmount, ClientLevel level, CallbackInfoReturnable<FogData> cir, @Local(name = "fogType") FogType fogType, @Local(name = "entity") Entity entity, @Local(name = "renderDistanceInBlocks") float renderDistanceInBlocks, @Local(name = "fog") FogData fogData) {
-        for (FogEnvironment fogEnvironment : FOG_ENVIRONMENTS) {
-            if (fogEnvironment.isApplicable(fogType, entity) && fogEnvironment instanceof FogEnvironmentExtended fogEnvironmentExtended) {
-                fogEnvironmentExtended.sodium_extra$applyFogSettings(fogType, fogData, entity, camera.blockPosition(), level, renderDistanceInBlocks);
-                break;
+    @Inject(method = "setupFog", at = @At(value = "TAIL"))
+    private static void applyFog(Camera camera, FogRenderer.FogMode fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci) {
+        if (FogOverrideState.isSettingUpCloudFog()) {
+            return;
+        }
+
+        Entity entity = camera.getEntity();
+        SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.putIfAbsent(entity.level().dimensionType().effectsLocation(), 0);
+        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.get(entity.level().dimensionType().effectsLocation()) : SodiumExtraClientMod.options().renderSettings.fogDistance;
+        FogRenderer.MobEffectFogFunction mobEffectFogFunction = getPriorityFogFunction(entity, tickDelta);
+        if (fogDistance == 0 || mobEffectFogFunction != null) {
+            return;
+        }
+        if (camera.getFluidInCamera() == FogType.NONE && (thickFog || fogType == FogRenderer.FogMode.FOG_TERRAIN)) {
+            float fogStart = (float) SodiumExtraClientMod.options().renderSettings.fogStart / 100;
+            if (fogDistance == 33) {
+                RenderSystem.setShaderFogStart(Short.MAX_VALUE - 1.0F);
+                RenderSystem.setShaderFogEnd(Short.MAX_VALUE);
+            } else {
+                RenderSystem.setShaderFogStart(fogDistance * 16 * fogStart);
+                RenderSystem.setShaderFogEnd((fogDistance + 1) * 16);
             }
         }
     }

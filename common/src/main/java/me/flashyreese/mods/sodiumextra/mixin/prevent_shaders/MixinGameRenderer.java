@@ -2,7 +2,7 @@ package me.flashyreese.mods.sodiumextra.mixin.prevent_shaders;
 
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,8 +18,8 @@ public class MixinGameRenderer {
         }
     }
 
-    @Inject(method = "setPostEffect", at = @At("HEAD"), cancellable = true)
-    private void dontLoadShader(Identifier identifier, CallbackInfo ci) {
+    @Inject(method = "loadEffect", at = @At("HEAD"), cancellable = true)
+    private void dontLoadShader(ResourceLocation identifier, CallbackInfo ci) {
         if (SodiumExtraClientMod.options().extraSettings.preventShaders) {
             ci.cancel();
         }

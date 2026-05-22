@@ -29,7 +29,7 @@ public class MixinVertexSerializerRegistryImpl {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void putSerializerIris(CallbackInfo ci) {
         if (IrisCompat.isIrisPresent()) {
-            this.cache.put(createKey(DefaultVertexFormat.ENTITY, IrisCompat.getTerrainFormat()), new ModelVertexToTerrainSerializer());
+            this.cache.put(createKey(DefaultVertexFormat.NEW_ENTITY, IrisCompat.getTerrainFormat()), new ModelVertexToTerrainSerializer());
         }
     }
 }
