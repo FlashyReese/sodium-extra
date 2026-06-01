@@ -5,6 +5,7 @@
   "plugin": "me.flashyreese.mods.sodiumextra.mixin.SodiumExtraMixinConfigPlugin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "adaptive_sync.MixinWindow",
     "animation.MixinSpriteAtlasTexture",
     "biome_colors.MixinBiomeColors",
     "cloud.MixinDimensionEffectsOverworld",
