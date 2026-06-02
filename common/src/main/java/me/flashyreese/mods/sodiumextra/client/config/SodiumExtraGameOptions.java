@@ -5,13 +5,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.common.util.IdentifierSerializer;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.material.FogType;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -20,12 +20,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.Map;
 
 public class SodiumExtraGameOptions implements StorageEventHandler {
     private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Identifier.class, new IdentifierSerializer())
+            .registerTypeAdapter(ResourceLocation.class, new IdentifierSerializer())
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()
             .excludeFieldsWithModifiers(Modifier.PRIVATE)
@@ -168,7 +167,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean blockBreak;
         public boolean blockBreaking;
         @SerializedName("other")
-        public Map<Identifier, Boolean> otherMap;
+        public Map<ResourceLocation, Boolean> otherMap;
 
         public ParticleSettings() {
             this.particles = true;
@@ -200,8 +199,11 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     }
 
     public static class RenderSettings {
-        public boolean globalFog;
-        public EnumMap<FogType, FogTypeConfig> fogTypeConfig;
+        public int fogDistance;
+        public int fogStart;
+        public boolean multiDimensionFogControl;
+        @SerializedName("dimensionFogDistance")
+        public Map<ResourceLocation, Integer> dimensionFogDistanceMap;
         public boolean lightUpdates;
         public boolean itemFrame;
         public boolean armorStand;
@@ -214,8 +216,10 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean playerNameTag;
 
         public RenderSettings() {
-            this.globalFog = true;
-            this.fogTypeConfig = new EnumMap<>(FogType.class);
+            this.fogDistance = 0;
+            this.fogStart = 100;
+            this.multiDimensionFogControl = false;
+            this.dimensionFogDistanceMap = new Object2IntArrayMap<>();
             this.lightUpdates = true;
             this.itemFrame = true;
             this.armorStand = true;
@@ -226,15 +230,6 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.enchantingTableBook = true;
             this.itemFrameNameTag = true;
             this.playerNameTag = true;
-
-            this.ensureFogTypeDefaults();
-        }
-
-        public void ensureFogTypeDefaults() {
-            for (FogType type : FogType.values()) {
-                if (type == FogType.NONE) continue;
-                this.fogTypeConfig.putIfAbsent(type, new FogTypeConfig());
-            }
         }
 
     }
@@ -248,6 +243,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean reduceResolutionOnMac;
         public boolean useAdaptiveSync;
         public int cloudHeight;
+        public int cloudDistance;
         public boolean toasts;
         public boolean advancementToast;
         public boolean recipeToast;
@@ -267,6 +263,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.reduceResolutionOnMac = false;
             this.useAdaptiveSync = false;
             this.cloudHeight = 192;
+            this.cloudDistance = 100;
             this.toasts = true;
             this.advancementToast = true;
             this.recipeToast = true;

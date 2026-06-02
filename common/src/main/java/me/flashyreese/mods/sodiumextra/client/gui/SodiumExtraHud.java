@@ -6,7 +6,7 @@ import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
@@ -46,8 +46,8 @@ public class SodiumExtraHud {
         }
     }
 
-    public void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
-        if (!this.client.debugEntries.isOverlayVisible() && !this.client.options.hideGui) {
+    public void onHudRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
+        if (!this.client.getDebugOverlay().showDebugScreen() && !this.client.options.hideGui) {
             SodiumExtraGameOptions.OverlayCorner overlayCorner = SodiumExtraClientMod.options().extraSettings.overlayCorner;
             // Calculate starting position based on the overlay corner
             int x;
@@ -70,13 +70,13 @@ public class SodiumExtraHud {
         }
     }
 
-    private void drawString(GuiGraphicsExtractor guiGraphics, Component text, int x, int y) {
+    private void drawString(GuiGraphics guiGraphics, Component text, int x, int y) {
         int textColor = 0xffffffff; // Default text color
 
         if (SodiumExtraClientMod.options().extraSettings.textContrast == SodiumExtraGameOptions.TextContrast.BACKGROUND) {
             guiGraphics.fill(x - 1, y - 1, x + this.client.font.width(text) + 1, y + this.client.font.lineHeight + 1, -1873784752);
         }
 
-        guiGraphics.text(this.client.font, text, x, y, textColor, SodiumExtraClientMod.options().extraSettings.textContrast == SodiumExtraGameOptions.TextContrast.SHADOW);
+        guiGraphics.drawString(this.client.font, text, x, y, textColor, SodiumExtraClientMod.options().extraSettings.textContrast == SodiumExtraGameOptions.TextContrast.SHADOW);
     }
 }

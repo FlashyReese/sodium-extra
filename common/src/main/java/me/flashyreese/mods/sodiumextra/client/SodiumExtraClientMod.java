@@ -1,27 +1,14 @@
 package me.flashyreese.mods.sodiumextra.client;
 
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
-import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryCoords;
-import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryFps;
-import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryLightUpdates;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraHud;
 import net.caffeinemc.caffeineconfig.CaffeineConfig;
 import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.debug.DebugScreenEntries;
-import net.minecraft.client.gui.components.debug.DebugScreenEntry;
-import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
-import net.minecraft.client.gui.components.debug.DebugScreenProfile;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
 public class SodiumExtraClientMod {
     private static SodiumExtraGameOptions CONFIG;
@@ -56,14 +43,18 @@ public class SodiumExtraClientMod {
                     .addMixinOption("cloud", true)
                     .addMixinOption("compat", true, false)
                     .addMixinOption("fog", true)
+                    .addMixinOption("fog_falloff", true)
                     .addMixinOption("fps", true)
                     .addMixinOption("gui", true)
                     .addMixinOption("instant_sneak", true)
                     .addMixinOption("light_updates", true)
                     .addMixinOption("optimizations", true)
                     .addMixinOption("optimizations.beacon_beam_rendering", true)
+                    .addMixinOption("optimizations.draw_helpers", false)
+                    .addMixinOption("optimizations.fast_weather", false)
                     .addMixinOption("particle", true)
                     .addMixinOption("prevent_shaders", true)
+                    .addMixinOption("profiler", true)
                     .addMixinOption("reduce_resolution_on_mac", true)
                     .addMixinOption("render", true)
                     .addMixinOption("render.block", true)
@@ -71,6 +62,13 @@ public class SodiumExtraClientMod {
                     .addMixinOption("render.entity", true)
                     .addMixinOption("sky", true)
                     .addMixinOption("sky_colors", true)
+                    .addMixinOption("sodium", true)
+                    .addMixinOption("sodium.accessibility", true)
+                    .addMixinOption("sodium.cloud", true)
+                    .addMixinOption("sodium.fog", true)
+                    .addMixinOption("sodium.resolution", true)
+                    .addMixinOption("sodium.scrollable_page", true)
+                    .addMixinOption("sodium.vsync", true)
                     .addMixinOption("stars", true)
                     .addMixinOption("steady_debug_hud", true)
                     .addMixinOption("sun_moon", true)
@@ -94,22 +92,10 @@ public class SodiumExtraClientMod {
         hud.onStartTick(client);
     }
 
-    public static void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
+    public static void onHudRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
         if (hud == null) {
             hud = new SodiumExtraHud();
         }
         hud.onHudRender(guiGraphics, deltaTracker);
-    }
-
-    public static void registerAll(BiConsumer<Identifier, DebugScreenEntry> register) {
-        Identifier fps = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps");
-        Identifier coordinates = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_coordinates");
-        Identifier fpsExtended = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.show_fps_extended");
-        Identifier lightUpdatesWarning = Identifier.fromNamespaceAndPath("sodium-extra", "sodium-extra.option.light_updates_warning");
-
-        register.accept(fps, new SodiumExtraDebugEntryFps(false));
-        register.accept(coordinates, new SodiumExtraDebugEntryCoords());
-        register.accept(fpsExtended, new SodiumExtraDebugEntryFps(true));
-        register.accept(lightUpdatesWarning, new SodiumExtraDebugEntryLightUpdates());
     }
 }

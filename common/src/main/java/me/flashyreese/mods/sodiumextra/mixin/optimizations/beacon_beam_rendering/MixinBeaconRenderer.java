@@ -8,35 +8,34 @@ import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.block.entity.BeaconBeamOwner;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = BeaconRenderer.class, priority = 1500)
-public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwner> {
+public abstract class MixinBeaconRenderer {
 
     /**
      * @author FlashyReese
      * @reason Use optimized vertex writer, also avoids unnecessary allocations
      */
-    /*@Inject(method = "renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/resources/Identifier;FFJIIIFF)V", at = @At(value = "HEAD"), cancellable = true)
-    private static void optimizeRenderBeam(PoseStack poseStack, MultiBufferSource multiBufferSource, Identifier Identifier, float tickDelta, float heightScale, long worldTime, int yOffset, int maxY, int color, float innerRadius, float outerRadius, CallbackInfo ci) {
+    @Inject(method = "renderBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/resources/ResourceLocation;FFJIIIFF)V", at = @At(value = "HEAD"), cancellable = true)
+    private static void optimizeRenderBeam(PoseStack poseStack, MultiBufferSource multiBufferSource, ResourceLocation resourceLocation, float tickDelta, float heightScale, long worldTime, int yOffset, int maxY, int color, float innerRadius, float outerRadius, CallbackInfo ci) {
         ci.cancel();
         if (IrisCompat.isIrisPresent()) {
             if (IrisCompat.isRenderingShadowPass()) {
@@ -64,7 +63,7 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
             long ptr = buffer;
             // Note: ModelVertex color takes in ABGR
             ptr = writeBeamLayerVertices(ptr, poseStack, ColorARGB.toABGR(color), yOffset, height, 0.0F, innerRadius, innerRadius, 0.0F, innerX3, 0.0F, 0.0F, innerZ4, innerV1, innerV2);
-            VertexBufferWriter.of(multiBufferSource.getBuffer(RenderType.beaconBeam(Identifier, false))).push(stack, buffer, 16, EntityVertex.FORMAT);
+            VertexBufferWriter.of(multiBufferSource.getBuffer(RenderType.beaconBeam(resourceLocation, false))).push(stack, buffer, 16, EntityVertex.FORMAT);
 
             poseStack.popPose();
             innerX1 = -outerRadius;
@@ -76,7 +75,7 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
 
             buffer = ptr;
             ptr = writeBeamLayerVertices(ptr, poseStack, ColorARGB.toABGR(color, 32), yOffset, height, innerX1, outerZ1, outerRadius, innerZ2, innerX3, outerRadius, outerRadius, outerRadius, innerV1, innerV2);
-            VertexBufferWriter.of(multiBufferSource.getBuffer(RenderType.beaconBeam(Identifier, true))).push(stack, buffer, 16, EntityVertex.FORMAT);
+            VertexBufferWriter.of(multiBufferSource.getBuffer(RenderType.beaconBeam(resourceLocation, true))).push(stack, buffer, 16, EntityVertex.FORMAT);
         }
         poseStack.popPose();
     }
@@ -122,19 +121,19 @@ public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwne
         return ptr;
     }
 
-    @Inject(method = {"render", "render(Lnet/minecraft/world/level/block/entity/BlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MutliBufferSource;IILnet/minecraft/world/phys/Vec3;)V"}, at = @At(value = "HEAD"), cancellable = true, require = 1)
-    public void render(T blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, Vec3 vec3, CallbackInfo ci) {
+    @Inject(method = "render(Lnet/minecraft/world/level/block/entity/BeaconBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V", at = @At(value = "HEAD"), cancellable = true)
+    public void render(BeaconBlockEntity beaconBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, CallbackInfo ci) {
         Frustum frustum = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getCullingFrustum();
         AABB box = new AABB(
-                blockEntity.getBlockPos().getX() - 1.0,
-                blockEntity.getBlockPos().getY() - 1.0,
-                blockEntity.getBlockPos().getZ() - 1.0,
-                blockEntity.getBlockPos().getX() + 1.0,
-                blockEntity.getBlockPos().getY() + (blockEntity.getBeamSections().isEmpty() ? 1.0 : 2048.0), // todo: probably want to limit this to max height vanilla overshoots as well
-                blockEntity.getBlockPos().getZ() + 1.0);
+                beaconBlockEntity.getBlockPos().getX() - 1.0,
+                beaconBlockEntity.getBlockPos().getY() - 1.0,
+                beaconBlockEntity.getBlockPos().getZ() - 1.0,
+                beaconBlockEntity.getBlockPos().getX() + 1.0,
+                beaconBlockEntity.getBlockPos().getY() + (beaconBlockEntity.getBeamSections().isEmpty() ? 1.0 : 1024.0), // todo: probably want to limit this to max height vanilla overshoots as well
+                beaconBlockEntity.getBlockPos().getZ() + 1.0);
 
         if (!frustum.isVisible(box)) {
             ci.cancel();
         }
-    }*/
+    }
 }
