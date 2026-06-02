@@ -56,6 +56,9 @@ neoForge {
         create("client") {
             client()
             ideName = "NeoForge/Client"
+            val sodiumRuntime = project.dependencies.create("net.caffeinemc:sodium-neoforge:$SODIUM_VERSION") as ExternalModuleDependency
+            sodiumRuntime.isTransitive = false
+            getAdditionalRuntimeClasspathConfiguration().dependencies.add(sodiumRuntime)
         }
     }
 
@@ -83,8 +86,7 @@ tasks.named("compileTestJava").configure {
 dependencies {
     compileOnly(project(":common"))
     implementation("net.caffeinemc:sodium-neoforge-mod:$SODIUM_VERSION")
-    implementation("net.caffeinemc:sodium-neoforge-api:${SODIUM_VERSION}")
-    implementation("net.caffeinemc:sodium-neoforge:${SODIUM_VERSION}")
+    compileOnly("net.caffeinemc:sodium-neoforge-api:${SODIUM_VERSION}")
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
