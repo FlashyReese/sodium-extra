@@ -37,11 +37,13 @@ public abstract class MixinDebugOptionsScreen extends DebugOptionsScreen.Abstrac
 
     @Inject(method = "extractContent", at = @At(value = "HEAD"), cancellable = true)
     public void redirectExtractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float a, CallbackInfo ci) {
-        Identifier id = Identifier.parse(this.name);
-        if (id.getNamespace().equals("sodium-extra")) {
-            ci.cancel();
+        if (!this.name.startsWith("sodium-extra:")) {
+            return;
         }
 
+        ci.cancel();
+
+        Identifier id = Identifier.parse(this.name);
         int x = this.getContentX();
         int y = this.getContentY();
         graphics.text(Minecraft.getInstance().font, Component.translatable(id.getPath()), x, y + 5, this.isAllowed ? -1 : -8355712);
