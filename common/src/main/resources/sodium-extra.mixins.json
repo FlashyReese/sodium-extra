@@ -33,6 +33,7 @@
     "render.entity.MixinPaintingEntityRenderer",
     "sky.MixinLevelRenderer",
     "sky_colors.MixinBiome",
+    "sodium.cloud.MixinCloudRenderer",
     "stars.MixinLevelRenderer",
     "steady_debug_hud.MixinDebugScreenOverlay",
     "sun_moon.MixinLevelRenderer",
