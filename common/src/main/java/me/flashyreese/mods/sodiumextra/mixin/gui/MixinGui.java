@@ -1,5 +1,6 @@
 package me.flashyreese.mods.sodiumextra.mixin.gui;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
@@ -12,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public class MixinGui {
     @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void onRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void onRender(DeltaTracker deltaTracker, boolean renderHud, boolean renderScreens, CallbackInfo ci, @Local GuiGraphicsExtractor guiGraphics) {
         SodiumExtraClientMod.onHudRender(guiGraphics, deltaTracker);
     }
 }
