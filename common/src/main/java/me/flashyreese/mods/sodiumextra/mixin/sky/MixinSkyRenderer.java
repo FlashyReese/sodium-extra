@@ -2,7 +2,6 @@ package me.flashyreese.mods.sodiumextra.mixin.sky;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.world.level.MoonPhase;
 import org.spongepowered.asm.mixin.Mixin;

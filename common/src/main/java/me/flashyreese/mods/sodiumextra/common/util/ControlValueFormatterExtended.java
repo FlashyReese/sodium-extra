@@ -12,7 +12,7 @@ public interface ControlValueFormatterExtended extends ControlValueFormatter {
             if (monitor == null) {
                 return Component.translatable("options.fullscreen.unavailable");
             } else {
-                return v == 0 ? Component.translatable("options.fullscreen.current") : Component.literal(monitor.getMode(v - 1).toString());
+                return v == 0 ? Component.translatable("options.fullscreen.current") : Component.literal(monitor.mode(v - 1).toString());
             }
         };
     }
