@@ -47,7 +47,7 @@ public class SodiumExtraHud {
     }
 
     public void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
-        if (!this.client.debugEntries.isOverlayVisible() && !this.client.options.hideGui) {
+        if (!this.client.debugEntries.isOverlayVisible() && !this.client.getDebugOverlay().showDebugScreen()) {
             SodiumExtraGameOptions.OverlayCorner overlayCorner = SodiumExtraClientMod.options().extraSettings.overlayCorner;
             // Calculate starting position based on the overlay corner
             int x;
