@@ -26,10 +26,4 @@ public class MixinClientLevel {
         }
     }
 
-    @Inject(method = "tickWeatherEffects", at = @At(value = "HEAD"), cancellable = true)
-    public void tickRainSplashing(CallbackInfo ci) {
-        if (!SodiumExtraClientMod.options().particleSettings.particles || !SodiumExtraClientMod.options().particleSettings.rainSplash) {
-            ci.cancel();
-        }
-    }
 }
