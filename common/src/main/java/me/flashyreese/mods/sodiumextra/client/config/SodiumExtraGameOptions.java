@@ -214,6 +214,11 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
                 this.otherMap = new Object2BooleanArrayMap<>();
             }
         }
+
+        public boolean isParticleEnabled(Identifier particleTypeId) {
+            this.sanitize();
+            return this.particles && this.otherMap.computeIfAbsent(particleTypeId, k -> true);
+        }
     }
 
     public static class DetailSettings {
