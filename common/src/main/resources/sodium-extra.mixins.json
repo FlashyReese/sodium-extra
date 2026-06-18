@@ -9,7 +9,7 @@
     "animation.MixinTextureAtlas",
     "biome_colors.MixinBiomeColors",
     "cloud.MixinLevelRenderer",
-    "fog.MixinFogEnvironment",
+    "fog.MixinAtmosphericFogEnvironment",
     "fog.MixinFogRenderer",
     "fps.MixinGameRenderer",
     "gui.MixinDebugOptionsScreen",
