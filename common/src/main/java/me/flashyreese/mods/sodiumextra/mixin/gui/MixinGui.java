@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinGui {
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void onRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded, CallbackInfo ci, @Local GuiGraphicsExtractor guiGraphics) {
-        if (shouldRenderLevel || resourcesLoaded) {
+        if (shouldRenderLevel) {
             SodiumExtraClientMod.onHudRender(guiGraphics, deltaTracker);
         }
     }
