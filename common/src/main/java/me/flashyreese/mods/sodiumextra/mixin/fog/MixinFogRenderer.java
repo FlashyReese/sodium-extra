@@ -1,41 +1,60 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import me.flashyreese.mods.sodiumextra.client.fog.FogEnvironmentExtended;
+import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.client.renderer.fog.FogRenderer;
+import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
 import net.minecraft.client.renderer.fog.environment.FogEnvironment;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.material.FogType;
-import org.joml.Vector4f;
 import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.util.List;
 
 @Mixin(value = FogRenderer.class, priority = 1300)
 public class MixinFogRenderer {
+    @Unique
+    private boolean sodiumExtra$usingAtmosphericFog;
 
-    @Shadow
-    @Final
-    private static List<FogEnvironment> FOG_ENVIRONMENTS;
+    @Inject(method = "setupFog", at = @At("HEAD"))
+    private void resetFogEnvironment(Camera camera, int renderDistanceInChunks, DeltaTracker deltaTracker, float darkenWorldAmount, ClientLevel level, CallbackInfoReturnable<FogData> cir) {
+        this.sodiumExtra$usingAtmosphericFog = false;
+    }
+
+    @Redirect(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/environment/FogEnvironment;setupFog(Lnet/minecraft/client/renderer/fog/FogData;Lnet/minecraft/client/Camera;Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/DeltaTracker;)V"))
+    private void captureFogEnvironment(FogEnvironment fogEnvironment, FogData fogData, Camera camera, ClientLevel level, float viewDistance, DeltaTracker deltaTracker) {
+        this.sodiumExtra$usingAtmosphericFog = fogEnvironment instanceof AtmosphericFogEnvironment;
+        fogEnvironment.setupFog(fogData, camera, level, viewDistance, deltaTracker);
+    }
 
     @Inject(method = "setupFog", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/fog/FogData;renderDistanceEnd:F", ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
-    public void postFogSetup(Camera camera, int renderDistanceInChunks, DeltaTracker deltaTracker, float darkenWorldAmount, ClientLevel level, CallbackInfoReturnable<FogData> cir, @Local(name = "fogType") FogType fogType, @Local(name = "entity") Entity entity, @Local(name = "renderDistanceInBlocks") float renderDistanceInBlocks, @Local(name = "fog") FogData fogData) {
-        for (FogEnvironment fogEnvironment : FOG_ENVIRONMENTS) {
-            if (fogEnvironment.isApplicable(fogType, entity) && fogEnvironment instanceof FogEnvironmentExtended fogEnvironmentExtended) {
-                fogEnvironmentExtended.sodium_extra$applyFogSettings(fogType, fogData, entity, camera.blockPosition(), level, renderDistanceInBlocks);
-                break;
-            }
+    private void postFogSetup(Camera camera, int renderDistanceInChunks, DeltaTracker deltaTracker, float darkenWorldAmount, ClientLevel level, CallbackInfoReturnable<FogData> cir, @Local(name = "fog") FogData fogData) {
+        if (!this.sodiumExtra$usingAtmosphericFog) {
+            return;
         }
+
+        int fogDistance = FogDistanceHelper.getFogDistance(level);
+        if (fogDistance == 0) {
+            return;
+        }
+
+        if (FogDistanceHelper.isBossFogActive()) {
+            return;
+        }
+
+        if (FogDistanceHelper.disablesFog(fogDistance)) {
+            fogData.renderDistanceStart = Float.MAX_VALUE;
+            fogData.renderDistanceEnd = Float.MAX_VALUE;
+            return;
+        }
+
+        fogData.renderDistanceStart = FogDistanceHelper.getStart(fogDistance);
+        fogData.renderDistanceEnd = FogDistanceHelper.getEnd(fogDistance);
     }
 }

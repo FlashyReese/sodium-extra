@@ -1,12 +1,13 @@
 package me.flashyreese.mods.sodiumextra.client.config;
 
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import me.flashyreese.mods.sodiumextra.common.util.ControlValueFormatterExtended;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
+import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
-import net.caffeinemc.mods.sodium.api.config.structure.IntegerOptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionGroupBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
@@ -15,7 +16,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.material.FogType;
+import net.minecraft.world.level.Level;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,32 +26,28 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         return Identifier.parse("sodium-extra:" + path);
     }
 
+    private static final Identifier MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
+    private static final List<Identifier> DEFAULT_DIMENSION_IDS = List.of(
+            Level.OVERWORLD.identifier(),
+            Level.NETHER.identifier(),
+            Level.END.identifier()
+    );
+
+    private static boolean isFogMixinEnabled() {
+        return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled();
+    }
+
+    private static boolean isSingleFogOptionEnabled(ConfigState state) {
+        return isFogMixinEnabled() && !state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+    }
+
+    private static boolean isDimensionFogOptionEnabled(ConfigState state) {
+        return isFogMixinEnabled() && state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+    }
+
     private static Component parseVanillaString(String key) {
         // Strip formatting codes like "§a"
         return Component.literal(Component.translatable(key).getString().replaceAll("§.", ""));
-    }
-
-    private static Component fogTypeName(FogType type) {
-        String key = "sodium-extra.option.fog_type." + type.name().toLowerCase();
-        Component translated = Component.translatable(key);
-
-        if (!ComponentUtils.isTranslationResolvable(translated)) {
-            String pretty = Arrays.stream(type.name().split("_"))
-                    .map(s -> s.charAt(0) + s.substring(1).toLowerCase())
-                    .collect(Collectors.joining(" ")) + " Fog";
-            return Component.literal(pretty);
-        }
-        return translated;
-    }
-
-    private static Component fogTypeTooltip(FogType type) {
-        String key = "sodium-extra.option.fog_type." + type.name().toLowerCase() + ".tooltip";
-        Component translated = Component.translatable(key);
-
-        if (!ComponentUtils.isTranslationResolvable(translated)) {
-            return Component.translatable("sodium-extra.option.fog_type.default.tooltip", fogTypeName(type));
-        }
-        return translated;
     }
 
     private static Component translatableName(Identifier identifier, String category) {
@@ -294,142 +291,69 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     }
 
     private OptionPageBuilder createRenderPage(ConfigBuilder builder) {
-        List<OptionGroupBuilder> fogGroups = new ArrayList<>();
-
-        Arrays.stream(FogType.values())
-                .sorted(Comparator.comparing(Enum::name))
-                .filter(type -> type != FogType.NONE)
-                .forEach(fogType -> {
-                    // Environment Start
-                    IntegerOptionBuilder envStart = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_environment_start"))
-                            .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                            .setName(Component.translatable("sodium-extra.option.fog_type.environment_start", fogTypeName(fogType)))
-                            .setTooltip(Component.translatable("sodium-extra.option.fog_type.environment_start.tooltip"))
-                            .setStorageHandler(SodiumExtraClientMod.options())
-                            .setRange(0, 300, 1)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage())
-                            .setDefaultValue(100)
-                            .setBinding(val -> {
-                                FogTypeConfig config = SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig());
-                                config.environmentStartMultiplier = val;
-                            }, () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).environmentStartMultiplier)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage());
-
-                    // Environment End
-                    IntegerOptionBuilder envEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_environment_end"))
-                            .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                            .setName(Component.translatable("sodium-extra.option.fog_type.environment_end", fogTypeName(fogType)))
-                            .setTooltip(Component.translatable("sodium-extra.option.fog_type.environment_end.tooltip"))
-                            .setStorageHandler(SodiumExtraClientMod.options())
-                            .setRange(0, 300, 1)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage())
-                            .setDefaultValue(100)
-                            .setBinding(val -> {
-                                FogTypeConfig config = SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig());
-                                config.environmentEndMultiplier = val;
-                            }, () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).environmentEndMultiplier)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage());
-
-                    // Render Start
-                    IntegerOptionBuilder renderStart = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_render_distance_start"))
-                            .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                            .setName(Component.translatable("sodium-extra.option.fog_type.render_distance_start", fogTypeName(fogType)))
-                            .setTooltip(Component.translatable("sodium-extra.option.fog_type.render_distance_start.tooltip"))
-                            .setStorageHandler(SodiumExtraClientMod.options())
-                            .setRange(0, 300, 1)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage())
-                            .setDefaultValue(100)
-                            .setBinding(val -> {
-                                FogTypeConfig config = SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig());
-                                config.renderDistanceStartMultiplier = val;
-                            }, () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).renderDistanceStartMultiplier)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage());
-
-                    // Render End
-                    IntegerOptionBuilder renderEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_render_distance_end"))
-                            .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                            .setName(Component.translatable("sodium-extra.option.fog_type.render_distance_end", fogTypeName(fogType)))
-                            .setTooltip(Component.translatable("sodium-extra.option.fog_type.render_distance_end.tooltip"))
-                            .setStorageHandler(SodiumExtraClientMod.options())
-                            .setRange(0, 300, 1)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage())
-                            .setDefaultValue(100)
-                            .setBinding(val -> {
-                                FogTypeConfig config = SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig());
-                                config.renderDistanceEndMultiplier = val;
-                            }, () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).renderDistanceEndMultiplier)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage());
-
-                    // Sky End
-                    IntegerOptionBuilder skyEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_sky_end"))
-                            .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                            .setName(Component.translatable("sodium-extra.option.fog_type.sky_end", fogTypeName(fogType)))
-                            .setTooltip(Component.translatable("sodium-extra.option.fog_type.sky_end.tooltip"))
-                            .setStorageHandler(SodiumExtraClientMod.options())
-                            .setRange(0, 300, 1)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage())
-                            .setDefaultValue(100)
-                            .setBinding(val -> {
-                                FogTypeConfig config = SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig());
-                                config.skyEndMultiplier = val;
-                            }, () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).skyEndMultiplier)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage());
-
-
-                    IntegerOptionBuilder cloudEnd = builder.createIntegerOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_cloud_end"))
-                            .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                            .setName(Component.translatable("sodium-extra.option.fog_type.cloud_end", fogTypeName(fogType)))
-                            .setTooltip(Component.translatable("sodium-extra.option.fog_type.cloud_end.tooltip"))
-                            .setStorageHandler(SodiumExtraClientMod.options())
-                            .setRange(0, 300, 1)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage())
-                            .setDefaultValue(100)
-                            .setBinding(val -> {
-                                FogTypeConfig config = SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig());
-                                config.cloudEndMultiplier = val;
-                            }, () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).cloudEndMultiplier)
-                            .setValueFormatter(ControlValueFormatterImpls.percentage());
-
-                    // Add group
-                    fogGroups.add(builder.createOptionGroup()
-                            .addOption(builder.createBooleanOption(id(fogType.name().toLowerCase(Locale.ROOT) + "_fog"))
-                                    .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                                    .setName(fogTypeName(fogType))
-                                    .setTooltip(fogTypeTooltip(fogType))
-                                    .setStorageHandler(SodiumExtraClientMod.options())
-                                    .setBinding(
-                                            (val) -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).enable = val,
-                                            () -> SodiumExtraClientMod.options().renderSettings.fogTypeConfig.computeIfAbsent(fogType, k -> new FogTypeConfig()).enable
-                                    )
-                                    .setDefaultValue(true)
-                            )
-                            .addOption(envStart)
-                            .addOption(envEnd)
-                            .addOption(renderStart)
-                            .addOption(renderEnd)
-                            .addOption(skyEnd)
-                            .addOption(cloudEnd)
-                    );
-                });
-
         OptionPageBuilder page = builder.createOptionPage()
                 .setName(Component.translatable("sodium-extra.option.render"));
 
+        DEFAULT_DIMENSION_IDS.stream()
+                .filter(identifier -> !SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.containsKey(identifier))
+                .forEach(identifier -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.put(identifier, 0));
+
         page.addOptionGroup(builder.createOptionGroup()
-                .addOption(builder.createBooleanOption(id("global_fog"))
+                .addOption(builder.createBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID)
                         .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                        .setName(Component.translatable("sodium-extra.option.global_fog"))
-                        .setTooltip(Component.translatable("sodium-extra.option.global_fog.tooltip"))
+                        .setName(Component.translatable("sodium-extra.option.multi_dimension_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.multi_dimension_fog.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
                         .setBinding(
-                                value -> SodiumExtraClientMod.options().renderSettings.globalFog = value,
-                                () -> SodiumExtraClientMod.options().renderSettings.globalFog
+                                value -> SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
                         )
-                        .setDefaultValue(true)
+                        .setDefaultValue(false)
+                )
+                .addOption(builder.createIntegerOption(id("fog_start"))
+                        .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
+                        .setName(Component.translatable("sodium-extra.option.fog_start"))
+                        .setTooltip(Component.translatable("sodium-extra.option.fog_start.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(0, 100, 1)
+                        .setValueFormatter(ControlValueFormatterImpls.percentage())
+                        .setBinding(value -> SodiumExtraClientMod.options().renderSettings.fogStart = value, () -> SodiumExtraClientMod.options().renderSettings.fogStart)
+                        .setDefaultValue(100)
                 )
         );
 
-        fogGroups.forEach(page::addOptionGroup);
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(builder.createIntegerOption(id("single_fog"))
+                        .setEnabledProvider(SodiumExtraConfig::isSingleFogOptionEnabled, MULTI_DIMENSION_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.single_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.single_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
+                        .setValueFormatter(ControlValueFormatterExtended.fogDistance())
+                        .setBinding(value -> SodiumExtraClientMod.options().renderSettings.fogDistance = value, () -> SodiumExtraClientMod.options().renderSettings.fogDistance)
+                        .setDefaultValue(0)
+                )
+        );
+
+        OptionGroupBuilder dimensionFogGroup = builder.createOptionGroup();
+        SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.keySet().stream()
+                .sorted(Comparator.comparing(Identifier::toString))
+                .forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
+                        .setEnabledProvider(SodiumExtraConfig::isDimensionFogOptionEnabled, MULTI_DIMENSION_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.fog", translatableName(identifier, "dimensions").getString()))
+                        .setTooltip(Component.translatable("sodium-extra.option.fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
+                        .setValueFormatter(ControlValueFormatterExtended.fogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.put(identifier, value),
+                                () -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(identifier, 0)
+                        )
+                        .setDefaultValue(0)
+                ));
+        page.addOptionGroup(dimensionFogGroup);
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(id("light_updates"))
