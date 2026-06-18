@@ -4,6 +4,9 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+import com.mojang.blaze3d.opengl.GlBackend;
+import com.mojang.blaze3d.systems.GpuSurface;
+import com.mojang.blaze3d.vulkan.VulkanBackend;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
@@ -11,6 +14,7 @@ import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import me.flashyreese.mods.sodiumextra.common.util.IdentifierSerializer;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -149,22 +153,39 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     public enum VerticalSyncOption implements TextProvider {
         OFF("options.off"),
         ON("options.on"),
-        ADAPTIVE("sodium-extra.option.use_adaptive_sync.name", GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+        ADAPTIVE("sodium-extra.option.use_adaptive_sync.name");
 
         private final Component name;
-        private final boolean supported;
 
         VerticalSyncOption(String name) {
-            this(name, true);
-        }
-
-        VerticalSyncOption(String name, boolean supported) {
             this.name = Component.translatable(name);
-            this.supported = supported;
         }
 
         public static VerticalSyncOption[] getAvailableOptions() {
-            return Arrays.stream(VerticalSyncOption.values()).filter((o) -> o.supported).toArray(VerticalSyncOption[]::new);
+            return Arrays.stream(VerticalSyncOption.values()).filter(VerticalSyncOption::isSupported).toArray(VerticalSyncOption[]::new);
+        }
+
+        public static boolean isAdaptiveSyncSupported() {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft == null || minecraft.getWindow() == null) {
+                return false;
+            }
+
+            if (minecraft.getWindow().backend() instanceof GlBackend) {
+                return GLFW.glfwGetCurrentContext() != 0L
+                        && (GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+            }
+
+            if (minecraft.getWindow().backend() instanceof VulkanBackend) {
+                GpuSurface surface = minecraft.windowSurface();
+                return surface != null && surface.supportedPresentModes().contains(GpuSurface.PresentMode.FIFO_RELAXED);
+            }
+
+            return false;
+        }
+
+        private boolean isSupported() {
+            return this != ADAPTIVE || isAdaptiveSyncSupported();
         }
 
         @Override

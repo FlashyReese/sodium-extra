@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.EnumOptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionGroupBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
@@ -27,6 +28,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     }
 
     private static final Identifier MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
+    private static final Identifier SODIUM_VSYNC_OPTION_ID = Identifier.parse("sodium:general.vsync");
     private static final List<Identifier> DEFAULT_DIMENSION_IDS = List.of(
             Level.OVERWORLD.identifier(),
             Level.NETHER.identifier(),
@@ -598,6 +600,58 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         ));
     }
 
+    private EnumOptionBuilder<SodiumExtraGameOptions.VerticalSyncOption> createVerticalSyncOption(ConfigBuilder builder) {
+        EnumSet<SodiumExtraGameOptions.VerticalSyncOption> allowedValues = EnumSet.of(
+                SodiumExtraGameOptions.VerticalSyncOption.OFF,
+                SodiumExtraGameOptions.VerticalSyncOption.ON
+        );
+        if (SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.adaptive_sync").isEnabled()
+                && SodiumExtraGameOptions.VerticalSyncOption.isAdaptiveSyncSupported()) {
+            allowedValues.add(SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE);
+        }
+
+        return builder.createEnumOption(SODIUM_VSYNC_OPTION_ID, SodiumExtraGameOptions.VerticalSyncOption.class)
+                .setDefaultValue(SodiumExtraGameOptions.VerticalSyncOption.ON)
+                .setAllowedValues(allowedValues)
+                .setName(Component.translatable("options.vsync"))
+                .setTooltip(Component.literal(Component.translatable("sodium.options.v_sync.tooltip").getString()
+                        + "\n- " + Component.translatable("sodium-extra.option.use_adaptive_sync.name").getString()
+                        + ": " + Component.translatable("sodium-extra.option.use_adaptive_sync.tooltip").getString()))
+                .setBinding((value) -> {
+                    switch (value) {
+                        case OFF -> {
+                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
+                            Minecraft.getInstance().options.enableVsync().set(false);
+                        }
+                        case ON -> {
+                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
+                            Minecraft.getInstance().options.enableVsync().set(true);
+                        }
+                        case ADAPTIVE -> {
+                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = true;
+                            Minecraft.getInstance().options.enableVsync().set(true);
+                        }
+                    }
+
+                    Minecraft.getInstance().invalidateSurfaceConfiguration();
+                }, () -> {
+                    boolean vsync = Minecraft.getInstance().options.enableVsync().get();
+                    boolean adaptive = SodiumExtraClientMod.options().extraSettings.useAdaptiveSync
+                            && SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.adaptive_sync").isEnabled()
+                            && SodiumExtraGameOptions.VerticalSyncOption.isAdaptiveSyncSupported();
+
+                    if (!vsync) {
+                        return SodiumExtraGameOptions.VerticalSyncOption.OFF;
+                    }
+
+                    return adaptive ? SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE : SodiumExtraGameOptions.VerticalSyncOption.ON;
+                })
+                .setStorageHandler(() -> {
+                    SodiumExtraClientMod.options().afterSave();
+                    Minecraft.getInstance().options.save();
+                });
+    }
+
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
@@ -606,6 +660,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .addPage(this.createParticlesPage(builder))
                 .addPage(this.createDetailsPage(builder))
                 .addPage(this.createRenderPage(builder))
-                .addPage(this.createExtraPage(builder));
+                .addPage(this.createExtraPage(builder))
+                .registerOptionReplacement(SODIUM_VSYNC_OPTION_ID, this.createVerticalSyncOption(builder));
     }
 }
