@@ -19,6 +19,7 @@
     "light_updates.MixinLevelLightEngine",
     "optimizations.beacon_beam_rendering.MixinBeaconRenderer",
     "optimizations.beacon_beam_rendering.MixinVertexSerializerRegistryImpl",
+    "particle.MixinClientPacketListener",
     "particle.MixinClientLevel",
     "particle.MixinFireworkParticle",
     "particle.MixinLevelRenderer",

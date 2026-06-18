@@ -15,12 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinParticleEngine {
     @Inject(method = "createParticle", at = @At(value = "HEAD"), cancellable = true)
     public void addParticle(ParticleOptions particleOptions, double d, double e, double f, double g, double h, double i, CallbackInfoReturnable<Particle> cir) {
-        if (SodiumExtraClientMod.options().particleSettings.particles) {
-            Identifier particleTypeId = BuiltInRegistries.PARTICLE_TYPE.getKey(particleOptions.getType());
-            if (!SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(particleTypeId, k -> true)) {
-                cir.setReturnValue(null);
-            }
-        } else {
+        Identifier particleTypeId = BuiltInRegistries.PARTICLE_TYPE.getKey(particleOptions.getType());
+        if (!SodiumExtraClientMod.options().particleSettings.isParticleEnabled(particleTypeId)) {
             cir.setReturnValue(null);
         }
     }
