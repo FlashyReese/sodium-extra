@@ -597,7 +597,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
-                .setIcon(ResourceLocation.parse("sodium-extra:textures/icon.png"))
+                .setNonTintedIcon(ResourceLocation.parse("sodium-extra:textures/icon.png"))
                 .addPage(this.createAnimationsPage(builder))
                 .addPage(this.createParticlesPage(builder))
                 .addPage(this.createDetailsPage(builder))
