@@ -129,6 +129,10 @@ public final class FogDistanceHelper {
         return fogDistance * CHUNK_SIZE * (SodiumExtraClientMod.options().renderSettings.fogStart / 100.0F);
     }
 
+    public static float applyStartMultiplier(float start) {
+        return start * (SodiumExtraClientMod.options().renderSettings.fogStart / 100.0F);
+    }
+
     public static float getEnd(int fogDistance) {
         return (fogDistance + 1) * CHUNK_SIZE;
     }
