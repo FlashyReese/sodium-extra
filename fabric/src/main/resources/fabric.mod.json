@@ -32,6 +32,9 @@
     "client": [
       "me.flashyreese.mods.sodiumextra.SodiumExtraFabricClientModInitializer"
     ],
+    "preLaunch": [
+      "me.flashyreese.mods.sodiumextra.SodiumExtraFabricPreLaunch"
+    ],
     "sodium:config_api_user": [
       "me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfig"
     ]

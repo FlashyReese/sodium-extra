@@ -1,6 +1,8 @@
 package me.flashyreese.mods.sodiumextra.client;
 
+import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfigKeys;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
+import me.flashyreese.mods.sodiumextra.client.gui.FullscreenResolutionConfirmation;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryCoords;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryFps;
 import me.flashyreese.mods.sodiumextra.client.gui.SodiumExtraDebugEntryLightUpdates;
@@ -84,7 +86,23 @@ public class SodiumExtraClientMod {
     }
 
     private static SodiumExtraGameOptions loadConfig() {
-        return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve("sodium-extra-options.json").toFile());
+        return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve(SodiumExtraConfigKeys.FILE_NAME).toFile());
+    }
+
+    public static void armWaylandFullscreenResolutionRecovery() {
+        SodiumExtraGameOptions options = options();
+        if (!options.extraSettings.waylandFullscreenResolutionRecoveryPending) {
+            options.extraSettings.waylandFullscreenResolutionRecoveryPending = true;
+            options.writeChanges();
+        }
+    }
+
+    public static void disarmWaylandFullscreenResolutionRecovery() {
+        SodiumExtraGameOptions options = options();
+        if (options.extraSettings.waylandFullscreenResolutionRecoveryPending) {
+            options.extraSettings.waylandFullscreenResolutionRecoveryPending = false;
+            options.writeChanges();
+        }
     }
 
     public static void onTick(Minecraft client) {
@@ -92,6 +110,7 @@ public class SodiumExtraClientMod {
             hud = new SodiumExtraHud();
         }
         hud.onStartTick(client);
+        FullscreenResolutionConfirmation.tick(client);
     }
 
     public static void onHudRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
