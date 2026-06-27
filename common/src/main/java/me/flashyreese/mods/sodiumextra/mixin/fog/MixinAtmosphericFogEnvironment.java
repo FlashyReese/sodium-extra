@@ -1,5 +1,6 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
+import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -15,7 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinAtmosphericFogEnvironment {
     @Inject(method = "setupFog", at = @At("TAIL"))
     private void postSetupFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo ci) {
-        int fogDistance = FogDistanceHelper.getFogDistance(level);
+        SodiumExtraGameOptions.AtmosphericFogSettings settings = FogDistanceHelper.getAtmosphericSettings(level);
+        int fogDistance = settings.distanceChunks;
         if (fogDistance == 0) {
             return;
         }
@@ -32,7 +34,11 @@ public class MixinAtmosphericFogEnvironment {
         }
 
         float end = FogDistanceHelper.getEnd(fogDistance);
-        fog.skyEnd = Math.min(end, renderDistance);
-        fog.cloudEnd = end;
+        if (settings.affectSkyFog) {
+            fog.skyEnd = Math.min(end, renderDistance);
+        }
+        if (settings.affectCloudFog) {
+            fog.cloudEnd = end;
+        }
     }
 }

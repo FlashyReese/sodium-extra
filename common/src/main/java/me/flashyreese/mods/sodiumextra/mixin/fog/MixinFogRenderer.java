@@ -1,6 +1,7 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -39,13 +40,15 @@ public class MixinFogRenderer {
             return;
         }
 
-        int fogDistance = FogDistanceHelper.getFogDistance(level);
+        SodiumExtraGameOptions.AtmosphericFogSettings settings = FogDistanceHelper.getAtmosphericSettings(level);
+        int fogDistance = settings.distanceChunks;
         if (FogDistanceHelper.isBossFogActive()) {
             return;
         }
 
         if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
-            fogData.renderDistanceStart = FogDistanceHelper.applyStartMultiplier(fogData.renderDistanceStart);
+            fogData.renderDistanceStart = FogDistanceHelper.applyStartMultiplier(fogData.renderDistanceStart, settings);
+            FogDistanceHelper.applyRenderDistanceShape(fogData, settings);
             return;
         }
 
@@ -55,7 +58,8 @@ public class MixinFogRenderer {
             return;
         }
 
-        fogData.renderDistanceStart = FogDistanceHelper.getStart(fogDistance);
+        fogData.renderDistanceStart = FogDistanceHelper.getStart(settings);
         fogData.renderDistanceEnd = FogDistanceHelper.getEnd(fogDistance);
+        FogDistanceHelper.applyRenderDistanceShape(fogData, settings);
     }
 }
