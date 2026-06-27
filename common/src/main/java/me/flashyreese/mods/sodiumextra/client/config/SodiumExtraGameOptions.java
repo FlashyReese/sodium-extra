@@ -6,7 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.mojang.blaze3d.opengl.GlBackend;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import me.flashyreese.mods.sodiumextra.common.util.IdentifierSerializer;
@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Map;
 
 public class SodiumExtraGameOptions implements StorageEventHandler {
@@ -254,11 +255,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     }
 
     public static class RenderSettings {
-        public int fogDistance;
-        public int fogStart;
-        public boolean multiDimensionFogControl;
-        @SerializedName("dimensionFogDistance")
-        public Map<Identifier, Integer> dimensionFogDistanceMap;
+        public FogSettings fogSettings;
         public boolean lightUpdates;
         public boolean itemFrame;
         public boolean armorStand;
@@ -271,10 +268,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean playerNameTag;
 
         public RenderSettings() {
-            this.fogDistance = 0;
-            this.fogStart = 100;
-            this.multiDimensionFogControl = false;
-            this.dimensionFogDistanceMap = new Object2IntArrayMap<>();
+            this.fogSettings = new FogSettings();
             this.lightUpdates = true;
             this.itemFrame = true;
             this.armorStand = true;
@@ -288,14 +282,147 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         }
 
         public void sanitize() {
-            if (this.dimensionFogDistanceMap == null) {
-                this.dimensionFogDistanceMap = new Object2IntArrayMap<>();
+            if (this.fogSettings == null) {
+                this.fogSettings = new FogSettings();
             }
 
-            this.fogDistance = FogDistanceHelper.normalizeFogDistance(this.fogDistance);
-            this.dimensionFogDistanceMap.replaceAll((identifier, fogDistance) -> FogDistanceHelper.normalizeFogDistance(fogDistance));
+            this.fogSettings.sanitize();
         }
 
+    }
+
+    public enum FogShapeMode implements TextProvider {
+        VANILLA("sodium-extra.option.fog_shape.vanilla"),
+        CYLINDRICAL("sodium-extra.option.fog_shape.cylindrical"),
+        RADIAL("sodium-extra.option.fog_shape.radial"),
+        PLANAR("sodium-extra.option.fog_shape.planar");
+
+        private final Component text;
+
+        FogShapeMode(String text) {
+            this.text = Component.translatable(text);
+        }
+
+        public static EnumSet<FogShapeMode> getAvailableOptions() {
+            return EnumSet.of(VANILLA, CYLINDRICAL, RADIAL, PLANAR);
+        }
+
+        @Override
+        public Component getLocalizedName() {
+            return this.text;
+        }
+    }
+
+    public static class FogSettings {
+        public boolean advanced;
+        public boolean multiDimensionFogControl;
+        public AtmosphericFogSettings atmospheric;
+        public Map<Identifier, AtmosphericFogSettings> dimensionOverrides;
+        public ProtectedFogSettings protectedGameplay;
+
+        public FogSettings() {
+            this.advanced = false;
+            this.multiDimensionFogControl = false;
+            this.atmospheric = new AtmosphericFogSettings();
+            this.dimensionOverrides = new Object2ObjectArrayMap<>();
+            this.protectedGameplay = new ProtectedFogSettings();
+        }
+
+        public void sanitize() {
+            if (this.atmospheric == null) {
+                this.atmospheric = new AtmosphericFogSettings();
+            }
+            this.atmospheric.sanitize();
+
+            if (this.dimensionOverrides == null) {
+                this.dimensionOverrides = new Object2ObjectArrayMap<>();
+            }
+            this.dimensionOverrides.replaceAll((identifier, settings) -> {
+                if (settings == null) {
+                    settings = new AtmosphericFogSettings();
+                }
+
+                settings.sanitize();
+                return settings;
+            });
+
+            if (this.protectedGameplay == null) {
+                this.protectedGameplay = new ProtectedFogSettings();
+            }
+            this.protectedGameplay.sanitize();
+        }
+
+        public AtmosphericFogSettings getAtmospheric(Identifier dimensionId) {
+            if (!this.advanced || !this.multiDimensionFogControl) {
+                return this.atmospheric;
+            }
+
+            return this.getOrCreateDimensionOverride(dimensionId);
+        }
+
+        public AtmosphericFogSettings getOrCreateDimensionOverride(Identifier dimensionId) {
+            AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> new AtmosphericFogSettings());
+            settings.sanitize();
+            return settings;
+        }
+    }
+
+    public static class AtmosphericFogSettings {
+        public int distanceChunks;
+        public int startPercent;
+        public FogShapeMode shapeMode;
+        public boolean affectSkyFog;
+        public boolean affectCloudFog;
+
+        public AtmosphericFogSettings() {
+            this.distanceChunks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.startPercent = 100;
+            this.shapeMode = FogShapeMode.VANILLA;
+            this.affectSkyFog = true;
+            this.affectCloudFog = true;
+        }
+
+        public void sanitize() {
+            this.distanceChunks = FogDistanceHelper.normalizeFogDistance(this.distanceChunks);
+            this.startPercent = Math.clamp(this.startPercent, 0, 100);
+
+            if (this.shapeMode == null) {
+                this.shapeMode = FogShapeMode.VANILLA;
+            } else if (!FogShapeMode.getAvailableOptions().contains(this.shapeMode)) {
+                this.shapeMode = FogShapeMode.VANILLA;
+            }
+        }
+    }
+
+    public static class ProtectedFogSettings {
+        @SerializedName(value = "enabled_when_allowed", alternate = "enabled_in_private_singleplayer")
+        public boolean enabledWhenAllowed;
+        @SerializedName(value = "blindness_distance_blocks", alternate = "blindness_distance_chunks")
+        public int blindnessDistanceBlocks;
+        @SerializedName(value = "darkness_distance_blocks", alternate = "darkness_distance_chunks")
+        public int darknessDistanceBlocks;
+        @SerializedName(value = "lava_distance_blocks", alternate = "lava_distance_chunks")
+        public int lavaDistanceBlocks;
+        @SerializedName(value = "powder_snow_distance_blocks", alternate = "powder_snow_distance_chunks")
+        public int powderSnowDistanceBlocks;
+        public int waterDistanceBlocks;
+
+        public ProtectedFogSettings() {
+            this.enabledWhenAllowed = false;
+            this.blindnessDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.darknessDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.lavaDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.powderSnowDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.waterDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+        }
+
+        public void sanitize() {
+            this.blindnessDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.blindnessDistanceBlocks);
+            this.darknessDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.darknessDistanceBlocks);
+            this.lavaDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.lavaDistanceBlocks);
+            this.powderSnowDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.powderSnowDistanceBlocks);
+            this.waterDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.waterDistanceBlocks);
+        }
     }
 
     public static class ExtraSettings {

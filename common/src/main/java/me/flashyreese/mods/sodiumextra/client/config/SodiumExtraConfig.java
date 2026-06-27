@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.Window;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.gui.FullscreenResolutionConfirmation;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
+import me.flashyreese.mods.sodiumextra.client.fog.FogShaderTransformer;
 import me.flashyreese.mods.sodiumextra.common.util.ControlValueFormatterExtended;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
@@ -37,7 +38,9 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         return Identifier.parse("sodium-extra:" + path);
     }
 
+    private static final Identifier ADVANCED_FOG_OPTION_ID = id("advanced_fog_settings");
     private static final Identifier MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
+    private static final Identifier PROTECTED_GAMEPLAY_FOG_OPTION_ID = id("protected_gameplay_fog");
     private static final Identifier WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID = id("wayland_fullscreen_resolution");
     private static final Identifier SODIUM_FULLSCREEN_MODE_OPTION_ID = Identifier.parse("sodium:general.fullscreen_mode");
     private static final Identifier SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = Identifier.parse("sodium:general.fullscreen_resolution");
@@ -52,12 +55,75 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled();
     }
 
+    private static boolean isAdvancedFogOptionEnabled(ConfigState state) {
+        return isFogMixinEnabled() && state.readBooleanOption(ADVANCED_FOG_OPTION_ID);
+    }
+
+    private static boolean isFogShapeOptionEnabled(ConfigState state) {
+        // Radial/planar shapes need the terrain shader patch.
+        return isAdvancedFogOptionEnabled(state) && FogShaderTransformer.isShapeSupported();
+    }
+
     private static boolean isSingleFogOptionEnabled(ConfigState state) {
-        return isFogMixinEnabled() && !state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+        boolean advanced = state.readBooleanOption(ADVANCED_FOG_OPTION_ID);
+        return isFogMixinEnabled() && (!advanced || !state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID));
     }
 
     private static boolean isDimensionFogOptionEnabled(ConfigState state) {
-        return isFogMixinEnabled() && state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+        return isFogMixinEnabled()
+                && state.readBooleanOption(ADVANCED_FOG_OPTION_ID)
+                && state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+    }
+
+    private static boolean isProtectedGameplayFogOptionEnabled(ConfigState state) {
+        return isFogMixinEnabled()
+                && state.readBooleanOption(ADVANCED_FOG_OPTION_ID)
+                && state.readBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID);
+    }
+
+    private static SodiumExtraGameOptions.FogSettings fogSettings() {
+        SodiumExtraGameOptions.RenderSettings renderSettings = SodiumExtraClientMod.options().renderSettings;
+        renderSettings.sanitize();
+        return renderSettings.fogSettings;
+    }
+
+    private static SodiumExtraGameOptions.AtmosphericFogSettings atmosphericFogSettings() {
+        return fogSettings().atmospheric;
+    }
+
+    private static SodiumExtraGameOptions.AtmosphericFogSettings createDimensionFogSettings() {
+        SodiumExtraGameOptions.AtmosphericFogSettings source = atmosphericFogSettings();
+        SodiumExtraGameOptions.AtmosphericFogSettings settings = new SodiumExtraGameOptions.AtmosphericFogSettings();
+        settings.startPercent = source.startPercent;
+        settings.shapeMode = source.shapeMode;
+        settings.affectSkyFog = source.affectSkyFog;
+        settings.affectCloudFog = source.affectCloudFog;
+        return settings;
+    }
+
+    private static void setAtmosphericFogStart(int value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        int clampedValue = Math.clamp(value, 0, 100);
+        fogSettings.atmospheric.startPercent = clampedValue;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.startPercent = clampedValue);
+    }
+
+    private static void setAtmosphericFogShape(SodiumExtraGameOptions.FogShapeMode value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        fogSettings.atmospheric.shapeMode = value;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.shapeMode = value);
+    }
+
+    private static void setAtmosphericSkyFog(boolean value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        fogSettings.atmospheric.affectSkyFog = value;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.affectSkyFog = value);
+    }
+
+    private static void setAtmosphericCloudFog(boolean value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        fogSettings.atmospheric.affectCloudFog = value;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.affectCloudFog = value);
     }
 
     private static int compareParticleNamespace(String a, String b) {
@@ -444,21 +510,40 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         OptionPageBuilder page = builder.createOptionPage()
                 .setName(Component.translatable("sodium-extra.option.render"));
 
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
         DEFAULT_DIMENSION_IDS.stream()
-                .filter(identifier -> !SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.containsKey(identifier))
-                .forEach(identifier -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.put(identifier, 0));
+                .filter(identifier -> !fogSettings.dimensionOverrides.containsKey(identifier))
+                .forEach(identifier -> fogSettings.dimensionOverrides.put(identifier, createDimensionFogSettings()));
 
         page.addOptionGroup(builder.createOptionGroup()
-                .addOption(builder.createBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID)
+                .addOption(builder.createBooleanOption(ADVANCED_FOG_OPTION_ID)
                         .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                        .setName(Component.translatable("sodium-extra.option.multi_dimension_fog"))
-                        .setTooltip(Component.translatable("sodium-extra.option.multi_dimension_fog.tooltip"))
+                        .setName(Component.translatable("sodium-extra.option.advanced_fog_settings"))
+                        .setTooltip(Component.translatable("sodium-extra.option.advanced_fog_settings.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
                         .setBinding(
-                                value -> SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl = value,
-                                () -> SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.advanced = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.advanced
                         )
                         .setDefaultValue(false)
+                )
+                .addOption(builder.createIntegerOption(id("single_fog"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isSingleFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                MULTI_DIMENSION_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.fog_distance"))
+                        .setTooltip(Component.translatable("sodium-extra.option.fog_distance.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
+                        .setValueFormatter(ControlValueFormatterExtended.fogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.distanceChunks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.distanceChunks
+                        )
+                        .setDefaultValue(0)
                 )
                 .addOption(builder.createIntegerOption(id("fog_start"))
                         .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
@@ -467,30 +552,63 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         .setStorageHandler(SodiumExtraClientMod.options())
                         .setRange(0, 100, 1)
                         .setValueFormatter(ControlValueFormatterImpls.percentage())
-                        .setBinding(value -> SodiumExtraClientMod.options().renderSettings.fogStart = value, () -> SodiumExtraClientMod.options().renderSettings.fogStart)
+                        .setBinding(SodiumExtraConfig::setAtmosphericFogStart, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.startPercent)
                         .setDefaultValue(100)
                 )
         );
 
         page.addOptionGroup(builder.createOptionGroup()
-                .addOption(builder.createIntegerOption(id("single_fog"))
-                        .setEnabledProvider(SodiumExtraConfig::isSingleFogOptionEnabled, MULTI_DIMENSION_FOG_OPTION_ID)
+                .addOption(builder.createBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID)
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
                         .setControlHiddenWhenDisabled(false)
-                        .setName(Component.translatable("sodium-extra.option.single_fog"))
-                        .setTooltip(Component.translatable("sodium-extra.option.single_fog.tooltip"))
+                        .setName(Component.translatable("sodium-extra.option.multi_dimension_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.multi_dimension_fog.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
-                        .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
-                        .setValueFormatter(ControlValueFormatterExtended.fogDistance())
-                        .setBinding(value -> SodiumExtraClientMod.options().renderSettings.fogDistance = value, () -> SodiumExtraClientMod.options().renderSettings.fogDistance)
-                        .setDefaultValue(0)
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.multiDimensionFogControl = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.multiDimensionFogControl
+                        )
+                        .setDefaultValue(false)
+                )
+                .addOption(builder.createEnumOption(id("fog_shape"), SodiumExtraGameOptions.FogShapeMode.class)
+                        .setEnabledProvider(SodiumExtraConfig::isFogShapeOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setAllowedValues(SodiumExtraGameOptions.FogShapeMode.getAvailableOptions())
+                        .setName(Component.translatable("sodium-extra.option.fog_shape"))
+                        .setTooltip(Component.translatable("sodium-extra.option.fog_shape.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(SodiumExtraConfig::setAtmosphericFogShape, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.shapeMode)
+                        .setDefaultValue(SodiumExtraGameOptions.FogShapeMode.VANILLA)
+                )
+                .addOption(builder.createBooleanOption(id("sky_fog"))
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.sky_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.sky_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(SodiumExtraConfig::setAtmosphericSkyFog, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.affectSkyFog)
+                        .setDefaultValue(true)
+                )
+                .addOption(builder.createBooleanOption(id("cloud_fog"))
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.cloud_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.cloud_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(SodiumExtraConfig::setAtmosphericCloudFog, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.affectCloudFog)
+                        .setDefaultValue(true)
                 )
         );
 
         OptionGroupBuilder dimensionFogGroup = builder.createOptionGroup();
-        SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.keySet().stream()
+        fogSettings.dimensionOverrides.keySet().stream()
                 .sorted(Comparator.comparing(Identifier::toString))
                 .forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
-                        .setEnabledProvider(SodiumExtraConfig::isDimensionFogOptionEnabled, MULTI_DIMENSION_FOG_OPTION_ID)
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isDimensionFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                MULTI_DIMENSION_FOG_OPTION_ID
+                        )
                         .setControlHiddenWhenDisabled(false)
                         .setName(Component.translatable("sodium-extra.option.fog", translatableName(identifier, "dimensions").getString()))
                         .setTooltip(Component.translatable("sodium-extra.option.fog.tooltip"))
@@ -498,12 +616,117 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
                         .setValueFormatter(ControlValueFormatterExtended.fogDistance())
                         .setBinding(
-                                value -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.put(identifier, value),
-                                () -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(identifier, 0)
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.getOrCreateDimensionOverride(identifier).distanceChunks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.getOrCreateDimensionOverride(identifier).distanceChunks
                         )
                         .setDefaultValue(0)
                 ));
         page.addOptionGroup(dimensionFogGroup);
+
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(builder.createBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID)
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.enabledWhenAllowed = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.enabledWhenAllowed
+                        )
+                        .setDefaultValue(false)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.blindness"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.blindness"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.blindness.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.blindnessDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.blindnessDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.darkness"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.darkness"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.darkness.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.darknessDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.darknessDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.lava"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.lava"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.lava.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.lavaDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.lavaDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.powder_snow"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.powder_snow"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.powder_snow.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.powderSnowDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.powderSnowDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.water"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.water"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.water.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.waterDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.waterDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+        );
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(id("light_updates"))
