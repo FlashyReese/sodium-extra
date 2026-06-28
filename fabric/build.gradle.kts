@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version ("1.15.4")
+    id("net.fabricmc.fabric-loom") version ("1.17.11")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -20,6 +20,8 @@ base {
 dependencies {
     minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
     compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+    runtimeOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+    testCompileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, FABRIC_API_VERSION)
@@ -41,24 +43,23 @@ tasks.test {
 loom {
     accessWidenerPath.set(project(":common").file("src/main/resources/${rootProject.name}.accesswidener"))
 
-    @Suppress("UnstableApiUsage")
-    mixin { defaultRefmapName.set("${rootProject.name}.refmap.json") }
-
     runs {
         named("client") {
             client()
-            configName = "Fabric Client"
-            ideConfigGenerated(true)
-            runDir("run")
+            displayName.set("Fabric Client")
+            generateRunConfig.set(true)
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
         named("server") {
             server()
-            configName = "Fabric Server"
-            ideConfigGenerated(true)
-            runDir("run")
+            displayName.set("Fabric Server")
+            generateRunConfig.set(true)
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
     }
 }
+
+val modVersion = project.version.toString()
 
 tasks {
     withType<JavaCompile> {
@@ -70,10 +71,10 @@ tasks {
     processResources {
         from(project(":common").sourceSets.main.get().resources)
 
-        inputs.property("version", project.version)
+        inputs.property("version", modVersion)
 
         filesMatching("fabric.mod.json") {
-            expand(mapOf("version" to project.version))
+            expand(mapOf("version" to modVersion))
         }
     }
 

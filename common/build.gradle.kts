@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.AbstractRemapJarTask
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version "1.15.4"
+    id("net.fabricmc.fabric-loom") version "1.17.11"
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -14,10 +14,11 @@ val FABRIC_API_VERSION: String by rootProject.extra
 val SODIUM_VERSION: String by rootProject.extra
 
 dependencies {
-    minecraft(group = "com.mojang", name = "minecraft", version = MINECRAFT_VERSION)
-    compileOnly("io.github.llamalad7:mixinextras-common:0.5.0")
-    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")
-    compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
+    minecraft("com.mojang:minecraft:$MINECRAFT_VERSION")
+    compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.4")
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4")
+    compileOnly("net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7")
 
     fun addDependentFabricModule(name: String) {
         val module = fabricApi.module(name, FABRIC_API_VERSION)
@@ -40,11 +41,6 @@ tasks.named("compileJava") {
 }
 
 loom {
-    mixin {
-        useLegacyMixinAp = false
-        //defaultRefmapName = "${rootProject.name}.refmap.json"
-    }
-
     accessWidenerPath = file("src/main/resources/${rootProject.name}.accesswidener")
 }
 
