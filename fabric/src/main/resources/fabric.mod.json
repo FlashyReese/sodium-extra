@@ -68,7 +68,7 @@
     "iris": "<1.7.0",
     "reeses-sodium-options": "<1.8.4"
   },
-  "recommends": {
-    "reeses-sodium-options": ">=1.8.5"
+  "suggests": {
+    "reeses-sodium-options": ">=2.2.0"
   }
 }
