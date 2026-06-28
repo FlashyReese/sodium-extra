@@ -1,7 +1,7 @@
 package me.flashyreese.mods.sodiumextra.mixin.reduce_resolution_on_mac;
 
 import com.mojang.blaze3d.platform.Window;
-import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.util.MacReducedResolution;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,9 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Window.class)
 public class MixinWindow {
-    @Unique
-    private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
-
     @Shadow
     private int framebufferWidth;
 
@@ -32,7 +29,6 @@ public class MixinWindow {
 
     @Inject(at = @At(value = "RETURN"), method = "refreshFramebufferSize")
     private void afterUpdateFrameBufferSize(CallbackInfo ci) {
-        // prevents mis-scaled startup screen
         this.scaleFramebufferSize();
     }
 
@@ -43,11 +39,11 @@ public class MixinWindow {
 
     @Unique
     private void scaleFramebufferSize() {
-        if (!OS_NAME.contains("mac") || !SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac) {
+        if (!MacReducedResolution.isEnabled()) {
             return;
         }
 
-        framebufferWidth = Math.max(1, framebufferWidth / 2);
-        framebufferHeight = Math.max(1, framebufferHeight / 2);
+        framebufferWidth = MacReducedResolution.reduce(framebufferWidth);
+        framebufferHeight = MacReducedResolution.reduce(framebufferHeight);
     }
 }
