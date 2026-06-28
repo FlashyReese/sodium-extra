@@ -29,6 +29,9 @@
   "icon": "assets/sodium-extra/textures/icon.png",
   "environment": "client",
   "entrypoints": {
+    "preLaunch": [
+      "me.flashyreese.mods.sodiumextra.SodiumExtraFabricPreLaunch"
+    ],
     "client": [
       "me.flashyreese.mods.sodiumextra.SodiumExtraFabricClientModInitializer"
     ],

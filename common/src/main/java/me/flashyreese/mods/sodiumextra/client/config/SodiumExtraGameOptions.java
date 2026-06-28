@@ -34,6 +34,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     public ParticleSettings particleSettings = new ParticleSettings();
     public DetailSettings detailSettings = new DetailSettings();
     public RenderSettings renderSettings = new RenderSettings();
+    @SerializedName(SodiumExtraConfigKeys.EXTRA_SETTINGS)
     public ExtraSettings extraSettings = new ExtraSettings();
     private File file;
 
@@ -298,6 +299,10 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean showFPSExtended;
         public boolean showCoords;
         public boolean reduceResolutionOnMac;
+        @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION)
+        public boolean waylandFullscreenResolution;
+        @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION_RECOVERY_PENDING)
+        public boolean waylandFullscreenResolutionRecoveryPending;
         public boolean useAdaptiveSync;
         public int cloudHeight;
         public int cloudDistance;
@@ -318,6 +323,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.showFPSExtended = true;
             this.showCoords = false;
             this.reduceResolutionOnMac = false;
+            this.waylandFullscreenResolution = false;
+            this.waylandFullscreenResolutionRecoveryPending = false;
             this.useAdaptiveSync = false;
             this.cloudHeight = 192;
             this.cloudDistance = 100;
