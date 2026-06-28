@@ -5,13 +5,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import me.flashyreese.mods.sodiumextra.common.util.IdentifierSerializer;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.material.FogType;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -20,7 +22,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
 
 public class SodiumExtraGameOptions implements StorageEventHandler {
@@ -30,11 +32,12 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             .setPrettyPrinting()
             .excludeFieldsWithModifiers(Modifier.PRIVATE)
             .create();
-    public final AnimationSettings animationSettings = new AnimationSettings();
-    public final ParticleSettings particleSettings = new ParticleSettings();
-    public final DetailSettings detailSettings = new DetailSettings();
-    public final RenderSettings renderSettings = new RenderSettings();
-    public final ExtraSettings extraSettings = new ExtraSettings();
+    public AnimationSettings animationSettings = new AnimationSettings();
+    public ParticleSettings particleSettings = new ParticleSettings();
+    public DetailSettings detailSettings = new DetailSettings();
+    public RenderSettings renderSettings = new RenderSettings();
+    @SerializedName(SodiumExtraConfigKeys.EXTRA_SETTINGS)
+    public ExtraSettings extraSettings = new ExtraSettings();
     private File file;
 
     public static SodiumExtraGameOptions load(File file) {
@@ -51,10 +54,41 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             config = new SodiumExtraGameOptions();
         }
 
+        if (config == null) {
+            SodiumExtraClientMod.logger().error("Could not parse config, falling back to defaults!");
+            config = new SodiumExtraGameOptions();
+        }
+
+        config.sanitize();
         config.file = file;
         config.writeChanges();
 
         return config;
+    }
+
+    private void sanitize() {
+        if (this.animationSettings == null) {
+            this.animationSettings = new AnimationSettings();
+        }
+
+        if (this.particleSettings == null) {
+            this.particleSettings = new ParticleSettings();
+        }
+        this.particleSettings.sanitize();
+
+        if (this.detailSettings == null) {
+            this.detailSettings = new DetailSettings();
+        }
+
+        if (this.renderSettings == null) {
+            this.renderSettings = new RenderSettings();
+        }
+        this.renderSettings.sanitize();
+
+        if (this.extraSettings == null) {
+            this.extraSettings = new ExtraSettings();
+        }
+        this.extraSettings.sanitize();
     }
 
     public void writeChanges() {
@@ -118,22 +152,30 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     public enum VerticalSyncOption implements TextProvider {
         OFF("options.off"),
         ON("options.on"),
-        ADAPTIVE("sodium-extra.option.use_adaptive_sync.name", GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+        ADAPTIVE("sodium-extra.option.use_adaptive_sync.name");
 
         private final Component name;
-        private final boolean supported;
 
         VerticalSyncOption(String name) {
-            this(name, true);
-        }
-
-        VerticalSyncOption(String name, boolean supported) {
             this.name = Component.translatable(name);
-            this.supported = supported;
         }
 
         public static VerticalSyncOption[] getAvailableOptions() {
-            return Arrays.stream(VerticalSyncOption.values()).filter((o) -> o.supported).toArray(VerticalSyncOption[]::new);
+            return Arrays.stream(VerticalSyncOption.values()).filter(VerticalSyncOption::isSupported).toArray(VerticalSyncOption[]::new);
+        }
+
+        public static boolean isAdaptiveSyncSupported() {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft == null || minecraft.getWindow() == null) {
+                return false;
+            }
+
+            return GLFW.glfwGetCurrentContext() != 0L
+                    && (GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+        }
+
+        private boolean isSupported() {
+            return this != ADAPTIVE || isAdaptiveSyncSupported();
         }
 
         @Override
@@ -177,6 +219,17 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.blockBreaking = true;
             this.otherMap = new Object2BooleanArrayMap<>();
         }
+
+        public void sanitize() {
+            if (this.otherMap == null) {
+                this.otherMap = new Object2BooleanArrayMap<>();
+            }
+        }
+
+        public boolean isParticleEnabled(Identifier particleTypeId) {
+            this.sanitize();
+            return this.particles && this.otherMap.computeIfAbsent(particleTypeId, k -> true);
+        }
     }
 
     public static class DetailSettings {
@@ -200,8 +253,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     }
 
     public static class RenderSettings {
-        public boolean globalFog;
-        public EnumMap<FogType, FogTypeConfig> fogTypeConfig;
+        public FogSettings fogSettings;
         public boolean lightUpdates;
         public boolean itemFrame;
         public boolean armorStand;
@@ -214,8 +266,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean playerNameTag;
 
         public RenderSettings() {
-            this.globalFog = true;
-            this.fogTypeConfig = new EnumMap<>(FogType.class);
+            this.fogSettings = new FogSettings();
             this.lightUpdates = true;
             this.itemFrame = true;
             this.armorStand = true;
@@ -226,17 +277,150 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.enchantingTableBook = true;
             this.itemFrameNameTag = true;
             this.playerNameTag = true;
-
-            this.ensureFogTypeDefaults();
         }
 
-        public void ensureFogTypeDefaults() {
-            for (FogType type : FogType.values()) {
-                if (type == FogType.NONE) continue;
-                this.fogTypeConfig.putIfAbsent(type, new FogTypeConfig());
+        public void sanitize() {
+            if (this.fogSettings == null) {
+                this.fogSettings = new FogSettings();
+            }
+
+            this.fogSettings.sanitize();
+        }
+
+    }
+
+    public enum FogShapeMode implements TextProvider {
+        VANILLA("sodium-extra.option.fog_shape.vanilla"),
+        CYLINDRICAL("sodium-extra.option.fog_shape.cylindrical"),
+        RADIAL("sodium-extra.option.fog_shape.radial"),
+        PLANAR("sodium-extra.option.fog_shape.planar");
+
+        private final Component text;
+
+        FogShapeMode(String text) {
+            this.text = Component.translatable(text);
+        }
+
+        public static EnumSet<FogShapeMode> getAvailableOptions() {
+            return EnumSet.of(VANILLA, CYLINDRICAL, RADIAL, PLANAR);
+        }
+
+        @Override
+        public Component getLocalizedName() {
+            return this.text;
+        }
+    }
+
+    public static class FogSettings {
+        public boolean advanced;
+        public boolean multiDimensionFogControl;
+        public AtmosphericFogSettings atmospheric;
+        public Map<Identifier, AtmosphericFogSettings> dimensionOverrides;
+        public ProtectedFogSettings protectedGameplay;
+
+        public FogSettings() {
+            this.advanced = false;
+            this.multiDimensionFogControl = false;
+            this.atmospheric = new AtmosphericFogSettings();
+            this.dimensionOverrides = new Object2ObjectArrayMap<>();
+            this.protectedGameplay = new ProtectedFogSettings();
+        }
+
+        public void sanitize() {
+            if (this.atmospheric == null) {
+                this.atmospheric = new AtmosphericFogSettings();
+            }
+            this.atmospheric.sanitize();
+
+            if (this.dimensionOverrides == null) {
+                this.dimensionOverrides = new Object2ObjectArrayMap<>();
+            }
+            this.dimensionOverrides.replaceAll((identifier, settings) -> {
+                if (settings == null) {
+                    settings = new AtmosphericFogSettings();
+                }
+
+                settings.sanitize();
+                return settings;
+            });
+
+            if (this.protectedGameplay == null) {
+                this.protectedGameplay = new ProtectedFogSettings();
+            }
+            this.protectedGameplay.sanitize();
+        }
+
+        public AtmosphericFogSettings getAtmospheric(Identifier dimensionId) {
+            if (!this.advanced || !this.multiDimensionFogControl) {
+                return this.atmospheric;
+            }
+
+            return this.getOrCreateDimensionOverride(dimensionId);
+        }
+
+        public AtmosphericFogSettings getOrCreateDimensionOverride(Identifier dimensionId) {
+            AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> new AtmosphericFogSettings());
+            settings.sanitize();
+            return settings;
+        }
+    }
+
+    public static class AtmosphericFogSettings {
+        public int distanceChunks;
+        public int startPercent;
+        public FogShapeMode shapeMode;
+        public boolean affectSkyFog;
+        public boolean affectCloudFog;
+
+        public AtmosphericFogSettings() {
+            this.distanceChunks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.startPercent = 100;
+            this.shapeMode = FogShapeMode.VANILLA;
+            this.affectSkyFog = true;
+            this.affectCloudFog = true;
+        }
+
+        public void sanitize() {
+            this.distanceChunks = FogDistanceHelper.normalizeFogDistance(this.distanceChunks);
+            this.startPercent = Math.clamp(this.startPercent, 0, 100);
+
+            if (this.shapeMode == null) {
+                this.shapeMode = FogShapeMode.VANILLA;
+            } else if (!FogShapeMode.getAvailableOptions().contains(this.shapeMode)) {
+                this.shapeMode = FogShapeMode.VANILLA;
             }
         }
+    }
 
+    public static class ProtectedFogSettings {
+        @SerializedName(value = "enabled_when_allowed", alternate = "enabled_in_private_singleplayer")
+        public boolean enabledWhenAllowed;
+        @SerializedName(value = "blindness_distance_blocks", alternate = "blindness_distance_chunks")
+        public int blindnessDistanceBlocks;
+        @SerializedName(value = "darkness_distance_blocks", alternate = "darkness_distance_chunks")
+        public int darknessDistanceBlocks;
+        @SerializedName(value = "lava_distance_blocks", alternate = "lava_distance_chunks")
+        public int lavaDistanceBlocks;
+        @SerializedName(value = "powder_snow_distance_blocks", alternate = "powder_snow_distance_chunks")
+        public int powderSnowDistanceBlocks;
+        public int waterDistanceBlocks;
+
+        public ProtectedFogSettings() {
+            this.enabledWhenAllowed = false;
+            this.blindnessDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.darknessDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.lavaDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.powderSnowDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+            this.waterDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
+        }
+
+        public void sanitize() {
+            this.blindnessDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.blindnessDistanceBlocks);
+            this.darknessDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.darknessDistanceBlocks);
+            this.lavaDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.lavaDistanceBlocks);
+            this.powderSnowDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.powderSnowDistanceBlocks);
+            this.waterDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.waterDistanceBlocks);
+        }
     }
 
     public static class ExtraSettings {
@@ -246,7 +430,12 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean showFPSExtended;
         public boolean showCoords;
         public boolean reduceResolutionOnMac;
+        @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION)
+        public boolean waylandFullscreenResolution;
+        @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION_RECOVERY_PENDING)
+        public boolean waylandFullscreenResolutionRecoveryPending;
         public boolean useAdaptiveSync;
+        public boolean cloudHeightOverride;
         public int cloudHeight;
         public boolean toasts;
         public boolean advancementToast;
@@ -265,7 +454,10 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.showFPSExtended = true;
             this.showCoords = false;
             this.reduceResolutionOnMac = false;
+            this.waylandFullscreenResolution = false;
+            this.waylandFullscreenResolutionRecoveryPending = false;
             this.useAdaptiveSync = false;
+            this.cloudHeightOverride = false;
             this.cloudHeight = 192;
             this.toasts = true;
             this.advancementToast = true;
@@ -276,6 +468,20 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.preventShaders = false;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
+        }
+
+        public void sanitize() {
+            if (this.overlayCorner == null) {
+                this.overlayCorner = OverlayCorner.TOP_LEFT;
+            }
+
+            if (this.textContrast == null) {
+                this.textContrast = TextContrast.NONE;
+            }
+
+            if (this.steadyDebugHudRefreshInterval < 1) {
+                this.steadyDebugHudRefreshInterval = 1;
+            }
         }
     }
 }
