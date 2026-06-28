@@ -30,11 +30,11 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             .setPrettyPrinting()
             .excludeFieldsWithModifiers(Modifier.PRIVATE)
             .create();
-    public final AnimationSettings animationSettings = new AnimationSettings();
-    public final ParticleSettings particleSettings = new ParticleSettings();
-    public final DetailSettings detailSettings = new DetailSettings();
-    public final RenderSettings renderSettings = new RenderSettings();
-    public final ExtraSettings extraSettings = new ExtraSettings();
+    public AnimationSettings animationSettings = new AnimationSettings();
+    public ParticleSettings particleSettings = new ParticleSettings();
+    public DetailSettings detailSettings = new DetailSettings();
+    public RenderSettings renderSettings = new RenderSettings();
+    public ExtraSettings extraSettings = new ExtraSettings();
     private File file;
 
     public static SodiumExtraGameOptions load(File file) {
@@ -51,10 +51,41 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             config = new SodiumExtraGameOptions();
         }
 
+        if (config == null) {
+            SodiumExtraClientMod.logger().error("Could not parse config, falling back to defaults!");
+            config = new SodiumExtraGameOptions();
+        }
+
+        config.sanitize();
         config.file = file;
         config.writeChanges();
 
         return config;
+    }
+
+    private void sanitize() {
+        if (this.animationSettings == null) {
+            this.animationSettings = new AnimationSettings();
+        }
+
+        if (this.particleSettings == null) {
+            this.particleSettings = new ParticleSettings();
+        }
+        this.particleSettings.sanitize();
+
+        if (this.detailSettings == null) {
+            this.detailSettings = new DetailSettings();
+        }
+
+        if (this.renderSettings == null) {
+            this.renderSettings = new RenderSettings();
+        }
+        this.renderSettings.sanitize();
+
+        if (this.extraSettings == null) {
+            this.extraSettings = new ExtraSettings();
+        }
+        this.extraSettings.sanitize();
     }
 
     public void writeChanges() {
@@ -177,6 +208,12 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.blockBreaking = true;
             this.otherMap = new Object2BooleanArrayMap<>();
         }
+
+        public void sanitize() {
+            if (this.otherMap == null) {
+                this.otherMap = new Object2BooleanArrayMap<>();
+            }
+        }
     }
 
     public static class DetailSettings {
@@ -230,6 +267,14 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.ensureFogTypeDefaults();
         }
 
+        public void sanitize() {
+            if (this.fogTypeConfig == null) {
+                this.fogTypeConfig = new EnumMap<>(FogType.class);
+            }
+
+            this.ensureFogTypeDefaults();
+        }
+
         public void ensureFogTypeDefaults() {
             for (FogType type : FogType.values()) {
                 if (type == FogType.NONE) continue;
@@ -276,6 +321,20 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.preventShaders = false;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
+        }
+
+        public void sanitize() {
+            if (this.overlayCorner == null) {
+                this.overlayCorner = OverlayCorner.TOP_LEFT;
+            }
+
+            if (this.textContrast == null) {
+                this.textContrast = TextContrast.NONE;
+            }
+
+            if (this.steadyDebugHudRefreshInterval < 1) {
+                this.steadyDebugHudRefreshInterval = 1;
+            }
         }
     }
 }
