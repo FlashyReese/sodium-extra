@@ -28,6 +28,32 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
 
     private static final ResourceLocation MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
 
+    private static int compareParticleNamespace(String a, String b) {
+        if (a.equals(ResourceLocation.DEFAULT_NAMESPACE) && !b.equals(ResourceLocation.DEFAULT_NAMESPACE)) {
+            return -1;
+        }
+
+        if (!a.equals(ResourceLocation.DEFAULT_NAMESPACE) && b.equals(ResourceLocation.DEFAULT_NAMESPACE)) {
+            return 1;
+        }
+
+        int result = a.compareToIgnoreCase(b);
+        return result != 0 ? result : a.compareTo(b);
+    }
+
+    private static Component particleNamespaceName(String namespace) {
+        String name = Arrays.stream(namespace.split("[^A-Za-z0-9]+"))
+                .filter(part -> !part.isBlank())
+                .map(SodiumExtraConfig::capitalizeNamespacePart)
+                .collect(Collectors.joining(" "));
+
+        return Component.literal(name.isBlank() ? namespace : name);
+    }
+
+    private static String capitalizeNamespacePart(String part) {
+        return part.substring(0, 1).toUpperCase(Locale.ROOT) + part.substring(1).toLowerCase(Locale.ROOT);
+    }
+
     private static boolean isFogMixinEnabled() {
         return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled();
     }
@@ -151,25 +177,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     }
 
     private OptionPageBuilder createParticlesPage(ConfigBuilder builder) {
-        OptionGroupBuilder otherParticlesGroup = builder.createOptionGroup();
-        BuiltInRegistries.PARTICLE_TYPE.keySet().stream()
-                .sorted((a, b) -> translatableName(a, "particles")
-                        .getString()
-                        .compareToIgnoreCase(translatableName(b, "particles").getString()))
-                .forEach(id -> otherParticlesGroup.addOption(
-                        builder.createBooleanOption(id("particle." + id.toLanguageKey("options.particles")))
-                                .setName(translatableName(id, "particles"))
-                                .setTooltip(translatableTooltip(id, "particles"))
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                                .setBinding(
-                                        value -> SodiumExtraClientMod.options().particleSettings.otherMap.put(id, value),
-                                        () -> SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(id, k -> true)
-                                )
-                                .setDefaultValue(true)
-                                .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
-                ));
-
-        return builder.createOptionPage()
+        OptionPageBuilder page = builder.createOptionPage()
                 .setName(parseVanillaString("options.particles"))
 
                 .addOptionGroup(builder.createOptionGroup()
@@ -208,9 +216,37 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setDefaultValue(true)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
                         )
-                )
+                );
 
-                .addOptionGroup(otherParticlesGroup);
+        Map<String, List<ResourceLocation>> particlesByNamespace = new TreeMap<>(SodiumExtraConfig::compareParticleNamespace);
+        BuiltInRegistries.PARTICLE_TYPE.keySet()
+                .forEach(identifier -> particlesByNamespace.computeIfAbsent(identifier.getNamespace(), namespace -> new ArrayList<>()).add(identifier));
+
+        particlesByNamespace.forEach((namespace, identifiers) -> {
+            OptionGroupBuilder particleGroup = builder.createOptionGroup()
+                    .setName(particleNamespaceName(namespace));
+
+            identifiers.stream()
+                    .sorted((a, b) -> translatableName(a, "particles")
+                            .getString()
+                            .compareToIgnoreCase(translatableName(b, "particles").getString()))
+                    .forEach(particleId -> particleGroup.addOption(
+                            builder.createBooleanOption(id("particle." + particleId.toLanguageKey("options.particles")))
+                                    .setName(translatableName(particleId, "particles"))
+                                    .setTooltip(translatableTooltip(particleId, "particles"))
+                                    .setStorageHandler(SodiumExtraClientMod.options())
+                                    .setBinding(
+                                            value -> SodiumExtraClientMod.options().particleSettings.otherMap.put(particleId, value),
+                                            () -> SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(particleId, k -> true)
+                                    )
+                                    .setDefaultValue(true)
+                                    .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
+                    ));
+
+            page.addOptionGroup(particleGroup);
+        });
+
+        return page;
     }
 
     private OptionPageBuilder createDetailsPage(ConfigBuilder builder) {
