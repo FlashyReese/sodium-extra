@@ -1,21 +1,32 @@
 package me.flashyreese.mods.sodiumextra.client.config;
 
+import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.VideoMode;
+import com.mojang.blaze3d.platform.Window;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
+import me.flashyreese.mods.sodiumextra.client.fog.FogShaderTransformer;
+import me.flashyreese.mods.sodiumextra.client.gui.FullscreenResolutionConfirmation;
 import me.flashyreese.mods.sodiumextra.common.util.ControlValueFormatterExtended;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.EnumOptionBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.IntegerOptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionGroupBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
+import net.caffeinemc.mods.sodium.client.gui.FullscreenResolutionRange;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.Util;
 import net.minecraft.world.level.levelgen.WorldDimensions;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,37 +37,234 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         return ResourceLocation.parse("sodium-extra:" + path);
     }
 
+    private static final ResourceLocation ADVANCED_FOG_OPTION_ID = id("advanced_fog_settings");
     private static final ResourceLocation MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
+    private static final ResourceLocation PROTECTED_GAMEPLAY_FOG_OPTION_ID = id("protected_gameplay_fog");
+    private static final ResourceLocation WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID = id("wayland_fullscreen_resolution");
+    private static final ResourceLocation CLOUD_HEIGHT_OVERRIDE_OPTION_ID = id("cloud_height_override");
+    private static final ResourceLocation SODIUM_FULLSCREEN_OPTION_ID = ResourceLocation.parse("sodium:general.fullscreen");
+    private static final ResourceLocation SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = ResourceLocation.parse("sodium:general.fullscreen_resolution");
+    private static final ResourceLocation SODIUM_VSYNC_OPTION_ID = ResourceLocation.parse("sodium:general.vsync");
+
+    private static Boolean isFullscreenResolutionOptionEnabled(ConfigState state) {
+        Monitor monitor = getMonitor();
+        if (monitor == null || monitor.getModeCount() <= 0) {
+            return false;
+        }
+
+        return state.readBooleanOption(SODIUM_FULLSCREEN_OPTION_ID)
+                && canUseFullscreenResolution(state);
+    }
+
+    private static boolean canUseFullscreenResolution(ConfigState state) {
+        return canUseFullscreenResolution(state.readBooleanOption(WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID));
+    }
+
+    private static boolean canUseFullscreenResolution() {
+        return canUseFullscreenResolution(SodiumExtraClientMod.options().extraSettings.waylandFullscreenResolution);
+    }
+
+    private static boolean canUseFullscreenResolution(boolean waylandFullscreenResolution) {
+        Util.OS os = Util.getPlatform();
+        return os == Util.OS.WINDOWS
+                || os == Util.OS.OSX
+                || isX11()
+                || (isWaylandOrXWayland() && waylandFullscreenResolution);
+    }
+
+    private static boolean isX11() {
+        return Util.getPlatform() == Util.OS.LINUX
+                && GLFW.glfwGetPlatform() == GLFW.GLFW_PLATFORM_X11
+                && !isWaylandSession();
+    }
+
+    private static boolean isWaylandOrXWayland() {
+        return Util.getPlatform() == Util.OS.LINUX
+                && (GLFW.glfwGetPlatform() == GLFW.GLFW_PLATFORM_WAYLAND || isWaylandSession());
+    }
+
+    private static boolean isWaylandSession() {
+        String sessionType = System.getenv("XDG_SESSION_TYPE");
+        return System.getenv("WAYLAND_DISPLAY") != null || "wayland".equalsIgnoreCase(sessionType);
+    }
+
+    private static Monitor getMonitor() {
+        Window window = Minecraft.getInstance().getWindow();
+        return window == null ? null : window.findBestMonitor();
+    }
+
+    private static Integer getFullscreenResolution() {
+        Monitor monitor = getMonitor();
+        if (monitor == null) {
+            return 0;
+        }
+
+        return Minecraft.getInstance().getWindow().getPreferredFullscreenVideoMode()
+                .map(monitor::getVideoModeIndex)
+                .map(value -> value + 1)
+                .orElse(0);
+    }
+
+    private static void setFullscreenResolution(Integer value) {
+        Monitor monitor = getMonitor();
+        if (monitor == null || monitor.getModeCount() <= 0) {
+            return;
+        }
+
+        Window window = Minecraft.getInstance().getWindow();
+        Optional<VideoMode> previousMode = window.getPreferredFullscreenVideoMode();
+        if (!canUseFullscreenResolution() || value == 0) {
+            window.setPreferredFullscreenVideoMode(Optional.empty());
+            SodiumExtraClientMod.disarmWaylandFullscreenResolutionRecovery();
+            return;
+        }
+
+        if (isWaylandOrXWayland()) {
+            SodiumExtraClientMod.armWaylandFullscreenResolutionRecovery();
+            FullscreenResolutionConfirmation.request(previousMode);
+        } else {
+            SodiumExtraClientMod.disarmWaylandFullscreenResolutionRecovery();
+        }
+
+        int modeIndex = Math.max(0, Math.min(value - 1, monitor.getModeCount() - 1));
+        window.setPreferredFullscreenVideoMode(Optional.of(monitor.getMode(modeIndex)));
+    }
+
+    private static void clearPreferredFullscreenVideoMode() {
+        Window window = Minecraft.getInstance().getWindow();
+        if (window != null && window.getPreferredFullscreenVideoMode().isPresent()) {
+            window.setPreferredFullscreenVideoMode(Optional.empty());
+        }
+    }
+
+    private static int compareParticleNamespace(String a, String b) {
+        if (a.equals(ResourceLocation.DEFAULT_NAMESPACE) && !b.equals(ResourceLocation.DEFAULT_NAMESPACE)) {
+            return -1;
+        }
+
+        if (!a.equals(ResourceLocation.DEFAULT_NAMESPACE) && b.equals(ResourceLocation.DEFAULT_NAMESPACE)) {
+            return 1;
+        }
+
+        int result = a.compareToIgnoreCase(b);
+        return result != 0 ? result : a.compareTo(b);
+    }
+
+    private static Component particleNamespaceName(String namespace) {
+        String name = Arrays.stream(namespace.split("[^A-Za-z0-9]+"))
+                .filter(part -> !part.isBlank())
+                .map(SodiumExtraConfig::capitalizeNamespacePart)
+                .collect(Collectors.joining(" "));
+
+        return Component.literal(name.isBlank() ? namespace : name);
+    }
+
+    private static String capitalizeNamespacePart(String part) {
+        return part.substring(0, 1).toUpperCase(Locale.ROOT) + part.substring(1).toLowerCase(Locale.ROOT);
+    }
 
     private static boolean isFogMixinEnabled() {
         return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled();
     }
 
+    private static boolean isAdvancedFogOptionEnabled(ConfigState state) {
+        return isFogMixinEnabled() && state.readBooleanOption(ADVANCED_FOG_OPTION_ID);
+    }
+
+    private static boolean isFogShapeOptionEnabled(ConfigState state) {
+        return isAdvancedFogOptionEnabled(state) && FogShaderTransformer.isShapeSupported();
+    }
+
     private static boolean isSingleFogOptionEnabled(ConfigState state) {
-        return isFogMixinEnabled() && !state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+        boolean advanced = state.readBooleanOption(ADVANCED_FOG_OPTION_ID);
+        return isFogMixinEnabled() && (!advanced || !state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID));
     }
 
     private static boolean isDimensionFogOptionEnabled(ConfigState state) {
-        return isFogMixinEnabled() && state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+        return isFogMixinEnabled()
+                && state.readBooleanOption(ADVANCED_FOG_OPTION_ID)
+                && state.readBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID);
+    }
+
+    private static boolean isProtectedGameplayFogOptionEnabled(ConfigState state) {
+        return isFogMixinEnabled()
+                && state.readBooleanOption(ADVANCED_FOG_OPTION_ID)
+                && state.readBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID);
+    }
+
+    private static boolean isCloudHeightOptionEnabled(ConfigState state) {
+        return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled()
+                && state.readBooleanOption(CLOUD_HEIGHT_OVERRIDE_OPTION_ID);
+    }
+
+    private static SodiumExtraGameOptions.FogSettings fogSettings() {
+        SodiumExtraGameOptions.RenderSettings renderSettings = SodiumExtraClientMod.options().renderSettings;
+        renderSettings.sanitize();
+        return renderSettings.fogSettings;
+    }
+
+    private static SodiumExtraGameOptions.AtmosphericFogSettings atmosphericFogSettings() {
+        return fogSettings().atmospheric;
+    }
+
+    private static SodiumExtraGameOptions.AtmosphericFogSettings createDimensionFogSettings() {
+        SodiumExtraGameOptions.AtmosphericFogSettings source = atmosphericFogSettings();
+        SodiumExtraGameOptions.AtmosphericFogSettings settings = new SodiumExtraGameOptions.AtmosphericFogSettings();
+        settings.startPercent = source.startPercent;
+        settings.shapeMode = source.shapeMode;
+        settings.affectSkyFog = source.affectSkyFog;
+        settings.affectCloudFog = source.affectCloudFog;
+        return settings;
+    }
+
+    private static void setAtmosphericFogStart(int value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        int clampedValue = Math.max(0, Math.min(value, 100));
+        fogSettings.atmospheric.startPercent = clampedValue;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.startPercent = clampedValue);
+    }
+
+    private static void setAtmosphericFogShape(SodiumExtraGameOptions.FogShapeMode value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        fogSettings.atmospheric.shapeMode = value;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.shapeMode = value);
+    }
+
+    private static void setAtmosphericSkyFog(boolean value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        fogSettings.atmospheric.affectSkyFog = value;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.affectSkyFog = value);
+    }
+
+    private static void setAtmosphericCloudFog(boolean value) {
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
+        fogSettings.atmospheric.affectCloudFog = value;
+        fogSettings.dimensionOverrides.values().forEach(settings -> settings.affectCloudFog = value);
     }
 
     private static Component parseVanillaString(String key) {
         // Strip formatting codes like "§a"
-        return Component.literal(Component.translatable(key).getString().replaceAll("§.", ""));
+        String name = Component.translatable(key).getString().replaceAll("§.", "");
+        return Component.literal(name.isBlank() ? fallbackName(key) : name);
     }
 
     private static Component translatableName(ResourceLocation identifier, String category) {
         String key = identifier.toLanguageKey("options.".concat(category));
         Component translatable = Component.translatable(key);
+        String name = translatable.getString().replaceAll("§.", "");
 
-        if (!ComponentUtils.isTranslationResolvable(translatable)) {
-            translatable = Component.literal(
-                    Arrays.stream(key.substring(key.lastIndexOf('.') + 1).split("_"))
-                            .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
-                            .collect(Collectors.joining(" "))
-            );
+        if (!ComponentUtils.isTranslationResolvable(translatable) || name.isBlank()) {
+            return Component.literal(fallbackName(key));
         }
-        return translatable;
+
+        return Component.literal(name);
+    }
+
+    private static String fallbackName(String key) {
+        return Arrays.stream(key.substring(key.lastIndexOf('.') + 1).split("_"))
+                .filter(s -> !s.isBlank())
+                .map(s -> s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1))
+                .collect(Collectors.joining(" "));
     }
 
     private static Component translatableTooltip(ResourceLocation identifier, String category) {
@@ -145,25 +353,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     }
 
     private OptionPageBuilder createParticlesPage(ConfigBuilder builder) {
-        OptionGroupBuilder otherParticlesGroup = builder.createOptionGroup();
-        BuiltInRegistries.PARTICLE_TYPE.keySet().stream()
-                .sorted((a, b) -> translatableName(a, "particles")
-                        .getString()
-                        .compareToIgnoreCase(translatableName(b, "particles").getString()))
-                .forEach(id -> otherParticlesGroup.addOption(
-                        builder.createBooleanOption(id("particle." + id.toLanguageKey("options.particles")))
-                                .setName(translatableName(id, "particles"))
-                                .setTooltip(translatableTooltip(id, "particles"))
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                                .setBinding(
-                                        value -> SodiumExtraClientMod.options().particleSettings.otherMap.put(id, value),
-                                        () -> SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(id, k -> true)
-                                )
-                                .setDefaultValue(true)
-                                .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
-                ));
-
-        return builder.createOptionPage()
+        OptionPageBuilder page = builder.createOptionPage()
                 .setName(parseVanillaString("options.particles"))
 
                 .addOptionGroup(builder.createOptionGroup()
@@ -202,9 +392,37 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setDefaultValue(true)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
                         )
-                )
+                );
 
-                .addOptionGroup(otherParticlesGroup);
+        Map<String, List<ResourceLocation>> particlesByNamespace = new TreeMap<>(SodiumExtraConfig::compareParticleNamespace);
+        BuiltInRegistries.PARTICLE_TYPE.keySet()
+                .forEach(identifier -> particlesByNamespace.computeIfAbsent(identifier.getNamespace(), namespace -> new ArrayList<>()).add(identifier));
+
+        particlesByNamespace.forEach((namespace, identifiers) -> {
+            OptionGroupBuilder particleGroup = builder.createOptionGroup()
+                    .setName(particleNamespaceName(namespace));
+
+            identifiers.stream()
+                    .sorted((a, b) -> translatableName(a, "particles")
+                            .getString()
+                            .compareToIgnoreCase(translatableName(b, "particles").getString()))
+                    .forEach(particleId -> particleGroup.addOption(
+                            builder.createBooleanOption(id("particle." + particleId.toLanguageKey("options.particles")))
+                                    .setName(translatableName(particleId, "particles"))
+                                    .setTooltip(translatableTooltip(particleId, "particles"))
+                                    .setStorageHandler(SodiumExtraClientMod.options())
+                                    .setBinding(
+                                            value -> SodiumExtraClientMod.options().particleSettings.otherMap.put(particleId, value),
+                                            () -> SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(particleId, k -> true)
+                                    )
+                                    .setDefaultValue(true)
+                                    .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
+                    ));
+
+            page.addOptionGroup(particleGroup);
+        });
+
+        return page;
     }
 
     private OptionPageBuilder createDetailsPage(ConfigBuilder builder) {
@@ -296,66 +514,224 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         OptionPageBuilder page = builder.createOptionPage()
                 .setName(Component.translatable("sodium-extra.option.render"));
 
+        SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
         WorldDimensions.keysInOrder(Stream.empty())
-                .filter(dim -> !SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.containsKey(dim.location()))
-                .forEach(dim -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.put(dim.location(), 0));
+                .map(dim -> dim.location())
+                .filter(identifier -> !fogSettings.dimensionOverrides.containsKey(identifier))
+                .forEach(identifier -> fogSettings.dimensionOverrides.put(identifier, createDimensionFogSettings()));
 
         page.addOptionGroup(builder.createOptionGroup()
-                .addOption(builder.createBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID)
+                .addOption(builder.createBooleanOption(ADVANCED_FOG_OPTION_ID)
                         .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
-                        .setName(Component.translatable("sodium-extra.option.multi_dimension_fog"))
-                        .setTooltip(Component.translatable("sodium-extra.option.multi_dimension_fog.tooltip"))
+                        .setName(Component.translatable("sodium-extra.option.advanced_fog_settings"))
+                        .setTooltip(Component.translatable("sodium-extra.option.advanced_fog_settings.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
                         .setBinding(
-                                value -> SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl = value,
-                                () -> SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.advanced = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.advanced
                         )
                         .setDefaultValue(false)
                 )
+                .addOption(builder.createIntegerOption(id("single_fog"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isSingleFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                MULTI_DIMENSION_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.fog_distance"))
+                        .setTooltip(Component.translatable("sodium-extra.option.fog_distance.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
+                        .setValueFormatter(ControlValueFormatterExtended.fogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.distanceChunks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.distanceChunks
+                        )
+                        .setDefaultValue(0)
+                )
                 .addOption(builder.createIntegerOption(id("fog_start"))
-                        .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog_falloff").isEnabled())
+                        .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.fog").isEnabled())
                         .setName(Component.translatable("sodium-extra.option.fog_start"))
                         .setTooltip(Component.translatable("sodium-extra.option.fog_start.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
                         .setRange(0, 100, 1)
                         .setValueFormatter(ControlValueFormatterImpls.percentage())
-                        .setBinding(value -> SodiumExtraClientMod.options().renderSettings.fogStart = value, () -> SodiumExtraClientMod.options().renderSettings.fogStart)
+                        .setBinding(SodiumExtraConfig::setAtmosphericFogStart, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.startPercent)
                         .setDefaultValue(100)
                 )
         );
 
         page.addOptionGroup(builder.createOptionGroup()
-                .addOption(builder.createIntegerOption(id("single_fog"))
-                        .setEnabledProvider(SodiumExtraConfig::isSingleFogOptionEnabled, MULTI_DIMENSION_FOG_OPTION_ID)
+                .addOption(builder.createBooleanOption(MULTI_DIMENSION_FOG_OPTION_ID)
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
                         .setControlHiddenWhenDisabled(false)
-                        .setName(Component.translatable("sodium-extra.option.single_fog"))
-                        .setTooltip(Component.translatable("sodium-extra.option.single_fog.tooltip"))
+                        .setName(Component.translatable("sodium-extra.option.multi_dimension_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.multi_dimension_fog.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
-                        .setRange(0, 33, 1)
-                        .setValueFormatter(ControlValueFormatterExtended.fogDistance())
-                        .setBinding(value -> SodiumExtraClientMod.options().renderSettings.fogDistance = value, () -> SodiumExtraClientMod.options().renderSettings.fogDistance)
-                        .setDefaultValue(0)
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.multiDimensionFogControl = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.multiDimensionFogControl
+                        )
+                        .setDefaultValue(false)
+                )
+                .addOption(builder.createEnumOption(id("fog_shape"), SodiumExtraGameOptions.FogShapeMode.class)
+                        .setEnabledProvider(SodiumExtraConfig::isFogShapeOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setAllowedValues(SodiumExtraGameOptions.FogShapeMode.getAvailableOptions())
+                        .setName(Component.translatable("sodium-extra.option.fog_shape"))
+                        .setTooltip(Component.translatable("sodium-extra.option.fog_shape.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(SodiumExtraConfig::setAtmosphericFogShape, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.shapeMode)
+                        .setDefaultValue(SodiumExtraGameOptions.FogShapeMode.VANILLA)
+                )
+                .addOption(builder.createBooleanOption(id("sky_fog"))
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.sky_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.sky_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(SodiumExtraConfig::setAtmosphericSkyFog, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.affectSkyFog)
+                        .setDefaultValue(true)
+                )
+                .addOption(builder.createBooleanOption(id("cloud_fog"))
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.cloud_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.cloud_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(SodiumExtraConfig::setAtmosphericCloudFog, () -> SodiumExtraClientMod.options().renderSettings.fogSettings.atmospheric.affectCloudFog)
+                        .setDefaultValue(true)
                 )
         );
 
         OptionGroupBuilder dimensionFogGroup = builder.createOptionGroup();
-        SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.keySet().stream()
+        fogSettings.dimensionOverrides.keySet().stream()
                 .sorted(Comparator.comparing(ResourceLocation::toString))
                 .forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
-                        .setEnabledProvider(SodiumExtraConfig::isDimensionFogOptionEnabled, MULTI_DIMENSION_FOG_OPTION_ID)
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isDimensionFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                MULTI_DIMENSION_FOG_OPTION_ID
+                        )
                         .setControlHiddenWhenDisabled(false)
                         .setName(Component.translatable("sodium-extra.option.fog", translatableName(identifier, "dimensions").getString()))
                         .setTooltip(Component.translatable("sodium-extra.option.fog.tooltip"))
                         .setStorageHandler(SodiumExtraClientMod.options())
-                        .setRange(0, 33, 1)
+                        .setRangeProvider(FogDistanceHelper::getFogDistanceRange, FogDistanceHelper.SODIUM_RENDER_DISTANCE_OPTION_ID, ConfigState.UPDATE_ON_REBUILD)
                         .setValueFormatter(ControlValueFormatterExtended.fogDistance())
                         .setBinding(
-                                value -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.put(identifier, value),
-                                () -> SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.getOrDefault(identifier, 0)
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.getOrCreateDimensionOverride(identifier).distanceChunks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.getOrCreateDimensionOverride(identifier).distanceChunks
                         )
                         .setDefaultValue(0)
                 ));
         page.addOptionGroup(dimensionFogGroup);
+
+        page.addOptionGroup(builder.createOptionGroup()
+                .addOption(builder.createBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID)
+                        .setEnabledProvider(SodiumExtraConfig::isAdvancedFogOptionEnabled, ADVANCED_FOG_OPTION_ID)
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.enabledWhenAllowed = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.enabledWhenAllowed
+                        )
+                        .setDefaultValue(false)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.blindness"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.blindness"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.blindness.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.blindnessDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.blindnessDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.darkness"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.darkness"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.darkness.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.darknessDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.darknessDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.lava"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.lava"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.lava.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.lavaDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.lavaDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.powder_snow"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.powder_snow"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.powder_snow.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.powderSnowDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.powderSnowDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+                .addOption(builder.createIntegerOption(id("protected_gameplay_fog.water"))
+                        .setEnabledProvider(
+                                SodiumExtraConfig::isProtectedGameplayFogOptionEnabled,
+                                ADVANCED_FOG_OPTION_ID,
+                                PROTECTED_GAMEPLAY_FOG_OPTION_ID
+                        )
+                        .setControlHiddenWhenDisabled(false)
+                        .setName(Component.translatable("sodium-extra.option.protected_gameplay_fog.water"))
+                        .setTooltip(Component.translatable("sodium-extra.option.protected_gameplay_fog.water.tooltip"))
+                        .setStorageHandler(SodiumExtraClientMod.options())
+                        .setRange(FogDistanceHelper.getProtectedGameplayFogDistanceRange())
+                        .setValueFormatter(ControlValueFormatterExtended.protectedFogDistance())
+                        .setBinding(
+                                value -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.waterDistanceBlocks = value,
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.protectedGameplay.waterDistanceBlocks
+                        )
+                        .setDefaultValue(0)
+                )
+        );
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(id("light_updates"))
@@ -459,6 +835,21 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac = value, () -> SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setDefaultValue(false)
+                        )
+                        .addOption(builder.createBooleanOption(WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID)
+                                .setEnabled(isWaylandOrXWayland())
+                                .setName(Component.translatable("sodium-extra.option.wayland_fullscreen_resolution"))
+                                .setTooltip(Component.translatable("sodium-extra.option.wayland_fullscreen_resolution.tooltip"))
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setBinding((value) -> {
+                                    SodiumExtraClientMod.options().extraSettings.waylandFullscreenResolution = value;
+                                    if (!value) {
+                                        clearPreferredFullscreenVideoMode();
+                                        SodiumExtraClientMod.disarmWaylandFullscreenResolutionRecovery();
+                                    }
+                                }, () -> SodiumExtraClientMod.options().extraSettings.waylandFullscreenResolution)
+                                .setStorageHandler(SodiumExtraClientMod.options())
+                                .setDefaultValue(false)
                         ))
                 .addOptionGroup(builder.createOptionGroup()
                         .addOption(builder.createEnumOption(id("overlay_corner"), SodiumExtraGameOptions.OverlayCorner.class)
@@ -496,14 +887,33 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showCoords = value, () -> SodiumExtraClientMod.options().extraSettings.showCoords)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                         )
-                        .addOption(builder.createIntegerOption(id("cloud_height"))
+                        .addOption(builder.createBooleanOption(CLOUD_HEIGHT_OVERRIDE_OPTION_ID)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled())
+                                .setName(Component.translatable("sodium-extra.option.cloud_height_override"))
+                                .setTooltip(Component.translatable("sodium-extra.option.cloud_height_override.tooltip"))
+                                .setDefaultValue(false)
+                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.cloudHeightOverride = value, () -> SodiumExtraClientMod.options().extraSettings.cloudHeightOverride)
+                                .setStorageHandler(SodiumExtraClientMod.options())
+                        )
+                        .addOption(builder.createIntegerOption(id("cloud_height"))
+                                .setEnabledProvider(SodiumExtraConfig::isCloudHeightOptionEnabled, CLOUD_HEIGHT_OVERRIDE_OPTION_ID)
+                                .setControlHiddenWhenDisabled(false)
                                 .setName(Component.translatable("sodium-extra.option.cloud_height"))
                                 .setTooltip(Component.translatable("sodium-extra.option.cloud_height.tooltip"))
                                 .setRange(-64, 319, 1)
                                 .setDefaultValue(192)
                                 .setValueFormatter(ControlValueFormatterImpls.number())
                                 .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.cloudHeight = value, () -> SodiumExtraClientMod.options().extraSettings.cloudHeight)
+                                .setStorageHandler(SodiumExtraClientMod.options())
+                        )
+                        .addOption(builder.createIntegerOption(id("cloud_distance"))
+                                .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.sodium.cloud").isEnabled())
+                                .setName(Component.translatable("sodium-extra.option.cloud_distance"))
+                                .setTooltip(Component.translatable("sodium-extra.option.cloud_distance.tooltip"))
+                                .setRange(100, 300, 10)
+                                .setDefaultValue(100)
+                                .setValueFormatter(ControlValueFormatterImpls.percentage())
+                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.cloudDistance = value, () -> SodiumExtraClientMod.options().extraSettings.cloudDistance)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                         ))
                 .addOptionGroup(builder.createOptionGroup()
@@ -594,6 +1004,74 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         ));
     }
 
+    private IntegerOptionBuilder createFullscreenResolutionOption(ConfigBuilder builder) {
+        return builder.createIntegerOption(SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID)
+                .setStorageHandler(() -> Minecraft.getInstance().options.save())
+                .setName(Component.translatable("options.fullscreen.resolution"))
+                .setTooltip(Component.translatable("sodium-extra.option.resolution.tooltip"))
+                .setValueFormatter(ControlValueFormatterExtended.resolution())
+                .setValidator(new FullscreenResolutionRange())
+                .setDefaultValue(0)
+                .setBinding(SodiumExtraConfig::setFullscreenResolution, SodiumExtraConfig::getFullscreenResolution)
+                .setFlags(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)
+                .setEnabledProvider(
+                        SodiumExtraConfig::isFullscreenResolutionOptionEnabled,
+                        SODIUM_FULLSCREEN_OPTION_ID,
+                        WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID,
+                        ConfigState.UPDATE_ON_REBUILD
+                );
+    }
+
+    private EnumOptionBuilder<SodiumExtraGameOptions.VerticalSyncOption> createVerticalSyncOption(ConfigBuilder builder) {
+        EnumSet<SodiumExtraGameOptions.VerticalSyncOption> allowedValues = EnumSet.of(
+                SodiumExtraGameOptions.VerticalSyncOption.OFF,
+                SodiumExtraGameOptions.VerticalSyncOption.ON
+        );
+        if (SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.adaptive_sync").isEnabled()
+                && SodiumExtraGameOptions.VerticalSyncOption.isAdaptiveSyncSupported()) {
+            allowedValues.add(SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE);
+        }
+
+        return builder.createEnumOption(SODIUM_VSYNC_OPTION_ID, SodiumExtraGameOptions.VerticalSyncOption.class)
+                .setDefaultValue(SodiumExtraGameOptions.VerticalSyncOption.ON)
+                .setAllowedValues(allowedValues)
+                .setName(Component.translatable("options.vsync"))
+                .setTooltip(Component.literal(Component.translatable("sodium.options.v_sync.tooltip").getString()
+                        + "\n- " + Component.translatable("sodium-extra.option.use_adaptive_sync.name").getString()
+                        + ": " + Component.translatable("sodium-extra.option.use_adaptive_sync.tooltip").getString()))
+                .setBinding((value) -> {
+                    switch (value) {
+                        case OFF -> {
+                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
+                            Minecraft.getInstance().options.enableVsync().set(false);
+                        }
+                        case ON -> {
+                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
+                            Minecraft.getInstance().options.enableVsync().set(true);
+                        }
+                        case ADAPTIVE -> {
+                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = true;
+                            Minecraft.getInstance().options.enableVsync().set(true);
+                        }
+                    }
+                }, () -> {
+                    boolean vsync = Minecraft.getInstance().options.enableVsync().get();
+                    boolean adaptive = SodiumExtraClientMod.options().extraSettings.useAdaptiveSync
+                            && SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.adaptive_sync").isEnabled()
+                            && SodiumExtraGameOptions.VerticalSyncOption.isAdaptiveSyncSupported();
+
+                    if (!vsync) {
+                        return SodiumExtraGameOptions.VerticalSyncOption.OFF;
+                    }
+
+                    return adaptive ? SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE : SodiumExtraGameOptions.VerticalSyncOption.ON;
+                })
+                .setStorageHandler(() -> {
+                    SodiumExtraClientMod.options().afterSave();
+                    Minecraft.getInstance().options.save();
+                });
+    }
+
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
@@ -603,39 +1081,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .addPage(this.createDetailsPage(builder))
                 .addPage(this.createRenderPage(builder))
                 .addPage(this.createExtraPage(builder))
-                .registerOptionReplacement(ResourceLocation.parse("sodium:general.vsync"),
-                        builder.createEnumOption(ResourceLocation.parse("sodium:general.vsync"), SodiumExtraGameOptions.VerticalSyncOption.class)
-                                .setDefaultValue(SodiumExtraGameOptions.VerticalSyncOption.ON)
-                                .setAllowedValues(EnumSet.copyOf(Arrays.asList(SodiumExtraGameOptions.VerticalSyncOption.getAvailableOptions())))
-                                .setName(Component.translatable("options.vsync"))
-                                .setTooltip(Component.literal(Component.translatable("sodium.options.v_sync.tooltip").getString() + "\n- " + Component.translatable("sodium-extra.option.use_adaptive_sync.name").getString() + ": " + Component.translatable("sodium-extra.option.use_adaptive_sync.tooltip").getString()))
-                                .setBinding((value) -> {
-                                    switch (value) {
-                                        case OFF -> {
-                                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
-                                            Minecraft.getInstance().options.enableVsync().set(false);
-                                        }
-                                        case ON -> {
-                                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = false;
-                                            Minecraft.getInstance().options.enableVsync().set(true);
-                                        }
-                                        case ADAPTIVE -> {
-                                            SodiumExtraClientMod.options().extraSettings.useAdaptiveSync = true;
-                                            Minecraft.getInstance().options.enableVsync().set(true);
-                                        }
-                                    }
-                                }, () -> {
-                                    if (Minecraft.getInstance().options.enableVsync().get() && !SodiumExtraClientMod.options().extraSettings.useAdaptiveSync) {
-                                        return SodiumExtraGameOptions.VerticalSyncOption.ON;
-                                    } else if (!Minecraft.getInstance().options.enableVsync().get() && !SodiumExtraClientMod.options().extraSettings.useAdaptiveSync) {
-                                        return SodiumExtraGameOptions.VerticalSyncOption.OFF;
-                                    } else {
-                                        return SodiumExtraGameOptions.VerticalSyncOption.ADAPTIVE;
-                                    }
-                                })
-                                .setStorageHandler(() -> {
-                                    SodiumExtraClientMod.options().afterSave();
-                                    Minecraft.getInstance().options.save();
-                                }));
+                .registerOptionReplacement(SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID, this.createFullscreenResolutionOption(builder))
+                .registerOptionReplacement(SODIUM_VSYNC_OPTION_ID, this.createVerticalSyncOption(builder));
     }
 }

@@ -12,6 +12,8 @@ public abstract class MixinDimensionEffectsOverworld extends DimensionSpecialEff
 
     @Override
     public float getCloudHeight() {
-        return SodiumExtraClientMod.options().extraSettings.cloudHeight;
+        return SodiumExtraClientMod.options().extraSettings.cloudHeightOverride
+                ? SodiumExtraClientMod.options().extraSettings.cloudHeight
+                : super.getCloudHeight();
     }
 }
