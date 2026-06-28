@@ -36,7 +36,6 @@
     "prevent_shaders.MixinGameRenderer",
     "reduce_resolution_on_mac.MixinGlBackend",
     "reduce_resolution_on_mac.MixinVulkanBackend",
-    "reduce_resolution_on_mac.MixinWindow",
     "render.block.entity.MixinBeaconRenderer",
     "render.block.entity.MixinEnchantingTableBlockEntityRenderer",
     "render.block.entity.MixinPistonBlockEntityRenderer",
