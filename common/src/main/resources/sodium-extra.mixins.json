@@ -11,7 +11,7 @@
     "cloud.MixinDimensionEffectsOverworld",
     "fog.MixinFogRenderer",
     "fog.MixinLevelRenderer",
-    "fog_falloff.MixinFogRenderer",
+    "fog.MixinSodiumShaderLoader",
     "fps.MixinGameRenderer",
     "gui.MixinGui",
     "gui.MixinMinecraftClient",

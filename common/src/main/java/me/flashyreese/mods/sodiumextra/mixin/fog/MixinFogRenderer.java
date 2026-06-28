@@ -1,10 +1,13 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
+import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import me.flashyreese.mods.sodiumextra.client.fog.FogOverrideState;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
@@ -18,32 +21,131 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinFogRenderer {
     @Shadow
     @Nullable
-    protected static FogRenderer.MobEffectFogFunction getPriorityFogFunction(Entity entity, float f) {
+    private static FogRenderer.MobEffectFogFunction getPriorityFogFunction(Entity entity, float tickDelta) {
         return null;
     }
 
-    @Inject(method = "setupFog", at = @At(value = "TAIL"))
-    private static void applyFog(Camera camera, FogRenderer.FogMode fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci) {
-        if (FogOverrideState.isSettingUpCloudFog()) {
+    @Inject(method = "setupFog", at = @At("TAIL"))
+    private static void sodiumExtra$applyFog(Camera camera, FogRenderer.FogMode fogMode, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.level == null) {
+            return;
+        }
+
+        SodiumExtraGameOptions.AtmosphericFogSettings settings = FogDistanceHelper.getAtmosphericSettings(minecraft.level);
+        if (FogOverrideState.isSettingUpCloudFog() && !settings.affectCloudFog) {
             return;
         }
 
         Entity entity = camera.getEntity();
-        SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.putIfAbsent(entity.level().dimensionType().effectsLocation(), 0);
-        int fogDistance = SodiumExtraClientMod.options().renderSettings.multiDimensionFogControl ? SodiumExtraClientMod.options().renderSettings.dimensionFogDistanceMap.get(entity.level().dimensionType().effectsLocation()) : SodiumExtraClientMod.options().renderSettings.fogDistance;
+        FogType fluid = camera.getFluidInCamera();
         FogRenderer.MobEffectFogFunction mobEffectFogFunction = getPriorityFogFunction(entity, tickDelta);
-        if (fogDistance == 0 || mobEffectFogFunction != null) {
+
+        if (sodiumExtra$applyProtectedGameplayFog(fluid, mobEffectFogFunction, fogMode)) {
             return;
         }
-        if (camera.getFluidInCamera() == FogType.NONE && (thickFog || fogType == FogRenderer.FogMode.FOG_TERRAIN)) {
-            float fogStart = (float) SodiumExtraClientMod.options().renderSettings.fogStart / 100;
-            if (fogDistance == 33) {
-                RenderSystem.setShaderFogStart(Short.MAX_VALUE - 1.0F);
-                RenderSystem.setShaderFogEnd(Short.MAX_VALUE);
-            } else {
-                RenderSystem.setShaderFogStart(fogDistance * 16 * fogStart);
-                RenderSystem.setShaderFogEnd((fogDistance + 1) * 16);
-            }
+
+        if (fluid != FogType.NONE || mobEffectFogFunction != null || FogDistanceHelper.isBossFogActive()) {
+            return;
         }
+
+        if (fogMode == FogRenderer.FogMode.FOG_SKY) {
+            sodiumExtra$applySkyFog(settings, viewDistance);
+            return;
+        }
+
+        if (fogMode == FogRenderer.FogMode.FOG_TERRAIN || thickFog) {
+            sodiumExtra$applyTerrainFog(settings);
+        }
+    }
+
+    private static boolean sodiumExtra$applyProtectedGameplayFog(FogType fluid, @Nullable FogRenderer.MobEffectFogFunction mobEffectFogFunction, FogRenderer.FogMode fogMode) {
+        if (!FogDistanceHelper.shouldModifyProtectedGameplayFog()) {
+            return false;
+        }
+
+        if (fluid == FogType.LAVA) {
+            sodiumExtra$applyProtectedGameplayFog(FogDistanceHelper.ProtectedFogType.LAVA, fogMode, 0.25F, 1.0F);
+            return true;
+        }
+
+        if (fluid == FogType.POWDER_SNOW) {
+            sodiumExtra$applyProtectedGameplayFog(FogDistanceHelper.ProtectedFogType.POWDER_SNOW, fogMode, 0.0F, 1.0F);
+            return true;
+        }
+
+        if (fluid == FogType.WATER) {
+            sodiumExtra$applyProtectedGameplayFog(FogDistanceHelper.ProtectedFogType.WATER, fogMode, 0.0F, 1.0F);
+            return true;
+        }
+
+        if (mobEffectFogFunction == null) {
+            return false;
+        }
+
+        if (MobEffects.BLINDNESS.equals(mobEffectFogFunction.getMobEffect())) {
+            sodiumExtra$applyProtectedGameplayFog(FogDistanceHelper.ProtectedFogType.BLINDNESS, fogMode, 0.25F, 0.8F);
+            return true;
+        }
+
+        if (MobEffects.DARKNESS.equals(mobEffectFogFunction.getMobEffect())) {
+            sodiumExtra$applyProtectedGameplayFog(FogDistanceHelper.ProtectedFogType.DARKNESS, fogMode, 0.75F, 1.0F);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void sodiumExtra$applyProtectedGameplayFog(FogDistanceHelper.ProtectedFogType type, FogRenderer.FogMode fogMode, float terrainStartMultiplier, float skyEndMultiplier) {
+        int distanceBlocks = FogDistanceHelper.getProtectedGameplayFogDistance(type);
+        if (fogMode == FogRenderer.FogMode.FOG_SKY) {
+            FogDistanceHelper.applyProtectedGameplayFog(distanceBlocks, 0.0F, skyEndMultiplier);
+        } else {
+            FogDistanceHelper.applyProtectedGameplayFog(distanceBlocks, terrainStartMultiplier, 1.0F);
+        }
+    }
+
+    private static void sodiumExtra$applySkyFog(SodiumExtraGameOptions.AtmosphericFogSettings settings, float viewDistance) {
+        if (!settings.affectSkyFog) {
+            return;
+        }
+
+        int fogDistance = settings.distanceChunks;
+        if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
+            return;
+        }
+
+        if (FogDistanceHelper.disablesFog(fogDistance)) {
+            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
+            return;
+        }
+
+        RenderSystem.setShaderFogStart(0.0F);
+        RenderSystem.setShaderFogEnd(Math.min(FogDistanceHelper.getEnd(fogDistance), viewDistance));
+    }
+
+    private static void sodiumExtra$applyTerrainFog(SodiumExtraGameOptions.AtmosphericFogSettings settings) {
+        int fogDistance = settings.distanceChunks;
+        if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
+            float start = FogDistanceHelper.applyStartMultiplier(RenderSystem.getShaderFogStart(), settings);
+            float end = RenderSystem.getShaderFogEnd();
+            RenderSystem.setShaderFogStart(start);
+            RenderSystem.setShaderFogEnd(end);
+            FogDistanceHelper.applyRenderDistanceShape(start, end, settings);
+            return;
+        }
+
+        if (FogDistanceHelper.disablesFog(fogDistance)) {
+            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
+            return;
+        }
+
+        float start = FogDistanceHelper.getStart(settings);
+        float end = FogDistanceHelper.getEnd(fogDistance);
+        RenderSystem.setShaderFogStart(start);
+        RenderSystem.setShaderFogEnd(end);
+        FogDistanceHelper.applyRenderDistanceShape(start, end, settings);
     }
 }
