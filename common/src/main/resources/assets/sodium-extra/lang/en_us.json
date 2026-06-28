@@ -319,6 +319,8 @@
   "sodium-extra.option.linear_flat_color_blender.tooltip": "Uses linear biome color blending without applying linear blending to block faces.",
   "sodium-extra.option.moon": "Moon",
   "sodium-extra.option.moon.tooltip": "Renders the moon.",
+  "sodium-extra.option.more_hud_overlays": "More HUD Overlays...",
+  "sodium-extra.option.more_hud_overlays.tooltip": "Opens the vanilla Debug Options screen (F3+F6), which can show more debug labels on the F3 screen or as persistent overlays.",
   "sodium-extra.option.multi_dimension_fog": "Multi Dimension Fog",
   "sodium-extra.option.multi_dimension_fog.tooltip": "Enables per-dimension fog sliders. If disabled, the Single Fog slider is used.\nAfter changing this option, close and reopen the menu to refresh the fog sliders.",
   "sodium-extra.option.overlay_corner": "Overlay Corner",
