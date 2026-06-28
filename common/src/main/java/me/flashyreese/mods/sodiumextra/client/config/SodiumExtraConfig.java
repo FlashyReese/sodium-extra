@@ -18,6 +18,7 @@ import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
 import net.caffeinemc.mods.sodium.client.gui.FullscreenResolutionRange;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.debug.DebugOptionsScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
@@ -749,6 +750,11 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setStorageHandler(() -> Minecraft.getInstance().options.save())
                                 .setBinding((value) -> Minecraft.getInstance().options.advancedItemTooltips = value, () -> Minecraft.getInstance().options.advancedItemTooltips)
                                 .setDefaultValue(false)
+                        )
+                        .addOption(builder.createExternalButtonOption(id("more_hud_overlays"))
+                                .setName(Component.translatable("sodium-extra.option.more_hud_overlays"))
+                                .setTooltip(Component.translatable("sodium-extra.option.more_hud_overlays.tooltip"))
+                                .setScreenConsumer((screen) -> Minecraft.getInstance().setScreenAndShow(new DebugOptionsScreen()))
                         ))
                 .addOptionGroup(builder.createOptionGroup()
                         .addOption(builder.createBooleanOption(id("toasts"))
