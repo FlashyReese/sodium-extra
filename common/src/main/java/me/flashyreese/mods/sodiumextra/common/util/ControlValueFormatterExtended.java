@@ -7,12 +7,13 @@ import net.minecraft.network.chat.Component;
 
 public interface ControlValueFormatterExtended extends ControlValueFormatter {
     static ControlValueFormatter resolution() {
-        Monitor monitor = Minecraft.getInstance().getWindow().findBestMonitor();
         return (v) -> {
-            if (monitor == null) {
+            Monitor monitor = Minecraft.getInstance().getWindow().findBestMonitor();
+            if (monitor == null || monitor.getModeCount() <= 0) {
                 return Component.translatable("options.fullscreen.unavailable");
             } else {
-                return v == 0 ? Component.translatable("options.fullscreen.current") : Component.literal(monitor.getMode(v - 1).toString());
+                int modeIndex = Math.clamp(v - 1, 0, monitor.getModeCount() - 1);
+                return v == 0 ? Component.translatable("options.fullscreen.current") : Component.literal(monitor.getMode(modeIndex).toString().replace(" (24bit)", ""));
             }
         };
     }
