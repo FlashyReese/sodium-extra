@@ -2,10 +2,11 @@ package me.flashyreese.mods.sodiumextra.mixin.reduce_resolution_on_mac;
 
 import com.mojang.blaze3d.platform.Window;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -22,6 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Window.class)
 public class MixinWindow {
+    @Unique
+    private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
+
     @Shadow
     private int framebufferWidth;
 
@@ -32,7 +36,7 @@ public class MixinWindow {
     private void onDefaultWindowHints() {
         GLFW.glfwDefaultWindowHints();
 
-        if (Minecraft.ON_OSX && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac) {
+        if (OS_NAME.contains("mac") && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac) {
             GLFW.glfwWindowHint(GLFW.GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW.GLFW_FALSE);
         }
     }
@@ -40,9 +44,21 @@ public class MixinWindow {
     @Inject(at = @At(value = "RETURN"), method = "refreshFramebufferSize")
     private void afterUpdateFrameBufferSize(CallbackInfo ci) {
         // prevents mis-scaled startup screen
-        if (Minecraft.ON_OSX && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac) {
-            framebufferWidth /= 2;
-            framebufferHeight /= 2;
+        this.scaleFramebufferSize();
+    }
+
+    @Inject(method = "onFramebufferResize", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/platform/Window;framebufferHeight:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    private void afterFramebufferResize(long handle, int newWidth, int newHeight, CallbackInfo ci) {
+        this.scaleFramebufferSize();
+    }
+
+    @Unique
+    private void scaleFramebufferSize() {
+        if (!OS_NAME.contains("mac") || !SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac) {
+            return;
         }
+
+        framebufferWidth = Math.max(1, framebufferWidth / 2);
+        framebufferHeight = Math.max(1, framebufferHeight / 2);
     }
 }
