@@ -83,6 +83,10 @@ tasks.named("compileTestJava").configure {
 dependencies {
     compileOnly(project(":common"))
     implementation("net.caffeinemc:sodium-neoforge-mod:$SODIUM_VERSION")
+    compileOnly("net.caffeinemc:sodium-neoforge-api:${SODIUM_VERSION}")
+    runtimeOnly("net.caffeinemc:sodium-neoforge:${SODIUM_VERSION}") {
+        isTransitive = false
+    }
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
