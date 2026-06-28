@@ -38,6 +38,7 @@
     "stars.MixinLevelRenderer",
     "steady_debug_hud.MixinDebugScreenOverlay",
     "sun_moon.MixinLevelRenderer",
+    "toasts.MixinToastInstance",
     "toasts.MixinToastManager"
   ],
   "injectors": {
