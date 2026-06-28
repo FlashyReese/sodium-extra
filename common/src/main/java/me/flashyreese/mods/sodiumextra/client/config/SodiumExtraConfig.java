@@ -42,21 +42,27 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
 
     private static Component parseVanillaString(String key) {
         // Strip formatting codes like "§a"
-        return Component.literal(Component.translatable(key).getString().replaceAll("§.", ""));
+        String name = Component.translatable(key).getString().replaceAll("§.", "");
+        return Component.literal(name.isBlank() ? fallbackName(key) : name);
     }
 
     private static Component translatableName(ResourceLocation identifier, String category) {
         String key = identifier.toLanguageKey("options.".concat(category));
         Component translatable = Component.translatable(key);
+        String name = translatable.getString().replaceAll("§.", "");
 
-        if (!ComponentUtils.isTranslationResolvable(translatable)) {
-            translatable = Component.literal(
-                    Arrays.stream(key.substring(key.lastIndexOf('.') + 1).split("_"))
-                            .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
-                            .collect(Collectors.joining(" "))
-            );
+        if (!ComponentUtils.isTranslationResolvable(translatable) || name.isBlank()) {
+            return Component.literal(fallbackName(key));
         }
-        return translatable;
+
+        return Component.literal(name);
+    }
+
+    private static String fallbackName(String key) {
+        return Arrays.stream(key.substring(key.lastIndexOf('.') + 1).split("_"))
+                .filter(s -> !s.isBlank())
+                .map(s -> s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1))
+                .collect(Collectors.joining(" "));
     }
 
     private static Component translatableTooltip(ResourceLocation identifier, String category) {
