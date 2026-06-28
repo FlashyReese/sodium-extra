@@ -9,6 +9,7 @@ import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.common.util.IdentifierSerializer;
 import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.material.FogType;
@@ -149,22 +150,30 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     public enum VerticalSyncOption implements TextProvider {
         OFF("options.off"),
         ON("options.on"),
-        ADAPTIVE("sodium-extra.option.use_adaptive_sync.name", GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+        ADAPTIVE("sodium-extra.option.use_adaptive_sync.name");
 
         private final Component name;
-        private final boolean supported;
 
         VerticalSyncOption(String name) {
-            this(name, true);
-        }
-
-        VerticalSyncOption(String name, boolean supported) {
             this.name = Component.translatable(name);
-            this.supported = supported;
         }
 
         public static VerticalSyncOption[] getAvailableOptions() {
-            return Arrays.stream(VerticalSyncOption.values()).filter((o) -> o.supported).toArray(VerticalSyncOption[]::new);
+            return Arrays.stream(VerticalSyncOption.values()).filter(VerticalSyncOption::isSupported).toArray(VerticalSyncOption[]::new);
+        }
+
+        public static boolean isAdaptiveSyncSupported() {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft == null || minecraft.getWindow() == null) {
+                return false;
+            }
+
+            return GLFW.glfwGetCurrentContext() != 0L
+                    && (GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+        }
+
+        private boolean isSupported() {
+            return this != ADAPTIVE || isAdaptiveSyncSupported();
         }
 
         @Override
