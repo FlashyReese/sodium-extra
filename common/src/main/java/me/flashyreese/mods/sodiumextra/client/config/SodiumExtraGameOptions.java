@@ -447,6 +447,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION_RECOVERY_PENDING)
         public boolean waylandFullscreenResolutionRecoveryPending;
         public boolean useAdaptiveSync;
+        public boolean cloudHeightOverride;
         public int cloudHeight;
         public boolean toasts;
         public boolean advancementToast;
@@ -468,6 +469,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.waylandFullscreenResolution = false;
             this.waylandFullscreenResolutionRecoveryPending = false;
             this.useAdaptiveSync = false;
+            this.cloudHeightOverride = false;
             this.cloudHeight = 192;
             this.toasts = true;
             this.advancementToast = true;
