@@ -41,6 +41,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static final Identifier MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
     private static final Identifier PROTECTED_GAMEPLAY_FOG_OPTION_ID = id("protected_gameplay_fog");
     private static final Identifier WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID = id("wayland_fullscreen_resolution");
+    private static final Identifier CLOUD_HEIGHT_OVERRIDE_OPTION_ID = id("cloud_height_override");
     private static final Identifier SODIUM_FULLSCREEN_OPTION_ID = Identifier.parse("sodium:general.fullscreen");
     private static final Identifier SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = Identifier.parse("sodium:general.fullscreen_resolution");
     private static final Identifier SODIUM_VSYNC_OPTION_ID = Identifier.parse("sodium:general.vsync");
@@ -77,6 +78,11 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         return isFogMixinEnabled()
                 && state.readBooleanOption(ADVANCED_FOG_OPTION_ID)
                 && state.readBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID);
+    }
+
+    private static boolean isCloudHeightOptionEnabled(ConfigState state) {
+        return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled()
+                && state.readBooleanOption(CLOUD_HEIGHT_OVERRIDE_OPTION_ID);
     }
 
     private static SodiumExtraGameOptions.FogSettings fogSettings() {
@@ -878,8 +884,17 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.showCoords = value, () -> SodiumExtraClientMod.options().extraSettings.showCoords)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                         )
-                        .addOption(builder.createIntegerOption(id("cloud_height"))
+                        .addOption(builder.createBooleanOption(CLOUD_HEIGHT_OVERRIDE_OPTION_ID)
                                 .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled())
+                                .setName(Component.translatable("sodium-extra.option.cloud_height_override"))
+                                .setTooltip(Component.translatable("sodium-extra.option.cloud_height_override.tooltip"))
+                                .setDefaultValue(false)
+                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.cloudHeightOverride = value, () -> SodiumExtraClientMod.options().extraSettings.cloudHeightOverride)
+                                .setStorageHandler(SodiumExtraClientMod.options())
+                        )
+                        .addOption(builder.createIntegerOption(id("cloud_height"))
+                                .setEnabledProvider(SodiumExtraConfig::isCloudHeightOptionEnabled, CLOUD_HEIGHT_OVERRIDE_OPTION_ID)
+                                .setControlHiddenWhenDisabled(false)
                                 .setName(Component.translatable("sodium-extra.option.cloud_height"))
                                 .setTooltip(Component.translatable("sodium-extra.option.cloud_height.tooltip"))
                                 .setRange(-64, 319, 1)
