@@ -37,6 +37,7 @@
     "sky.MixinSkyRenderer",
     "sky_colors.MixinAtmosphericFogEnvironment",
     "steady_debug_hud.MixinDebugScreenOverlay",
+    "toasts.MixinToastInstance",
     "toasts.MixinToastManager"
   ],
   "injectors": {
