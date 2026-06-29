@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import me.flashyreese.mods.sodiumextra.client.config.ConfigFileIO;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +84,7 @@ public final class WaylandFullscreenResolutionRecovery {
             }
 
             if (changed) {
-                Files.write(optionsFile, output, StandardCharsets.UTF_8);
+                ConfigFileIO.writeLinesAtomically(optionsFile, output);
             }
 
             return changed;
@@ -109,8 +110,7 @@ public final class WaylandFullscreenResolutionRecovery {
 
     private static void writeJson(Path path, JsonObject object) {
         try {
-            Files.createDirectories(path.getParent());
-            Files.writeString(path, GSON.toJson(object) + System.lineSeparator(), StandardCharsets.UTF_8);
+            ConfigFileIO.writeStringAtomically(path, GSON.toJson(object) + System.lineSeparator());
         } catch (IOException e) {
             LOGGER.error("Failed to write Sodium Extra fullscreen recovery state", e);
         }
