@@ -335,14 +335,23 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             if (this.dimensionOverrides == null) {
                 this.dimensionOverrides = new Object2ObjectArrayMap<>();
             }
-            this.dimensionOverrides.replaceAll((identifier, settings) -> {
+
+            Map<ResourceLocation, AtmosphericFogSettings> sanitizedDimensionOverrides = new Object2ObjectArrayMap<>(this.dimensionOverrides.size());
+            for (Map.Entry<ResourceLocation, AtmosphericFogSettings> entry : this.dimensionOverrides.entrySet()) {
+                ResourceLocation identifier = entry.getKey();
+                if (identifier == null) {
+                    continue;
+                }
+
+                AtmosphericFogSettings settings = entry.getValue();
                 if (settings == null) {
                     settings = new AtmosphericFogSettings();
                 }
 
                 settings.sanitize();
-                return settings;
-            });
+                sanitizedDimensionOverrides.put(identifier, settings);
+            }
+            this.dimensionOverrides = sanitizedDimensionOverrides;
 
             if (this.protectedGameplay == null) {
                 this.protectedGameplay = new ProtectedFogSettings();
