@@ -35,11 +35,24 @@ public class MixinWindow {
 
     @Inject(at = @At(value = "RETURN"), method = "refreshFramebufferSize")
     private void afterUpdateFrameBufferSize(CallbackInfo ci) {
-        this.scaleFramebufferSize();
+        this.scaleInitialFramebufferSize();
     }
 
     @Inject(method = "onFramebufferResize", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/platform/Window;framebufferHeight:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
     private void afterFramebufferResize(long handle, int newWidth, int newHeight, CallbackInfo ci) {
+        this.scaleFramebufferSize();
+    }
+
+    @Unique
+    private void scaleInitialFramebufferSize() {
+        MacReducedResolution.rememberWindowSize(this.width, this.height);
+
+        if (MacReducedResolution.shouldUseWindowSizeForInitialFramebuffer()) {
+            this.framebufferWidth = Math.max(1, this.width);
+            this.framebufferHeight = Math.max(1, this.height);
+            return;
+        }
+
         this.scaleFramebufferSize();
     }
 

@@ -40,6 +40,10 @@ public final class MacReducedResolution {
         return isEnabled() && backend != Backend.OPENGL && isHighDpiFramebuffer(framebufferWidth, framebufferHeight, windowWidth, windowHeight);
     }
 
+    public static boolean shouldUseWindowSizeForInitialFramebuffer() {
+        return isEnabled() && backend == Backend.OPENGL;
+    }
+
     public static GpuSurface.Configuration reduceSurfaceConfiguration(GpuSurface.Configuration config) {
         if (!isEnabled() || backend != Backend.VULKAN || !isHighDpiFramebuffer(config.width(), config.height(), windowWidth, windowHeight)) {
             return config;
