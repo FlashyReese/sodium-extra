@@ -3,6 +3,7 @@ package me.flashyreese.mods.sodiumextra.client.config;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.mojang.blaze3d.opengl.GlBackend;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
@@ -18,10 +19,11 @@ import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
@@ -39,30 +41,37 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     public RenderSettings renderSettings = new RenderSettings();
     @SerializedName(SodiumExtraConfigKeys.EXTRA_SETTINGS)
     public ExtraSettings extraSettings = new ExtraSettings();
-    private File file;
+    private Path path;
 
     public static SodiumExtraGameOptions load(File file) {
-        SodiumExtraGameOptions config;
+        return load(file.toPath());
+    }
 
-        if (file.exists()) {
-            try (FileReader reader = new FileReader(file)) {
+    public static SodiumExtraGameOptions load(Path path) {
+        SodiumExtraGameOptions config;
+        boolean shouldWriteChanges = true;
+
+        if (Files.exists(path)) {
+            try (var reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
                 config = gson.fromJson(reader, SodiumExtraGameOptions.class);
-            } catch (Exception e) {
-                SodiumExtraClientMod.logger().error("Could not parse config, falling back to defaults!", e);
+                if (config == null) {
+                    throw new JsonParseException("Root element must be a JSON object");
+                }
+            } catch (IOException | JsonParseException | IllegalStateException e) {
+                SodiumExtraClientMod.logger().warn("Could not read config, falling back to defaults", e);
                 config = new SodiumExtraGameOptions();
+                shouldWriteChanges = moveCorruptConfig(path);
             }
         } else {
             config = new SodiumExtraGameOptions();
         }
 
-        if (config == null) {
-            SodiumExtraClientMod.logger().error("Could not parse config, falling back to defaults!");
-            config = new SodiumExtraGameOptions();
-        }
-
         config.sanitize();
-        config.file = file;
-        config.writeChanges();
+        config.path = path;
+
+        if (shouldWriteChanges) {
+            config.writeChanges();
+        }
 
         return config;
     }
@@ -93,20 +102,27 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
     }
 
     public void writeChanges() {
-        File dir = this.file.getParentFile();
-
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                throw new RuntimeException("Could not create parent directories");
-            }
-        } else if (!dir.isDirectory()) {
-            throw new RuntimeException("The parent file is not a directory");
+        if (this.path == null) {
+            SodiumExtraClientMod.logger().warn("Could not save configuration file because no path was set");
+            return;
         }
 
-        try (FileWriter writer = new FileWriter(this.file)) {
-            gson.toJson(this, writer);
+        try {
+            this.sanitize();
+            ConfigFileIO.writeStringAtomically(this.path, gson.toJson(this) + System.lineSeparator());
         } catch (IOException e) {
-            throw new RuntimeException("Could not save configuration file", e);
+            SodiumExtraClientMod.logger().warn("Could not save configuration file", e);
+        }
+    }
+
+    private static boolean moveCorruptConfig(Path path) {
+        try {
+            Path corruptPath = ConfigFileIO.moveCorruptFile(path);
+            SodiumExtraClientMod.logger().warn("Moved corrupt configuration file to {}", corruptPath);
+            return true;
+        } catch (IOException e) {
+            SodiumExtraClientMod.logger().warn("Could not move corrupt configuration file", e);
+            return false;
         }
     }
 
@@ -337,14 +353,23 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             if (this.dimensionOverrides == null) {
                 this.dimensionOverrides = new Object2ObjectArrayMap<>();
             }
-            this.dimensionOverrides.replaceAll((identifier, settings) -> {
+
+            Map<Identifier, AtmosphericFogSettings> sanitizedDimensionOverrides = new Object2ObjectArrayMap<>(this.dimensionOverrides.size());
+            for (Map.Entry<Identifier, AtmosphericFogSettings> entry : this.dimensionOverrides.entrySet()) {
+                Identifier identifier = entry.getKey();
+                if (identifier == null) {
+                    continue;
+                }
+
+                AtmosphericFogSettings settings = entry.getValue();
                 if (settings == null) {
                     settings = new AtmosphericFogSettings();
                 }
 
                 settings.sanitize();
-                return settings;
-            });
+                sanitizedDimensionOverrides.put(identifier, settings);
+            }
+            this.dimensionOverrides = sanitizedDimensionOverrides;
 
             if (this.protectedGameplay == null) {
                 this.protectedGameplay = new ProtectedFogSettings();

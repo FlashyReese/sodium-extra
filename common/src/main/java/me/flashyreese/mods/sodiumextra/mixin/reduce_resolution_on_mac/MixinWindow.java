@@ -22,6 +22,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public class MixinWindow {
     @Shadow
+    private int width;
+
+    @Shadow
+    private int height;
+
+    @Shadow
     private int framebufferWidth;
 
     @Shadow
@@ -29,7 +35,7 @@ public class MixinWindow {
 
     @Inject(at = @At(value = "RETURN"), method = "refreshFramebufferSize")
     private void afterUpdateFrameBufferSize(CallbackInfo ci) {
-        this.scaleFramebufferSize();
+        this.scaleInitialFramebufferSize();
     }
 
     @Inject(method = "onFramebufferResize", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/platform/Window;framebufferHeight:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
@@ -38,12 +44,36 @@ public class MixinWindow {
     }
 
     @Unique
-    private void scaleFramebufferSize() {
-        if (!MacReducedResolution.isEnabled()) {
+    private void scaleInitialFramebufferSize() {
+        /*
+         * OpenGL only: the Cocoa non-Retina window hint gives us the correct
+         * reduced drawable, but the first refreshFramebufferSize() during startup
+         * can leave Minecraft's Window framebuffer fields at the Retina backing
+         * size. A manual resize fixes it through the normal callback path; pinning
+         * the initial values to the logical window size avoids the startup-only
+         * stretched/offset GUI without changing resize behavior.
+         */
+        if (MacReducedResolution.shouldUseWindowSizeForInitialFramebuffer()) {
+            this.framebufferWidth = Math.max(1, this.width);
+            this.framebufferHeight = Math.max(1, this.height);
             return;
         }
 
-        framebufferWidth = MacReducedResolution.reduce(framebufferWidth);
-        framebufferHeight = MacReducedResolution.reduce(framebufferHeight);
+        this.scaleFramebufferSize();
+    }
+
+    @Unique
+    private void scaleFramebufferSize() {
+        /*
+         * Do not halve on the OpenGL backend. GLFW already returned the reduced
+         * drawable after GLFW_COCOA_RETINA_FRAMEBUFFER=false, and a second halving
+         * was confirmed on 26.2 to render 1440p as 720p.
+         */
+        if (!MacReducedResolution.shouldReduceFramebuffer()) {
+            return;
+        }
+
+        this.framebufferWidth = MacReducedResolution.reduce(this.framebufferWidth);
+        this.framebufferHeight = MacReducedResolution.reduce(this.framebufferHeight);
     }
 }
