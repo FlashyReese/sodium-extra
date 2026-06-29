@@ -25,12 +25,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.Util;
-import net.minecraft.world.level.levelgen.WorldDimensions;
+import net.minecraft.world.level.Level;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SodiumExtraConfig implements ConfigEntryPoint {
     private static ResourceLocation id(String path) {
@@ -45,6 +44,11 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static final ResourceLocation SODIUM_FULLSCREEN_OPTION_ID = ResourceLocation.parse("sodium:general.fullscreen");
     private static final ResourceLocation SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = ResourceLocation.parse("sodium:general.fullscreen_resolution");
     private static final ResourceLocation SODIUM_VSYNC_OPTION_ID = ResourceLocation.parse("sodium:general.vsync");
+    private static final List<ResourceLocation> VANILLA_DIMENSION_IDS = List.of(
+            Level.OVERWORLD.location(),
+            Level.NETHER.location(),
+            Level.END.location()
+    );
 
     private static Boolean isFullscreenResolutionOptionEnabled(ConfigState state) {
         Monitor monitor = getMonitor();
@@ -215,6 +219,17 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         settings.affectSkyFog = source.affectSkyFog;
         settings.affectCloudFog = source.affectCloudFog;
         return settings;
+    }
+
+    private static List<ResourceLocation> getDimensionFogOptionIds(SodiumExtraGameOptions.FogSettings fogSettings) {
+        Set<ResourceLocation> identifiers = new LinkedHashSet<>(VANILLA_DIMENSION_IDS);
+        identifiers.addAll(fogSettings.dimensionOverrides.keySet());
+
+        identifiers.forEach(identifier -> fogSettings.dimensionOverrides.computeIfAbsent(identifier, ignored -> createDimensionFogSettings()));
+
+        return identifiers.stream()
+                .sorted(Comparator.comparing(ResourceLocation::toString))
+                .toList();
     }
 
     private static void setAtmosphericFogStart(int value) {
@@ -515,10 +530,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .setName(Component.translatable("sodium-extra.option.render"));
 
         SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
-        WorldDimensions.keysInOrder(Stream.empty())
-                .map(dim -> dim.location())
-                .filter(identifier -> !fogSettings.dimensionOverrides.containsKey(identifier))
-                .forEach(identifier -> fogSettings.dimensionOverrides.put(identifier, createDimensionFogSettings()));
+        List<ResourceLocation> dimensionFogOptionIds = getDimensionFogOptionIds(fogSettings);
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(ADVANCED_FOG_OPTION_ID)
@@ -606,9 +618,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         );
 
         OptionGroupBuilder dimensionFogGroup = builder.createOptionGroup();
-        fogSettings.dimensionOverrides.keySet().stream()
-                .sorted(Comparator.comparing(ResourceLocation::toString))
-                .forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
+        dimensionFogOptionIds.forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
                         .setEnabledProvider(
                                 SodiumExtraConfig::isDimensionFogOptionEnabled,
                                 ADVANCED_FOG_OPTION_ID,
@@ -626,7 +636,9 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         )
                         .setDefaultValue(0)
                 ));
-        page.addOptionGroup(dimensionFogGroup);
+        if (!dimensionFogOptionIds.isEmpty()) {
+            page.addOptionGroup(dimensionFogGroup);
+        }
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID)
