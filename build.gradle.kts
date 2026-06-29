@@ -11,7 +11,7 @@ val FABRIC_API_VERSION by extra { "0.153.0+26.1.2" }
 // https://semver.org/
 val MAVEN_GROUP by extra { "me.flashyreese.mods" }
 val ARCHIVE_NAME by extra { "sodium-extra" }
-val MOD_VERSION by extra { "0.9.0" }
+val MOD_VERSION by extra { "0.9.1" }
 val SODIUM_VERSION by extra { "0.9.1-beta.2+mc26.1.2" }
 
 allprojects {
