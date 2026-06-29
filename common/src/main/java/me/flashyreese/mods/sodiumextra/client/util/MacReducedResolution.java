@@ -5,6 +5,13 @@ import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.util.Util;
 
 public final class MacReducedResolution {
+    private enum Backend {
+        UNKNOWN,
+        OPENGL,
+        VULKAN
+    }
+
+    private static Backend backend = Backend.UNKNOWN;
     private static int windowWidth = -1;
     private static int windowHeight = -1;
 
@@ -16,17 +23,25 @@ public final class MacReducedResolution {
         return Math.max(1, value / 2);
     }
 
+    public static void useOpenGlBackend() {
+        backend = Backend.OPENGL;
+    }
+
+    public static void useVulkanBackend() {
+        backend = Backend.VULKAN;
+    }
+
     public static void rememberWindowSize(int width, int height) {
         windowWidth = width;
         windowHeight = height;
     }
 
     public static boolean shouldReduceFramebuffer(int framebufferWidth, int framebufferHeight, int windowWidth, int windowHeight) {
-        return isEnabled() && isHighDpiFramebuffer(framebufferWidth, framebufferHeight, windowWidth, windowHeight);
+        return isEnabled() && backend != Backend.OPENGL && isHighDpiFramebuffer(framebufferWidth, framebufferHeight, windowWidth, windowHeight);
     }
 
     public static GpuSurface.Configuration reduceSurfaceConfiguration(GpuSurface.Configuration config) {
-        if (!shouldReduceFramebuffer(config.width(), config.height(), windowWidth, windowHeight)) {
+        if (!isEnabled() || backend != Backend.VULKAN || !isHighDpiFramebuffer(config.width(), config.height(), windowWidth, windowHeight)) {
             return config;
         }
 
