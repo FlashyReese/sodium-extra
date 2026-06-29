@@ -83,7 +83,7 @@ public class SodiumExtraClientMod {
     }
 
     private static SodiumExtraGameOptions loadConfig() {
-        return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve(SodiumExtraConfigKeys.FILE_NAME).toFile());
+        return SodiumExtraGameOptions.load(PlatformRuntimeInformation.getInstance().getConfigDirectory().resolve(SodiumExtraConfigKeys.FILE_NAME));
     }
 
     public static void armWaylandFullscreenResolutionRecovery() {
