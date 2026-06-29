@@ -43,8 +43,8 @@ public final class FogDistanceHelper {
 
     public static SodiumExtraGameOptions.AtmosphericFogSettings getAtmosphericSettings(ClientLevel level) {
         SodiumExtraGameOptions.FogSettings fogSettings = getFogSettings();
-        ResourceLocation dimensionId = level.dimension().location();
-        return fogSettings.getAtmospheric(dimensionId);
+        ResourceLocation dimensionEffectsId = level.dimensionType().effectsLocation();
+        return fogSettings.getAtmospheric(dimensionEffectsId);
     }
 
     public static int normalizeFogDistance(int fogDistance) {
