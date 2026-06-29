@@ -46,7 +46,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static final Identifier SODIUM_FULLSCREEN_MODE_OPTION_ID = Identifier.parse("sodium:general.fullscreen_mode");
     private static final Identifier SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = Identifier.parse("sodium:general.fullscreen_resolution");
     private static final Identifier SODIUM_VSYNC_OPTION_ID = Identifier.parse("sodium:general.vsync");
-    private static final List<Identifier> DEFAULT_DIMENSION_IDS = List.of(
+    private static final List<Identifier> DEFAULT_DIMENSION_EFFECT_IDS = List.of(
             Level.OVERWORLD.identifier(),
             Level.NETHER.identifier(),
             Level.END.identifier()
@@ -105,6 +105,36 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         settings.affectSkyFog = source.affectSkyFog;
         settings.affectCloudFog = source.affectCloudFog;
         return settings;
+    }
+
+    private static List<Identifier> getDimensionFogEffectIds(SodiumExtraGameOptions.FogSettings fogSettings) {
+        Set<Identifier> identifiers = new LinkedHashSet<>(DEFAULT_DIMENSION_EFFECT_IDS);
+        addKnownWorldDimensionEffectIds(identifiers);
+        identifiers.addAll(fogSettings.dimensionOverrides.keySet());
+
+        identifiers.forEach(identifier -> fogSettings.dimensionOverrides.computeIfAbsent(identifier, ignored -> createDimensionFogSettings()));
+
+        return identifiers.stream()
+                .sorted(Comparator.comparing(Identifier::toString))
+                .toList();
+    }
+
+    private static void addKnownWorldDimensionEffectIds(Set<Identifier> identifiers) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) {
+            return;
+        }
+
+        if (minecraft.level != null) {
+            identifiers.add(getDimensionFogEffectId(minecraft.level));
+        }
+    }
+
+    private static Identifier getDimensionFogEffectId(Level level) {
+        return level.dimensionTypeRegistration()
+                .unwrapKey()
+                .map(key -> key.identifier())
+                .orElseGet(() -> level.dimension().identifier());
     }
 
     private static void setAtmosphericFogStart(int value) {
@@ -517,9 +547,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .setName(Component.translatable("sodium-extra.option.render"));
 
         SodiumExtraGameOptions.FogSettings fogSettings = fogSettings();
-        DEFAULT_DIMENSION_IDS.stream()
-                .filter(identifier -> !fogSettings.dimensionOverrides.containsKey(identifier))
-                .forEach(identifier -> fogSettings.dimensionOverrides.put(identifier, createDimensionFogSettings()));
+        List<Identifier> dimensionFogEffectIds = getDimensionFogEffectIds(fogSettings);
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(ADVANCED_FOG_OPTION_ID)
@@ -607,9 +635,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         );
 
         OptionGroupBuilder dimensionFogGroup = builder.createOptionGroup();
-        fogSettings.dimensionOverrides.keySet().stream()
-                .sorted(Comparator.comparing(Identifier::toString))
-                .forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
+        dimensionFogEffectIds.forEach(identifier -> dimensionFogGroup.addOption(builder.createIntegerOption(id("fog." + identifier.toLanguageKey("options.dimensions")))
                         .setEnabledProvider(
                                 SodiumExtraConfig::isDimensionFogOptionEnabled,
                                 ADVANCED_FOG_OPTION_ID,
@@ -627,7 +653,9 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         )
                         .setDefaultValue(0)
                 ));
-        page.addOptionGroup(dimensionFogGroup);
+        if (!dimensionFogEffectIds.isEmpty()) {
+            page.addOptionGroup(dimensionFogGroup);
+        }
 
         page.addOptionGroup(builder.createOptionGroup()
                 .addOption(builder.createBooleanOption(PROTECTED_GAMEPLAY_FOG_OPTION_ID)
