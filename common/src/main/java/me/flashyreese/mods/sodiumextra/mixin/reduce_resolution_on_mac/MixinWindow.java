@@ -22,6 +22,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public class MixinWindow {
     @Shadow
+    private int width;
+
+    @Shadow
+    private int height;
+
+    @Shadow
     private int framebufferWidth;
 
     @Shadow
@@ -39,11 +45,13 @@ public class MixinWindow {
 
     @Unique
     private void scaleFramebufferSize() {
-        if (!MacReducedResolution.isEnabled()) {
+        MacReducedResolution.rememberWindowSize(this.width, this.height);
+
+        if (!MacReducedResolution.shouldReduceFramebuffer(this.framebufferWidth, this.framebufferHeight, this.width, this.height)) {
             return;
         }
 
-        framebufferWidth = MacReducedResolution.reduce(framebufferWidth);
-        framebufferHeight = MacReducedResolution.reduce(framebufferHeight);
+        this.framebufferWidth = MacReducedResolution.reduce(this.framebufferWidth);
+        this.framebufferHeight = MacReducedResolution.reduce(this.framebufferHeight);
     }
 }
