@@ -498,6 +498,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean tutorialToast;
         public boolean instantSneak;
         public boolean preventShaders;
+        public boolean paniniProjection;
+        public int paniniProjectionStrength;
         public boolean steadyDebugHud;
         public int steadyDebugHudRefreshInterval;
 
@@ -521,6 +523,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.tutorialToast = true;
             this.instantSneak = false;
             this.preventShaders = false;
+            this.paniniProjection = false;
+            this.paniniProjectionStrength = 25;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
         }
@@ -533,6 +537,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             if (this.textContrast == null) {
                 this.textContrast = TextContrast.NONE;
             }
+
+            this.paniniProjectionStrength = Math.clamp(this.paniniProjectionStrength, 0, 100);
 
             if (this.steadyDebugHudRefreshInterval < 1) {
                 this.steadyDebugHudRefreshInterval = 1;

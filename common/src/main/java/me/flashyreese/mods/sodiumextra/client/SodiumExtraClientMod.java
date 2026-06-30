@@ -53,6 +53,7 @@ public class SodiumExtraClientMod {
                     .addMixinOption("optimizations.beacon_beam_rendering", true)
                     .addMixinOption("optimizations.draw_helpers", false)
                     .addMixinOption("optimizations.fast_weather", false)
+                    .addMixinOption("panini_projection", true)
                     .addMixinOption("particle", true)
                     .addMixinOption("prevent_shaders", true)
                     .addMixinOption("profiler", true)
