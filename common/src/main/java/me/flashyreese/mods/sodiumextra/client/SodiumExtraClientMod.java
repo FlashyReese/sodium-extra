@@ -51,6 +51,7 @@ public class SodiumExtraClientMod {
                     .addMixinOption("light_updates", true)
                     .addMixinOption("optimizations", true)
                     .addMixinOption("optimizations.beacon_beam_rendering", true)
+                    .addMixinOption("panini_projection", true)
                     .addMixinOption("particle", true)
                     .addMixinOption("prevent_shaders", true)
                     .addMixinOption("reduce_resolution_on_mac", true)

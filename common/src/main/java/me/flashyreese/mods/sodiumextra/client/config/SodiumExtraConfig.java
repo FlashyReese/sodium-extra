@@ -42,6 +42,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static final Identifier PROTECTED_GAMEPLAY_FOG_OPTION_ID = id("protected_gameplay_fog");
     private static final Identifier WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID = id("wayland_fullscreen_resolution");
     private static final Identifier CLOUD_HEIGHT_OVERRIDE_OPTION_ID = id("cloud_height_override");
+    private static final Identifier PANINI_PROJECTION_OPTION_ID = id("panini_projection");
     private static final Identifier SODIUM_FULLSCREEN_OPTION_ID = Identifier.parse("sodium:general.fullscreen");
     private static final Identifier SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = Identifier.parse("sodium:general.fullscreen_resolution");
     private static final Identifier SODIUM_VSYNC_OPTION_ID = Identifier.parse("sodium:general.vsync");
@@ -83,6 +84,11 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static boolean isCloudHeightOptionEnabled(ConfigState state) {
         return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.cloud").isEnabled()
                 && state.readBooleanOption(CLOUD_HEIGHT_OVERRIDE_OPTION_ID);
+    }
+
+    private static boolean isPaniniProjectionOptionEnabled(ConfigState state) {
+        return SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.panini_projection").isEnabled()
+                && state.readBooleanOption(PANINI_PROJECTION_OPTION_ID);
     }
 
     private static SodiumExtraGameOptions.FogSettings fogSettings() {
@@ -987,6 +993,27 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.preventShaders = value, () -> SodiumExtraClientMod.options().extraSettings.preventShaders)
                                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                                 .setDefaultValue(false)
+                                .setStorageHandler(SodiumExtraClientMod.options())
+                        ))
+                .addOptionGroup(builder.createOptionGroup()
+                        .addOption(builder.createBooleanOption(PANINI_PROJECTION_OPTION_ID)
+                                .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.panini_projection").isEnabled())
+                                .setName(Component.translatable("sodium-extra.option.panini_projection"))
+                                .setTooltip(Component.translatable("sodium-extra.option.panini_projection.tooltip"))
+                                .setImpact(OptionImpact.MEDIUM)
+                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.paniniProjection = value, () -> SodiumExtraClientMod.options().extraSettings.paniniProjection)
+                                .setDefaultValue(false)
+                                .setStorageHandler(SodiumExtraClientMod.options())
+                        )
+                        .addOption(builder.createIntegerOption(id("panini_projection_strength"))
+                                .setEnabledProvider(SodiumExtraConfig::isPaniniProjectionOptionEnabled, PANINI_PROJECTION_OPTION_ID)
+                                .setControlHiddenWhenDisabled(false)
+                                .setName(Component.translatable("sodium-extra.option.panini_projection_strength"))
+                                .setTooltip(Component.translatable("sodium-extra.option.panini_projection_strength.tooltip"))
+                                .setRange(0, 100, 1)
+                                .setValueFormatter(ControlValueFormatterImpls.percentage())
+                                .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.paniniProjectionStrength = value, () -> SodiumExtraClientMod.options().extraSettings.paniniProjectionStrength)
+                                .setDefaultValue(25)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                         ))
                 .addOptionGroup(builder.createOptionGroup()
