@@ -385,9 +385,26 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             return this.getOrCreateDimensionOverride(dimensionId);
         }
 
+        public int getDimensionFogDistance(Identifier dimensionId) {
+            AtmosphericFogSettings settings = this.dimensionOverrides.get(dimensionId);
+            return settings != null ? settings.distanceChunks : FogDistanceHelper.FOG_DISTANCE_VANILLA;
+        }
+
         public AtmosphericFogSettings getOrCreateDimensionOverride(Identifier dimensionId) {
-            AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> new AtmosphericFogSettings());
+            AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> this.createInheritedAtmospheric());
             settings.sanitize();
+            return settings;
+        }
+
+        // New per-dimension overrides inherit the global atmospheric settings (except distance) at the
+        // moment they are first edited, rather than being pre-created when the config screen is opened.
+        private AtmosphericFogSettings createInheritedAtmospheric() {
+            AtmosphericFogSettings base = this.atmospheric != null ? this.atmospheric : new AtmosphericFogSettings();
+            AtmosphericFogSettings settings = new AtmosphericFogSettings();
+            settings.startPercent = base.startPercent;
+            settings.shapeMode = base.shapeMode;
+            settings.affectSkyFog = base.affectSkyFog;
+            settings.affectCloudFog = base.affectCloudFog;
             return settings;
         }
     }

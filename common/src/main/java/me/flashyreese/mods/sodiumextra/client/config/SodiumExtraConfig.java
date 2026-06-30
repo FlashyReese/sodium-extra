@@ -93,26 +93,12 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
         return renderSettings.fogSettings;
     }
 
-    private static SodiumExtraGameOptions.AtmosphericFogSettings atmosphericFogSettings() {
-        return fogSettings().atmospheric;
-    }
-
-    private static SodiumExtraGameOptions.AtmosphericFogSettings createDimensionFogSettings() {
-        SodiumExtraGameOptions.AtmosphericFogSettings source = atmosphericFogSettings();
-        SodiumExtraGameOptions.AtmosphericFogSettings settings = new SodiumExtraGameOptions.AtmosphericFogSettings();
-        settings.startPercent = source.startPercent;
-        settings.shapeMode = source.shapeMode;
-        settings.affectSkyFog = source.affectSkyFog;
-        settings.affectCloudFog = source.affectCloudFog;
-        return settings;
-    }
-
     private static List<Identifier> getDimensionFogEffectIds(SodiumExtraGameOptions.FogSettings fogSettings) {
+        // Build the list of dimensions to show options for without creating overrides; an override is
+        // only persisted once the player actually edits that dimension's fog distance.
         Set<Identifier> identifiers = new LinkedHashSet<>(DEFAULT_DIMENSION_EFFECT_IDS);
         addKnownWorldDimensionEffectIds(identifiers);
         identifiers.addAll(fogSettings.dimensionOverrides.keySet());
-
-        identifiers.forEach(identifier -> fogSettings.dimensionOverrides.computeIfAbsent(identifier, ignored -> createDimensionFogSettings()));
 
         return identifiers.stream()
                 .sorted(Comparator.comparing(Identifier::toString))
@@ -649,7 +635,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                         .setValueFormatter(ControlValueFormatterExtended.fogDistance())
                         .setBinding(
                                 value -> SodiumExtraClientMod.options().renderSettings.fogSettings.getOrCreateDimensionOverride(identifier).distanceChunks = value,
-                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.getOrCreateDimensionOverride(identifier).distanceChunks
+                                () -> SodiumExtraClientMod.options().renderSettings.fogSettings.getDimensionFogDistance(identifier)
                         )
                         .setDefaultValue(0)
                 ));
