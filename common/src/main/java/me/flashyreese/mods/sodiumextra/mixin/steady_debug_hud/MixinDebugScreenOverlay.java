@@ -48,17 +48,19 @@ public abstract class MixinDebugScreenOverlay {
     public void sodiumExtra$redirectDrawLeftText(DebugScreenOverlay instance, GuiGraphicsExtractor guiGraphics, List<String> text, boolean left) {
         if (this.rebuild) {
             this.leftTextCache.clear();
-            this.leftTextCache.addAll(text);
+            this.extractLines(guiGraphics, this.leftTextCache, left);
         }
-        this.extractLines(guiGraphics, this.leftTextCache, left);
+        text.clear();
+        text.addAll(this.leftTextCache);
     }
 
     @Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V", ordinal = 1))
     public void sodiumExtra$redirectDrawRightText(DebugScreenOverlay instance, GuiGraphicsExtractor guiGraphics, List<String> text, boolean left) {
         if (this.rebuild) {
             this.rightTextCache.clear();
-            this.rightTextCache.addAll(text);
+            this.extractLines(guiGraphics, this.rightTextCache, left);
         }
-        this.extractLines(guiGraphics, this.rightTextCache, left);
+        text.clear();
+        text.addAll(this.rightTextCache);
     }
 }
