@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
-import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
@@ -233,18 +233,31 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.rainSplash = true;
             this.blockBreak = true;
             this.blockBreaking = true;
-            this.otherMap = new Object2BooleanArrayMap<>();
+            this.otherMap = new Object2BooleanLinkedOpenHashMap<>();
         }
 
         public void sanitize() {
+            // Normalize to a hashed map for O(1) lookups on the particle-creation hot path while keeping
+            // insertion order for stable config serialization. Gson deserializes into a plain map.
             if (this.otherMap == null) {
-                this.otherMap = new Object2BooleanArrayMap<>();
+                this.otherMap = new Object2BooleanLinkedOpenHashMap<>();
+            } else if (!(this.otherMap instanceof Object2BooleanLinkedOpenHashMap)) {
+                this.otherMap = new Object2BooleanLinkedOpenHashMap<>(this.otherMap);
             }
         }
 
         public boolean isParticleEnabled(Identifier particleTypeId) {
-            this.sanitize();
-            return this.particles && this.otherMap.computeIfAbsent(particleTypeId, k -> true);
+            if (!this.particles) {
+                return false;
+            }
+
+            // Unidentified particle types (e.g. unregistered modded types) are never filtered. Read without
+            // mutating so this stays thread-safe and does not bloat the config with every particle seen.
+            if (particleTypeId == null || this.otherMap == null) {
+                return true;
+            }
+
+            return this.otherMap.getOrDefault(particleTypeId, true);
         }
     }
 

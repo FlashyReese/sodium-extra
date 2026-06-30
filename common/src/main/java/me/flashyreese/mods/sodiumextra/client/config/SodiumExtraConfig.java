@@ -427,7 +427,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                     .setStorageHandler(SodiumExtraClientMod.options())
                                     .setBinding(
                                             value -> SodiumExtraClientMod.options().particleSettings.otherMap.put(particleId, value),
-                                            () -> SodiumExtraClientMod.options().particleSettings.otherMap.computeIfAbsent(particleId, k -> true)
+                                            () -> SodiumExtraClientMod.options().particleSettings.otherMap.getOrDefault(particleId, true)
                                     )
                                     .setDefaultValue(true)
                                     .setEnabled(SodiumExtraClientMod.mixinConfig().getOptions().get("mixin.particle").isEnabled())
