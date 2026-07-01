@@ -1,9 +1,8 @@
-name: Build (Self-Hosted)
-on: [push]
+name: Build
+on: [pull_request, push]
 jobs:
-  selfhost-build:
-    if: github.repository_owner == 'FlashyReese'
-    runs-on: self-hosted
+  build:
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Checkout Repository
@@ -21,11 +20,8 @@ jobs:
           distribution: 'temurin'
           java-version: 25
           check-latest: true
-      - name: Build and Publish with Gradle
-        run: ./gradlew build publishAllPublicationsToFlashyReeseSnapshotsRepository
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+      - name: Build with Gradle
+        run: ./gradlew build --stacktrace
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
