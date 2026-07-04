@@ -50,7 +50,6 @@ public class SodiumExtraClientMod {
                     .addMixinOption("instant_sneak", true)
                     .addMixinOption("light_updates", true)
                     .addMixinOption("optimizations", true)
-                    .addMixinOption("optimizations.beacon_beam_rendering", true)
                     .addMixinOption("optimizations.draw_helpers", false)
                     .addMixinOption("optimizations.fast_weather", false)
                     .addMixinOption("panini_projection", true)
