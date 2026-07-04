@@ -538,7 +538,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
                 this.textContrast = TextContrast.NONE;
             }
 
-            this.paniniProjectionStrength = Math.clamp(this.paniniProjectionStrength, 0, 100);
+            this.paniniProjectionStrength = Math.max(0, Math.min(this.paniniProjectionStrength, 100));
 
             if (this.steadyDebugHudRefreshInterval < 1) {
                 this.steadyDebugHudRefreshInterval = 1;
