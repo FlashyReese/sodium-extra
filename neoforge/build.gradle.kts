@@ -10,6 +10,7 @@ val NEOFORGE_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 val ARCHIVE_NAME: String by rootProject.extra
 
 base {
@@ -85,6 +86,8 @@ dependencies {
     implementation("net.caffeinemc:sodium-neoforge-mod:$SODIUM_VERSION")
     implementation("net.caffeinemc:sodium-neoforge-api:${SODIUM_VERSION}")
     implementation("net.caffeinemc:sodium-neoforge:${SODIUM_VERSION}")
+    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    jarJar("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code

@@ -30,6 +30,13 @@ versionRange = "[0.9.0,)"
 ordering = "NONE"
 side = "CLIENT"
 
+[[dependencies.sodium_extra]]
+modId = "greenlight"
+type = "optional"
+versionRange = "[0.1.0,)"
+ordering = "AFTER"
+side = "CLIENT"
+
 [[mixins]]
 config = "sodium-extra.mixins.json"
 

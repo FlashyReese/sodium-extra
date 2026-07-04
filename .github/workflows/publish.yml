@@ -44,6 +44,7 @@ jobs:
           loaders: neoforge
           dependencies: |
             sodium
+            greenlight(optional)
             reeses-sodium-options(optional)
             irisshaders(optional)
             iris(optional)
@@ -65,6 +66,7 @@ jobs:
           loaders: fabric
           dependencies: |
             sodium
+            greenlight(optional)
             reeses-sodium-options(optional)
             irisshaders(optional)
             iris(optional)

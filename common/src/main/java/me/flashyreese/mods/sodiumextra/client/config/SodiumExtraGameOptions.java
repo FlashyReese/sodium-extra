@@ -397,7 +397,6 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             if (this.protectedGameplay == null) {
                 this.protectedGameplay = new ProtectedFogSettings();
             }
-            this.protectedGameplay.sanitize();
         }
 
         public AtmosphericFogSettings getAtmospheric(Identifier dimensionId) {
@@ -448,7 +447,6 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         }
 
         public void sanitize() {
-            this.distanceChunks = FogDistanceHelper.normalizeFogDistance(this.distanceChunks);
             this.startPercent = Math.clamp(this.startPercent, 0, 100);
 
             if (this.shapeMode == null) {
@@ -479,14 +477,6 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.lavaDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
             this.powderSnowDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
             this.waterDistanceBlocks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
-        }
-
-        public void sanitize() {
-            this.blindnessDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.blindnessDistanceBlocks);
-            this.darknessDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.darknessDistanceBlocks);
-            this.lavaDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.lavaDistanceBlocks);
-            this.powderSnowDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.powderSnowDistanceBlocks);
-            this.waterDistanceBlocks = FogDistanceHelper.normalizeFogDistance(this.waterDistanceBlocks);
         }
     }
 
