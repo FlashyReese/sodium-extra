@@ -34,6 +34,8 @@ public class MixinAtmosphericFogEnvironment {
         }
 
         float end = FogDistanceHelper.getEnd(fogDistance);
+        fog.environmentalStart = FogDistanceHelper.getStart(settings);
+        fog.environmentalEnd = end;
         if (settings.affectSkyFog) {
             fog.skyEnd = Math.min(end, renderDistance);
         }
