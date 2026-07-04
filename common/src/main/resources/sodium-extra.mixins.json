@@ -25,8 +25,6 @@
     "gui.MixinMinecraftClient",
     "instant_sneak.MixinCamera",
     "light_updates.MixinLevelLightEngine",
-    "optimizations.beacon_beam_rendering.MixinBeaconRenderer",
-    "optimizations.beacon_beam_rendering.MixinVertexSerializerRegistryImpl",
     "panini_projection.AccessorPostChain",
     "panini_projection.AccessorPostPass",
     "panini_projection.MixinGameRenderer",
