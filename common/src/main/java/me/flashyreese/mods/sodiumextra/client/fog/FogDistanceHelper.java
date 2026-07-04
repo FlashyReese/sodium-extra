@@ -1,5 +1,8 @@
 package me.flashyreese.mods.sodiumextra.client.fog;
 
+import com.google.gson.JsonObject;
+import me.flashyreese.mods.greenlight.feature.ClientFeature;
+import me.flashyreese.mods.greenlight.feature.Greenlight;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import me.flashyreese.mods.sodiumextra.mixin.fog.AccessorMinecraftServer;
@@ -16,9 +19,12 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.players.PlayerList;
+import net.minecraft.util.GsonHelper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.EnumMap;
+import java.util.Map;
 
 public final class FogDistanceHelper {
     public static final Identifier SODIUM_RENDER_DISTANCE_OPTION_ID = Identifier.parse("sodium:general.render_distance");
@@ -30,13 +36,23 @@ public final class FogDistanceHelper {
     private static final float RADIAL_RENDER_DISTANCE_OFFSET = 1_048_576.0F;
     private static final float PLANAR_RENDER_DISTANCE_OFFSET = 2_097_152.0F;
     private static final float CHUNK_SIZE = 16F;
+    private static final ClientFeature<ProtectedGameplayFogPolicy> PROTECTED_GAMEPLAY_FOG = Greenlight
+            .feature(Identifier.fromNamespaceAndPath("sodium-extra", "protected_gameplay_fog"))
+            .decoder(1, ProtectedGameplayFogPolicy::fromJson)
+            .register();
 
     public enum ProtectedFogType {
-        BLINDNESS,
-        DARKNESS,
-        LAVA,
-        POWDER_SNOW,
-        WATER
+        BLINDNESS("blindness"),
+        DARKNESS("darkness"),
+        LAVA("lava"),
+        POWDER_SNOW("powder_snow"),
+        WATER("water");
+
+        private final String policyKey;
+
+        ProtectedFogType(String policyKey) {
+            this.policyKey = policyKey;
+        }
     }
 
     public static SodiumExtraGameOptions.AtmosphericFogSettings getAtmosphericSettings(ClientLevel level) {
@@ -185,11 +201,28 @@ public final class FogDistanceHelper {
 
     public static boolean shouldModifyProtectedGameplayFog() {
         SodiumExtraGameOptions.FogSettings fogSettings = getFogSettings();
-        return fogSettings.advanced && fogSettings.protectedGameplay.enabledWhenAllowed && isLocalWorldAllowedForProtectedGameplayFog();
+        return fogSettings.advanced
+                && fogSettings.protectedGameplay.enabledWhenAllowed
+                && (isLocalWorldAllowedForProtectedGameplayFog() || PROTECTED_GAMEPLAY_FOG.policy().isPresent());
     }
 
     public static int getProtectedGameplayFogDistance(ProtectedFogType type) {
-        SodiumExtraGameOptions.ProtectedFogSettings settings = getFogSettings().protectedGameplay;
+        SodiumExtraGameOptions.FogSettings fogSettings = getFogSettings();
+        if (!fogSettings.advanced || !fogSettings.protectedGameplay.enabledWhenAllowed) {
+            return FOG_DISTANCE_VANILLA;
+        }
+
+        int distanceBlocks = getConfiguredProtectedGameplayFogDistance(fogSettings.protectedGameplay, type);
+        if (isLocalWorldAllowedForProtectedGameplayFog()) {
+            return distanceBlocks;
+        }
+
+        return PROTECTED_GAMEPLAY_FOG.policy()
+                .map(policy -> policy.clamp(type, distanceBlocks))
+                .orElse(FOG_DISTANCE_VANILLA);
+    }
+
+    private static int getConfiguredProtectedGameplayFogDistance(SodiumExtraGameOptions.ProtectedFogSettings settings, ProtectedFogType type) {
         return switch (type) {
             case BLINDNESS -> settings.blindnessDistanceBlocks;
             case DARKNESS -> settings.darknessDistanceBlocks;
@@ -201,6 +234,7 @@ public final class FogDistanceHelper {
 
     public static void applyProtectedGameplayFog(FogData fog, int distanceBlocks, float environmentalStartMultiplier, float skyEndMultiplier) {
         distanceBlocks = normalizeFogDistance(distanceBlocks);
+
         if (distanceBlocks == FOG_DISTANCE_VANILLA) {
             return;
         }
@@ -252,6 +286,46 @@ public final class FogDistanceHelper {
             return result instanceof Integer value ? value : fallback;
         } catch (ReflectiveOperationException | RuntimeException ignored) {
             return fallback;
+        }
+    }
+
+    private record ProtectedGameplayFogPolicy(Map<ProtectedFogType, ProtectedFogRule> rules) {
+        private static ProtectedGameplayFogPolicy fromJson(JsonObject settings) {
+            EnumMap<ProtectedFogType, ProtectedFogRule> rules = new EnumMap<>(ProtectedFogType.class);
+
+            for (ProtectedFogType type : ProtectedFogType.values()) {
+                JsonObject rule = GsonHelper.getAsJsonObject(settings, type.policyKey, new JsonObject());
+                boolean enabled = GsonHelper.getAsBoolean(rule, "enabled", false);
+                int maxDistanceBlocks = Math.clamp(GsonHelper.getAsInt(rule, "max_distance_blocks", FOG_DISTANCE_VANILLA), FOG_DISTANCE_VANILLA, PROTECTED_FOG_DISTANCE_MAX_BLOCKS);
+                boolean allowOff = GsonHelper.getAsBoolean(rule, "allow_off", false);
+
+                rules.put(type, new ProtectedFogRule(enabled, maxDistanceBlocks, allowOff));
+            }
+
+            return new ProtectedGameplayFogPolicy(Map.copyOf(rules));
+        }
+
+        private int clamp(ProtectedFogType type, int distanceBlocks) {
+            ProtectedFogRule rule = this.rules.get(type);
+            return rule != null ? rule.clamp(distanceBlocks) : FOG_DISTANCE_VANILLA;
+        }
+    }
+
+    private record ProtectedFogRule(boolean enabled, int maxDistanceBlocks, boolean allowOff) {
+        private int clamp(int distanceBlocks) {
+            if (!this.enabled) {
+                return FOG_DISTANCE_VANILLA;
+            }
+
+            if (distanceBlocks == FOG_DISTANCE_VANILLA) {
+                return FOG_DISTANCE_VANILLA;
+            }
+
+            if (disablesFog(distanceBlocks)) {
+                return this.allowOff ? FOG_DISTANCE_OFF : this.maxDistanceBlocks;
+            }
+
+            return Math.min(distanceBlocks, this.maxDistanceBlocks);
         }
     }
 

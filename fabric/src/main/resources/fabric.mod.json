@@ -66,6 +66,7 @@
     "reeses-sodium-options": "<1.8.4"
   },
   "suggests": {
+    "greenlight": ">=0.1.0",
     "reeses-sodium-options": ">=2.2.0"
   }
 }

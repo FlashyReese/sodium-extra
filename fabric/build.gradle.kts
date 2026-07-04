@@ -11,6 +11,7 @@ val FABRIC_API_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 val ARCHIVE_NAME: String by rootProject.extra
 
 base {
@@ -40,6 +41,8 @@ dependencies {
     addEmbeddedFabricModule("fabric-resource-loader-v0")
     compileOnly(project(":common"))
     modImplementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    modImplementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.test {

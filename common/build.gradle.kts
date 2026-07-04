@@ -12,6 +12,7 @@ val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 
 // This trick hides common tasks in the IDEA list.
 tasks.configureEach {
@@ -40,6 +41,7 @@ dependencies {
     //addDependentFabricModule("fabric-renderer-api-v1")
 
     modImplementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    compileOnly("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.withType<AbstractRemapJarTask>().forEach {
