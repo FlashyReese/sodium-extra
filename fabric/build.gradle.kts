@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.16.1")
+    id("net.fabricmc.fabric-loom-remap") version ("1.17.13")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -59,15 +59,15 @@ loom {
     runs {
         named("client") {
             client()
-            configName = "Fabric Client"
-            ideConfigGenerated(true)
-            runDir("run")
+            displayName.set("Fabric Client")
+            generateRunConfig.set(true)
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
         named("server") {
             server()
-            configName = "Fabric Server"
-            ideConfigGenerated(true)
-            runDir("run")
+            displayName.set("Fabric Server")
+            generateRunConfig.set(true)
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
     }
 }
