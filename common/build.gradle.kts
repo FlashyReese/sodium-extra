@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.AbstractRemapJarTask
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version "1.17.11"
+    id("net.fabricmc.fabric-loom") version "1.17.13"
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
