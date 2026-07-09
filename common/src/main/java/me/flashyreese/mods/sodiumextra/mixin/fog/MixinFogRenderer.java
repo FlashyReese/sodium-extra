@@ -124,6 +124,11 @@ public abstract class MixinFogRenderer {
     private static void sodiumExtra$applyTerrainFog(SodiumExtraGameOptions.AtmosphericFogSettings settings) {
         int fogDistance = settings.distanceChunks;
         if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
+            float start = FogDistanceHelper.applyStartMultiplier(RenderSystem.getShaderFogStart(), settings);
+            float end = RenderSystem.getShaderFogEnd();
+            RenderSystem.setShaderFogStart(start);
+            RenderSystem.setShaderFogEnd(end);
+            FogDistanceHelper.applyRenderDistanceShape(start, end, settings);
             return;
         }
 
