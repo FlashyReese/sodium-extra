@@ -31,7 +31,11 @@ public final class FogDistanceHelper {
     public static final int FOG_DISTANCE_OFF = -1;
     public static final int FOG_DISTANCE_VANILLA = 0;
     private static final int LEGACY_FOG_DISTANCE_OFF = 33;
+    // The cloud shader fades clouds from the camera to cloudEnd; 100% puts the fade end at the
+    // cloud render edge, which is vanilla's own formula.
+    public static final int VANILLA_CLOUD_FOG_PERCENT = 100;
     private static final int VANILLA_MAX_FOG_DISTANCE = 32;
+    private static final int VANILLA_MAX_CLOUD_RENDER_DISTANCE = 128;
     private static final int PROTECTED_FOG_DISTANCE_MAX_BLOCKS = 256;
     // Shape sentinels decoded by FogShaderTransformer; keep values in sync with its GLSL constants.
     private static final float RADIAL_RENDER_DISTANCE_OFFSET = 1_048_576.0F;
@@ -172,6 +176,19 @@ public final class FogDistanceHelper {
 
     public static float getEnd(int fogDistance) {
         return (fogDistance + 1) * CHUNK_SIZE;
+    }
+
+    public static float getCloudEnd(int cloudFogPercent) {
+        return getCloudRenderDistance() * CHUNK_SIZE * (Math.clamp(cloudFogPercent, 0, 100) / 100.0F);
+    }
+
+    private static int getCloudRenderDistance() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.options == null) {
+            return VANILLA_MAX_CLOUD_RENDER_DISTANCE;
+        }
+
+        return Math.max(1, minecraft.options.cloudRange().get());
     }
 
     public static boolean disablesFog(int fogDistance) {

@@ -402,22 +402,44 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             return settings != null ? settings.distanceChunks : FogDistanceHelper.FOG_DISTANCE_VANILLA;
         }
 
+        public int getDimensionFogStart(Identifier dimensionId) {
+            return this.getDimensionOrFallback(dimensionId).startPercent;
+        }
+
+        public FogShapeMode getDimensionFogShape(Identifier dimensionId) {
+            return this.getDimensionOrFallback(dimensionId).shapeMode;
+        }
+
+        public int getDimensionCloudFogPercent(Identifier dimensionId) {
+            return this.getDimensionOrFallback(dimensionId).cloudFogPercent;
+        }
+
+        // Unlike terrain distance, these settings inherit the global atmospheric values until the
+        // dimension is first edited; see createInheritedAtmospheric.
+        private AtmosphericFogSettings getDimensionOrFallback(Identifier dimensionId) {
+            AtmosphericFogSettings settings = this.dimensionOverrides.get(dimensionId);
+            return settings != null ? settings : this.getAtmosphericFallback();
+        }
+
         public AtmosphericFogSettings getOrCreateDimensionOverride(Identifier dimensionId) {
             AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> this.createInheritedAtmospheric());
             settings.sanitize();
             return settings;
         }
 
-        // New per-dimension overrides inherit the global atmospheric settings (except distance) at the
+        // New per-dimension overrides inherit the global atmospheric settings (except terrain distance) at the
         // moment they are first edited, rather than being pre-created when the config screen is opened.
         private AtmosphericFogSettings createInheritedAtmospheric() {
-            AtmosphericFogSettings base = this.atmospheric != null ? this.atmospheric : new AtmosphericFogSettings();
+            AtmosphericFogSettings base = this.getAtmosphericFallback();
             AtmosphericFogSettings settings = new AtmosphericFogSettings();
             settings.startPercent = base.startPercent;
             settings.shapeMode = base.shapeMode;
-            settings.affectSkyFog = base.affectSkyFog;
-            settings.affectCloudFog = base.affectCloudFog;
+            settings.cloudFogPercent = base.cloudFogPercent;
             return settings;
+        }
+
+        private AtmosphericFogSettings getAtmosphericFallback() {
+            return this.atmospheric != null ? this.atmospheric : new AtmosphericFogSettings();
         }
     }
 
@@ -425,19 +447,18 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public int distanceChunks;
         public int startPercent;
         public FogShapeMode shapeMode;
-        public boolean affectSkyFog;
-        public boolean affectCloudFog;
+        public int cloudFogPercent;
 
         public AtmosphericFogSettings() {
             this.distanceChunks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
             this.startPercent = 100;
             this.shapeMode = FogShapeMode.VANILLA;
-            this.affectSkyFog = true;
-            this.affectCloudFog = true;
+            this.cloudFogPercent = FogDistanceHelper.VANILLA_CLOUD_FOG_PERCENT;
         }
 
         public void sanitize() {
             this.startPercent = Math.clamp(this.startPercent, 0, 100);
+            this.cloudFogPercent = Math.clamp(this.cloudFogPercent, 0, 100);
 
             if (this.shapeMode == null) {
                 this.shapeMode = FogShapeMode.VANILLA;
