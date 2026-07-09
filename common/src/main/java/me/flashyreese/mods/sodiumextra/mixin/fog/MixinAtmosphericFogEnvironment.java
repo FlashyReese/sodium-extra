@@ -18,29 +18,35 @@ public class MixinAtmosphericFogEnvironment {
     private void postSetupFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo ci) {
         SodiumExtraGameOptions.AtmosphericFogSettings settings = FogDistanceHelper.getAtmosphericSettings(level);
         int fogDistance = settings.distanceChunks;
-        if (fogDistance == 0) {
-            return;
-        }
-
         if (FogDistanceHelper.isBossFogActive()) {
             return;
         }
 
+        if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
+            applyCloudFog(fog, settings);
+            return;
+        }
+
         if (FogDistanceHelper.disablesFog(fogDistance)) {
-            // Keep vanilla sky/cloud fog; the sky shader uses it to blend the horizon cleanly.
+            // Keep vanilla sky fog; the sky shader uses it to blend the horizon cleanly.
             fog.environmentalStart = Float.MAX_VALUE;
             fog.environmentalEnd = Float.MAX_VALUE;
+            applyCloudFog(fog, settings);
             return;
         }
 
         float end = FogDistanceHelper.getEnd(fogDistance);
         fog.environmentalStart = FogDistanceHelper.getStart(settings);
         fog.environmentalEnd = end;
-        if (settings.affectSkyFog) {
-            fog.skyEnd = Math.min(end, renderDistance);
-        }
-        if (settings.affectCloudFog) {
-            fog.cloudEnd = end;
+        // Match the sky's horizon tint to the custom terrain fog so the two don't seam.
+        fog.skyEnd = Math.min(end, renderDistance);
+        applyCloudFog(fog, settings);
+    }
+
+    private static void applyCloudFog(FogData fog, SodiumExtraGameOptions.AtmosphericFogSettings settings) {
+        if (settings.cloudFogPercent != FogDistanceHelper.VANILLA_CLOUD_FOG_PERCENT) {
+            // Vanilla already capped cloudEnd with the dimension's fog attribute; only pull it closer.
+            fog.cloudEnd = Math.min(fog.cloudEnd, FogDistanceHelper.getCloudEnd(settings.cloudFogPercent));
         }
     }
 }
