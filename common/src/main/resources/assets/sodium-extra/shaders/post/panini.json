@@ -15,7 +15,7 @@
             ]
         },
         {
-            "name": "blit",
+            "name": "sodium_extra_panini_blit",
             "intarget": "panini_swap",
             "outtarget": "minecraft:main"
         }
