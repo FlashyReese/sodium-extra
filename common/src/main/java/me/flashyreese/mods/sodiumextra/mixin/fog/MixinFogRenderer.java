@@ -33,7 +33,8 @@ public abstract class MixinFogRenderer {
         }
 
         SodiumExtraGameOptions.AtmosphericFogSettings settings = FogDistanceHelper.getAtmosphericSettings(minecraft.level);
-        if (FogOverrideState.isSettingUpCloudFog() && !settings.affectCloudFog) {
+        if (FogOverrideState.isSettingUpCloudFog()) {
+            sodiumExtra$applyCloudFog(settings);
             return;
         }
 
@@ -106,18 +107,13 @@ public abstract class MixinFogRenderer {
     }
 
     private static void sodiumExtra$applySkyFog(SodiumExtraGameOptions.AtmosphericFogSettings settings, float viewDistance) {
-        if (!settings.affectSkyFog) {
-            return;
-        }
-
         int fogDistance = settings.distanceChunks;
         if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
             return;
         }
 
         if (FogDistanceHelper.disablesFog(fogDistance)) {
-            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
-            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
+            // Keep vanilla sky fog; the sky shader uses it to blend the horizon cleanly.
             return;
         }
 
@@ -128,11 +124,6 @@ public abstract class MixinFogRenderer {
     private static void sodiumExtra$applyTerrainFog(SodiumExtraGameOptions.AtmosphericFogSettings settings) {
         int fogDistance = settings.distanceChunks;
         if (fogDistance == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
-            float start = FogDistanceHelper.applyStartMultiplier(RenderSystem.getShaderFogStart(), settings);
-            float end = RenderSystem.getShaderFogEnd();
-            RenderSystem.setShaderFogStart(start);
-            RenderSystem.setShaderFogEnd(end);
-            FogDistanceHelper.applyRenderDistanceShape(start, end, settings);
             return;
         }
 
@@ -147,5 +138,13 @@ public abstract class MixinFogRenderer {
         RenderSystem.setShaderFogStart(start);
         RenderSystem.setShaderFogEnd(end);
         FogDistanceHelper.applyRenderDistanceShape(start, end, settings);
+    }
+
+    private static void sodiumExtra$applyCloudFog(SodiumExtraGameOptions.AtmosphericFogSettings settings) {
+        if (settings.cloudFogPercent == FogDistanceHelper.VANILLA_CLOUD_FOG_PERCENT) {
+            return;
+        }
+
+        RenderSystem.setShaderFogEnd(Math.min(RenderSystem.getShaderFogEnd(), FogDistanceHelper.getCloudEnd(settings.cloudFogPercent)));
     }
 }
