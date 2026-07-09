@@ -26,7 +26,7 @@ side = "CLIENT"
 [[dependencies.sodium_extra]]
 modId = "sodium"
 type = "required"
-versionRange = "[0.9.1-beta.4+mc26.1.2,)"
+versionRange = "[0.9.1+mc26.1.2,)"
 ordering = "NONE"
 side = "CLIENT"
 
