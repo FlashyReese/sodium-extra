@@ -39,11 +39,18 @@ public final class FogDistanceHelper {
     // Shape sentinels decoded by FogShaderTransformer; keep values in sync with its GLSL constants.
     private static final float RADIAL_RENDER_DISTANCE_OFFSET = 1_048_576.0F;
     private static final float PLANAR_RENDER_DISTANCE_OFFSET = 2_097_152.0F;
+    private static final float CYLINDRICAL_RENDER_DISTANCE_OFFSET = 3_145_728.0F;
+    private static final float CYLINDRICAL_CULL_DISTANCE_MARKER = 0.75F;
     private static final float CHUNK_SIZE = 16F;
+    public static final float CYLINDRICAL_VERTICAL_SCALE = 16.0F;
     private static final ClientFeature<ProtectedGameplayFogPolicy> PROTECTED_GAMEPLAY_FOG = Greenlight
             .feature(Identifier.fromNamespaceAndPath("sodium-extra", "protected_gameplay_fog"))
             .decoder(1, ProtectedGameplayFogPolicy::fromJson)
             .register();
+    // Snapshot of the currently-active expanded cylindrical cull. Published on the render thread by
+    // expandCylindricalCullDistance and read lock-free during occlusion traversal. Only one is ever
+    // active because every cull distance in a frame derives from the same render distance.
+    private static volatile ExpandedCylindricalCull activeExpandedCylindricalCull;
 
     public enum ProtectedFogType {
         BLINDNESS("blindness"),
@@ -191,12 +198,13 @@ public final class FogDistanceHelper {
     }
 
     public static void applyRenderDistanceShape(FogData fog, SodiumExtraGameOptions.AtmosphericFogSettings settings) {
-        // VANILLA/CYLINDRICAL use the unmodified shader path. If the transformer failed, skip offsets too.
+        // VANILLA uses the unmodified shader path. If the transformer failed, skip custom shape offsets too.
         if (fog.renderDistanceEnd == Float.MAX_VALUE || !FogShaderTransformer.isShapeSupported()) {
             return;
         }
 
         float offset = switch (settings.shapeMode) {
+            case CYLINDRICAL -> CYLINDRICAL_RENDER_DISTANCE_OFFSET;
             case RADIAL -> RADIAL_RENDER_DISTANCE_OFFSET;
             case PLANAR -> PLANAR_RENDER_DISTANCE_OFFSET;
             default -> 0.0F;
@@ -205,6 +213,61 @@ public final class FogDistanceHelper {
         if (offset != 0.0F) {
             fog.renderDistanceStart += offset;
             fog.renderDistanceEnd += offset;
+        }
+    }
+
+    public static float expandCylindricalCullDistance(float currentDistance, float renderDistanceStart, float renderDistanceEnd, float renderDistance) {
+        if (!isCylindricalRenderDistanceEncoded(renderDistanceStart, renderDistanceEnd)) {
+            return currentDistance;
+        }
+
+        float decodedRenderDistanceEnd = renderDistanceEnd - CYLINDRICAL_RENDER_DISTANCE_OFFSET;
+        if (!Float.isFinite(decodedRenderDistanceEnd) || decodedRenderDistanceEnd <= 0.0F
+                || !Float.isFinite(renderDistance) || renderDistance <= 0.0F) {
+            return currentDistance;
+        }
+
+        // Fog only changes fragment color, not alpha. If we cull at the fog end, translucent water can
+        // reveal missing background sections through fully-fogged-but-still-transparent fragments. Keep
+        // the real render-distance cull, but use the taller vertical axis expected by the shader.
+        float horizontalLimit = renderDistance;
+        float verticalLimit = renderDistance * CYLINDRICAL_VERTICAL_SCALE;
+        float expandedDistance = (float)Math.ceil(Math.max(horizontalLimit, verticalLimit)) + CYLINDRICAL_CULL_DISTANCE_MARKER;
+
+        activeExpandedCylindricalCull = new ExpandedCylindricalCull(expandedDistance, horizontalLimit, verticalLimit);
+        return expandedDistance;
+    }
+
+    public static boolean isExpandedCylindricalCullDistance(float distanceLimit) {
+        ExpandedCylindricalCull active = activeExpandedCylindricalCull;
+        return active != null && active.matches(distanceLimit);
+    }
+
+    public static boolean testExpandedCylindricalCullDistance(float horizontalDistanceSquared, float verticalDistance, float distanceLimit) {
+        ExpandedCylindricalCull active = activeExpandedCylindricalCull;
+        if (active == null || !active.matches(distanceLimit)) {
+            return horizontalDistanceSquared < distanceLimit * distanceLimit
+                    && Math.abs(verticalDistance) < distanceLimit;
+        }
+
+        return horizontalDistanceSquared < active.horizontalLimit() * active.horizontalLimit()
+                && Math.abs(verticalDistance) < active.verticalLimit();
+    }
+
+    private static boolean isCylindricalRenderDistanceEncoded(float renderDistanceStart, float renderDistanceEnd) {
+        return FogShaderTransformer.isShapeSupported()
+                && Float.isFinite(renderDistanceStart)
+                && Float.isFinite(renderDistanceEnd)
+                && renderDistanceStart >= CYLINDRICAL_RENDER_DISTANCE_OFFSET
+                && renderDistanceEnd >= CYLINDRICAL_RENDER_DISTANCE_OFFSET;
+    }
+
+    // distanceLimit carries the marker fraction and is compared by raw bits: the value fed back to the
+    // cull tests is the exact float returned by expandCylindricalCullDistance, so identity holds and no
+    // boxed map lookup is needed on the per-section hot path.
+    private record ExpandedCylindricalCull(float distanceLimit, float horizontalLimit, float verticalLimit) {
+        private boolean matches(float candidate) {
+            return Float.floatToRawIntBits(candidate) == Float.floatToRawIntBits(this.distanceLimit);
         }
     }
 
