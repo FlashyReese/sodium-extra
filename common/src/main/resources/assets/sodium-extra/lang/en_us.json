@@ -279,7 +279,7 @@
   "sodium-extra.option.fog_distance": "Fog Distance",
   "sodium-extra.option.fog_distance.tooltip": "Adjusts atmospheric terrain fog distance.\n0: Use vanilla fog settings\n1+: Set fog distance in chunks\nOff: Disable atmospheric terrain fog",
   "sodium-extra.option.fog_shape": "Fog Shape",
-  "sodium-extra.option.fog_shape.tooltip": "Controls which camera distance atmospheric terrain fog uses.\nVanilla/Cylindrical: Match Minecraft's current render-distance fog shape\nRadial: Use true spherical distance from the camera\nPlanar: Use distance to the camera plane (view depth); fog shifts as you turn",
+  "sodium-extra.option.fog_shape.tooltip": "Controls which camera distance atmospheric terrain fog uses.\nVanilla: Match Minecraft's current render-distance fog shape\nCylindrical: Use horizontal distance with a taller vertical cap\nRadial: Use true spherical distance from the camera\nPlanar: Use distance to the camera plane (view depth); fog shifts as you turn",
   "sodium-extra.option.fog_shape.cylindrical": "Cylindrical",
   "sodium-extra.option.fog_shape.planar": "Planar",
   "sodium-extra.option.fog_shape.radial": "Radial",
