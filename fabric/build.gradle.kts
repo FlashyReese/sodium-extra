@@ -18,6 +18,28 @@ base {
     archivesName.set("$ARCHIVE_NAME-fabric")
 }
 
+val embeddedGreenlightApi by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    isTransitive = false
+}
+
+configurations.named("compileOnly") {
+    extendsFrom(embeddedGreenlightApi)
+}
+
+configurations.named("runtimeOnly") {
+    extendsFrom(embeddedGreenlightApi)
+}
+
+configurations.named("testCompileOnly") {
+    extendsFrom(embeddedGreenlightApi)
+}
+
+configurations.named("testRuntimeOnly") {
+    extendsFrom(embeddedGreenlightApi)
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
     add("mappings", loom.layered {
@@ -42,8 +64,7 @@ dependencies {
     addEmbeddedFabricModule("fabric-resource-loader-v0")
     compileOnly(project(":common"))
     add("modImplementation", "net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
-    add("modImplementation", "me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
-    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    add(embeddedGreenlightApi.name, "me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.test {
@@ -91,6 +112,12 @@ tasks {
 
     jar {
         from(rootDir.resolve("LICENSE.txt"))
+
+        // The Greenlight API is published in the named namespace. Merge it into this
+        // input jar so Loom remaps its Minecraft references alongside Sodium Extra.
+        from({ embeddedGreenlightApi.map { zipTree(it) } }) {
+            exclude("META-INF/MANIFEST.MF")
+        }
     }
 }
 
