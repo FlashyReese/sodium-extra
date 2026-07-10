@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version ("1.17.11")
+    id("net.fabricmc.fabric-loom") version ("1.17.13")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -11,6 +11,7 @@ val FABRIC_API_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 val ARCHIVE_NAME: String by rootProject.extra
 
 base {
@@ -34,6 +35,8 @@ dependencies {
     addEmbeddedFabricModule("fabric-rendering-v1")
     compileOnly(project(":common"))
     implementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.test {

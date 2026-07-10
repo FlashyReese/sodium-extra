@@ -61,7 +61,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.19",
-    "sodium": ">=0.9.1-beta.2",
+    "sodium": ">=0.9.1+mc26.1.2",
     "minecraft": ">=26.1.2"
   },
   "breaks": {
@@ -69,6 +69,7 @@
     "reeses-sodium-options": "<1.8.4"
   },
   "suggests": {
+    "greenlight": ">=0.1.0",
     "reeses-sodium-options": ">=2.2.0"
   }
 }

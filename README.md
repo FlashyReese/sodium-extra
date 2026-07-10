@@ -9,6 +9,17 @@
 
 Features that shouldn't be in Sodium.
 
+## Protected gameplay fog
+Protected Gameplay Fog changes blindness, darkness, lava, powder snow, and water fog.
+On normal multiplayer servers it stays vanilla unless the server authorizes it through
+[Greenlight](https://modrinth.com/mod/greenlight) and you have it installed. See
+[Protected Gameplay Fog](https://github.com/FlashyReese/sodium-extra/wiki/Protected-Gameplay-Fog) for the player-facing behavior.
+
+## Server policies
+Server owners can authorize Sodium Extra's protected gameplay fog controls with a
+a server resource pack and the [Greenlight](https://modrinth.com/mod/greenlight) client mod. See
+[Server Policies](https://github.com/FlashyReese/sodium-extra/wiki/Server-Policies) for the policy schema and examples.
+
 ## Building from source
 ### Prerequisites
 - Java Development Kit 17 or above
