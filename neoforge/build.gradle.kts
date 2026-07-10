@@ -1,6 +1,6 @@
 plugins {
     id("idea")
-    id("net.neoforged.moddev") version "2.0.123"
+    id("net.neoforged.moddev") version "2.0.141"
     id("java-library")
 }
 
@@ -10,6 +10,7 @@ val NEOFORGE_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 val ARCHIVE_NAME: String by rootProject.extra
 
 base {
@@ -87,6 +88,8 @@ dependencies {
     runtimeOnly("net.caffeinemc:sodium-neoforge:${SODIUM_VERSION}") {
         isTransitive = false
     }
+    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    jarJar("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code

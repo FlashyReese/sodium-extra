@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 public class IrisCompat {
     private static boolean irisPresent;
     private static MethodHandle handleRenderingShadowPass;
+    private static MethodHandle handleShaderPackInUse;
     private static Object apiInstance;
     private static VertexFormat terrainFormat;
 
@@ -19,6 +20,7 @@ public class IrisCompat {
             Class<?> api = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
             apiInstance = api.cast(api.getDeclaredMethod("getInstance").invoke(null));
             handleRenderingShadowPass = MethodHandles.lookup().findVirtual(api, "isRenderingShadowPass", MethodType.methodType(boolean.class));
+            handleShaderPackInUse = MethodHandles.lookup().findVirtual(api, "isShaderPackInUse", MethodType.methodType(boolean.class));
 
             Class<?> irisVertexFormatsClass = Class.forName("net.irisshaders.iris.vertices.IrisVertexFormats");
             Field terrainField = irisVertexFormatsClass.getDeclaredField("TERRAIN");
@@ -35,6 +37,18 @@ public class IrisCompat {
         if (irisPresent) {
             try {
                 return (boolean) handleRenderingShadowPass.invoke(apiInstance);
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean isShaderPackInUse() {
+        if (irisPresent) {
+            try {
+                return (boolean) handleShaderPackInUse.invoke(apiInstance);
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }

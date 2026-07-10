@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.AbstractRemapJarTask
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.14-SNAPSHOT"
+    id("net.fabricmc.fabric-loom-remap") version "1.17.13"
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -12,6 +12,7 @@ val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 
 // This trick hides common tasks in the IDEA list.
 tasks.configureEach {
@@ -26,9 +27,10 @@ dependencies {
             parchment("org.parchmentmc.data:parchment-${MINECRAFT_VERSION}:${PARCHMENT_VERSION}@zip")
         }
     })
-    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
-    annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
-    compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.4")
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4")
+    compileOnly("net.fabricmc:sponge-mixin:0.17.2+mixin.0.8.7")
+    compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addDependentFabricModule(name: String) {
         val module = fabricApi.module(name, FABRIC_API_VERSION)
@@ -40,6 +42,7 @@ dependencies {
     //addDependentFabricModule("fabric-renderer-api-v1")
 
     modImplementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    compileOnly("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.withType<AbstractRemapJarTask>().forEach {

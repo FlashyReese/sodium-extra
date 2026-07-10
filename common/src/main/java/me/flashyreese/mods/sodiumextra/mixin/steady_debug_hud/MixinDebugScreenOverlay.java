@@ -1,9 +1,13 @@
 package me.flashyreese.mods.sodiumextra.mixin.steady_debug_hud;
 
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import net.minecraft.util.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
+import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
+import net.minecraft.client.gui.components.debug.DebugScreenEntry;
+import net.minecraft.util.Util;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -60,5 +64,12 @@ public abstract class MixinDebugScreenOverlay {
             this.rightTextCache.addAll(text);
         }
         this.renderLines(guiGraphics, this.rightTextCache, left);
+    }
+
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntry;display(Lnet/minecraft/client/gui/components/debug/DebugScreenDisplayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/chunk/LevelChunk;)V"))
+    public void sodiumExtra$redirectDebugEntryDisplay(DebugScreenEntry entry, DebugScreenDisplayer displayer, Level level, LevelChunk clientChunk, LevelChunk serverChunk) {
+        if (this.rebuild) {
+            entry.display(displayer, level, clientChunk, serverChunk);
+        }
     }
 }

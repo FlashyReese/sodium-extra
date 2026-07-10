@@ -1,0 +1,25 @@
+{
+  "protocol_version": 1,
+  "feature": "sodium-extra:protected_gameplay_fog",
+  "enabled": true,
+  "settings_version": 1,
+  "settings": {
+    "blindness": {
+      "enabled": false
+    },
+    "darkness": {
+      "enabled": false
+    },
+    "lava": {
+      "enabled": true,
+      "max_distance_blocks": 256,
+      "allow_off": true
+    },
+    "powder_snow": {
+      "enabled": false
+    },
+    "water": {
+      "enabled": false
+    }
+  }
+}
