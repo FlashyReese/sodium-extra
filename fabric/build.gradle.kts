@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.16.1")
+    id("net.fabricmc.fabric-loom-remap") version ("1.17.13")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -11,6 +11,7 @@ val FABRIC_API_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 val ARCHIVE_NAME: String by rootProject.extra
 
 base {
@@ -41,6 +42,8 @@ dependencies {
     addEmbeddedFabricModule("fabric-resource-loader-v0")
     compileOnly(project(":common"))
     add("modImplementation", "net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    add("modImplementation", "me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.test {
@@ -56,15 +59,15 @@ loom {
     runs {
         named("client") {
             client()
-            configName = "Fabric Client"
-            ideConfigGenerated(true)
-            runDir("run")
+            displayName.set("Fabric Client")
+            generateRunConfig.set(true)
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
         named("server") {
             server()
-            configName = "Fabric Server"
-            ideConfigGenerated(true)
-            runDir("run")
+            displayName.set("Fabric Server")
+            generateRunConfig.set(true)
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
     }
 }

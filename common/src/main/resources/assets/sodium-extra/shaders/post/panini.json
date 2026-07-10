@@ -1,0 +1,23 @@
+{
+    "targets": [
+        "panini_swap"
+    ],
+    "passes": [
+        {
+            "name": "sodium_extra_panini",
+            "intarget": "minecraft:main",
+            "outtarget": "panini_swap",
+            "uniforms": [
+                {
+                    "name": "Params",
+                    "values": [ 0.0, 1.0, 0.0, 0.0 ]
+                }
+            ]
+        },
+        {
+            "name": "sodium_extra_panini_blit",
+            "intarget": "panini_swap",
+            "outtarget": "minecraft:main"
+        }
+    ]
+}

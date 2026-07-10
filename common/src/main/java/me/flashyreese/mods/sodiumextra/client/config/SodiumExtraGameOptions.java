@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
-import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
@@ -233,18 +233,31 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.rainSplash = true;
             this.blockBreak = true;
             this.blockBreaking = true;
-            this.otherMap = new Object2BooleanArrayMap<>();
+            this.otherMap = new Object2BooleanLinkedOpenHashMap<>();
         }
 
         public void sanitize() {
+            // Normalize to a hashed map for O(1) lookups on the particle-creation hot path while keeping
+            // insertion order for stable config serialization. Gson deserializes into a plain map.
             if (this.otherMap == null) {
-                this.otherMap = new Object2BooleanArrayMap<>();
+                this.otherMap = new Object2BooleanLinkedOpenHashMap<>();
+            } else if (!(this.otherMap instanceof Object2BooleanLinkedOpenHashMap)) {
+                this.otherMap = new Object2BooleanLinkedOpenHashMap<>(this.otherMap);
             }
         }
 
         public boolean isParticleEnabled(ResourceLocation particleTypeId) {
-            this.sanitize();
-            return this.particles && this.otherMap.computeIfAbsent(particleTypeId, k -> true);
+            if (!this.particles) {
+                return false;
+            }
+
+            // Unidentified particle types (e.g. unregistered modded types) are never filtered. Read without
+            // mutating so this stays thread-safe and does not bloat the config with every particle seen.
+            if (particleTypeId == null || this.otherMap == null) {
+                return true;
+            }
+
+            return this.otherMap.getOrDefault(particleTypeId, true);
         }
     }
 
@@ -383,10 +396,49 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             return this.getOrCreateDimensionOverride(dimensionId);
         }
 
+        public int getDimensionFogDistance(ResourceLocation dimensionId) {
+            AtmosphericFogSettings settings = this.dimensionOverrides.get(dimensionId);
+            return settings != null ? settings.distanceChunks : FogDistanceHelper.FOG_DISTANCE_VANILLA;
+        }
+
+        public int getDimensionFogStart(ResourceLocation dimensionId) {
+            return this.getDimensionOrFallback(dimensionId).startPercent;
+        }
+
+        public FogShapeMode getDimensionFogShape(ResourceLocation dimensionId) {
+            return this.getDimensionOrFallback(dimensionId).shapeMode;
+        }
+
+        public int getDimensionCloudFogPercent(ResourceLocation dimensionId) {
+            return this.getDimensionOrFallback(dimensionId).cloudFogPercent;
+        }
+
+        // Unlike terrain distance, these settings inherit the global atmospheric values until the
+        // dimension is first edited; see createInheritedAtmospheric.
+        private AtmosphericFogSettings getDimensionOrFallback(ResourceLocation dimensionId) {
+            AtmosphericFogSettings settings = this.dimensionOverrides.get(dimensionId);
+            return settings != null ? settings : this.getAtmosphericFallback();
+        }
+
         public AtmosphericFogSettings getOrCreateDimensionOverride(ResourceLocation dimensionId) {
-            AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> new AtmosphericFogSettings());
+            AtmosphericFogSettings settings = this.dimensionOverrides.computeIfAbsent(dimensionId, ignored -> this.createInheritedAtmospheric());
             settings.sanitize();
             return settings;
+        }
+
+        // New per-dimension overrides inherit the global atmospheric settings (except terrain distance) at the
+        // moment they are first edited, rather than being pre-created when the config screen is opened.
+        private AtmosphericFogSettings createInheritedAtmospheric() {
+            AtmosphericFogSettings base = this.getAtmosphericFallback();
+            AtmosphericFogSettings settings = new AtmosphericFogSettings();
+            settings.startPercent = base.startPercent;
+            settings.shapeMode = base.shapeMode;
+            settings.cloudFogPercent = base.cloudFogPercent;
+            return settings;
+        }
+
+        private AtmosphericFogSettings getAtmosphericFallback() {
+            return this.atmospheric != null ? this.atmospheric : new AtmosphericFogSettings();
         }
     }
 
@@ -394,20 +446,19 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public int distanceChunks;
         public int startPercent;
         public FogShapeMode shapeMode;
-        public boolean affectSkyFog;
-        public boolean affectCloudFog;
+        public int cloudFogPercent;
 
         public AtmosphericFogSettings() {
             this.distanceChunks = FogDistanceHelper.FOG_DISTANCE_VANILLA;
             this.startPercent = 100;
             this.shapeMode = FogShapeMode.VANILLA;
-            this.affectSkyFog = true;
-            this.affectCloudFog = true;
+            this.cloudFogPercent = FogDistanceHelper.VANILLA_CLOUD_FOG_PERCENT;
         }
 
         public void sanitize() {
             this.distanceChunks = FogDistanceHelper.normalizeFogDistance(this.distanceChunks);
-            this.startPercent = Math.max(0, Math.min(this.startPercent, 100));
+            this.startPercent = Math.clamp(this.startPercent, 0, 100);
+            this.cloudFogPercent = Math.clamp(this.cloudFogPercent, 0, 100);
 
             if (this.shapeMode == null || !FogShapeMode.getAvailableOptions().contains(this.shapeMode)) {
                 this.shapeMode = FogShapeMode.VANILLA;
@@ -468,6 +519,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean tutorialToast;
         public boolean instantSneak;
         public boolean preventShaders;
+        public boolean paniniProjection;
+        public int paniniProjectionStrength;
         public boolean steadyDebugHud;
         public int steadyDebugHudRefreshInterval;
 
@@ -491,6 +544,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.tutorialToast = true;
             this.instantSneak = false;
             this.preventShaders = false;
+            this.paniniProjection = false;
+            this.paniniProjectionStrength = 25;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
         }
@@ -503,6 +558,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             if (this.textContrast == null) {
                 this.textContrast = TextContrast.NONE;
             }
+
+            this.paniniProjectionStrength = Math.max(0, Math.min(this.paniniProjectionStrength, 100));
 
             if (this.steadyDebugHudRefreshInterval < 1) {
                 this.steadyDebugHudRefreshInterval = 1;

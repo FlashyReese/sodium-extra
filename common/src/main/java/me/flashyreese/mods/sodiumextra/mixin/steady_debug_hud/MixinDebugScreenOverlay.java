@@ -60,4 +60,20 @@ public abstract class MixinDebugScreenOverlay {
         }
         this.renderLines(guiGraphics, this.rightTextCache, left);
     }
+
+    @Inject(method = "drawGameInformation", at = @At("HEAD"), cancellable = true)
+    private void sodiumExtra$drawCachedGameInformation(GuiGraphics guiGraphics, CallbackInfo ci) {
+        if (!this.rebuild) {
+            this.renderLines(guiGraphics, this.leftTextCache, true);
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "drawSystemInformation", at = @At("HEAD"), cancellable = true)
+    private void sodiumExtra$drawCachedSystemInformation(GuiGraphics guiGraphics, CallbackInfo ci) {
+        if (!this.rebuild) {
+            this.renderLines(guiGraphics, this.rightTextCache, false);
+            ci.cancel();
+        }
+    }
 }

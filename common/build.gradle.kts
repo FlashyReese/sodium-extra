@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.AbstractRemapJarTask
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.16.1"
+    id("net.fabricmc.fabric-loom-remap") version "1.17.13"
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -12,6 +12,7 @@ val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 
 val SODIUM_VERSION: String by rootProject.extra
+val GREENLIGHT_VERSION: String by rootProject.extra
 
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = MINECRAFT_VERSION)
@@ -37,6 +38,7 @@ dependencies {
     addDependentFabricModule("fabric-rendering-data-attachment-v1")
 
     add("modImplementation", "net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    compileOnly("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
 }
 
 tasks.withType<AbstractRemapJarTask>().forEach {
