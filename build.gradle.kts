@@ -14,7 +14,7 @@ val PARCHMENT_VERSION by extra { null }
 // https://semver.org/
 val MAVEN_GROUP by extra { "me.flashyreese.mods" }
 val ARCHIVE_NAME by extra { "sodium-extra" }
-val MOD_VERSION by extra { "0.9.1" }
+val MOD_VERSION by extra { "0.9.2" }
 val SODIUM_VERSION by extra { "0.8.12+mc1.21.1" }
 val GREENLIGHT_VERSION by extra { "0.1.0+mc1.21.10" }
 
