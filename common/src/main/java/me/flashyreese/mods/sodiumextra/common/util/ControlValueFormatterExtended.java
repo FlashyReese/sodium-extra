@@ -30,7 +30,12 @@ public interface ControlValueFormatterExtended extends ControlValueFormatter {
     }
 
     private static int gcd(int a, int b) {
-        return b == 0 ? a : gcd(b, a % b);
+        while (b != 0) {
+            int remainder = a % b;
+            a = b;
+            b = remainder;
+        }
+        return a;
     }
 
     static ControlValueFormatter fogDistance() {
