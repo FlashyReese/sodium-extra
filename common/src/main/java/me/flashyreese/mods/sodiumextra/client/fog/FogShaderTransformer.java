@@ -68,7 +68,7 @@ public final class FogShaderTransformer {
             """;
 
     private static final String VERTEX_PLANAR_DECL = "\nout float v_PlanarDistance;";
-    private static final String VERTEX_PLANAR_COMPUTE = "v_PlanarDistance = -(u_ModelViewMatrix * vec4(position, 1.0)).z;\n\n    ";
+    private static final String VERTEX_PLANAR_COMPUTE = "v_PlanarDistance = abs((u_ModelViewMatrix * vec4(position, 1.0)).z);\n\n    ";
     private static final String VERTEX_CYLINDRICAL_DECL = "\nout vec2 v_SodiumExtraCylindricalDistance;";
     private static final String VERTEX_CYLINDRICAL_COMPUTE = "v_SodiumExtraCylindricalDistance = vec2(length(position.xz), abs(position.y));\n    ";
     private static final String FRAGMENT_PLANAR_DECL = "\nin float v_PlanarDistance;";
