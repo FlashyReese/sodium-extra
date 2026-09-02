@@ -1,6 +1,7 @@
 package me.flashyreese.mods.sodiumextra.common.util;
 
 import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.VideoMode;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import net.caffeinemc.mods.sodium.api.config.option.ControlValueFormatter;
 import net.minecraft.client.Minecraft;
@@ -14,9 +15,27 @@ public interface ControlValueFormatterExtended extends ControlValueFormatter {
                 return Component.translatable("options.fullscreen.unavailable");
             } else {
                 int modeIndex = Math.clamp(v - 1, 0, monitor.modeCount() - 1);
-                return v == 0 ? Component.translatable("options.fullscreen.current") : Component.literal(monitor.mode(modeIndex).toString().replace(" (24bit)", ""));
+                if (v == 0) {
+                    return Component.translatable("options.fullscreen.current");
+                }
+                VideoMode mode = monitor.mode(modeIndex);
+                int w = mode.getWidth();
+                int h = mode.getHeight();
+                int g = gcd(w, h);
+                String ratio = (w / g) + ":" + (h / g);
+                String formatted = w + "x" + h + "@" + mode.getRefreshRate() + " (" + ratio + " | " + mode.getBitsPerPixel() + "bit)";
+                return Component.literal(formatted);
             }
         };
+    }
+
+    private static int gcd(int a, int b) {
+        while (b != 0) {
+            int remainder = a % b;
+            a = b;
+            b = remainder;
+        }
+        return a;
     }
 
     static ControlValueFormatter fogDistance() {
