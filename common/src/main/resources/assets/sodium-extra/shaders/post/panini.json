@@ -7,10 +7,11 @@
             "name": "sodium_extra_panini",
             "intarget": "minecraft:main",
             "outtarget": "panini_swap",
+            "use_linear_filter": true,
             "uniforms": [
                 {
                     "name": "Params",
-                    "values": [ 0.0, 1.0, 0.0, 0.0 ]
+                    "values": [ 0.0, 1.0, 1.0, 0.0 ]
                 }
             ]
         },

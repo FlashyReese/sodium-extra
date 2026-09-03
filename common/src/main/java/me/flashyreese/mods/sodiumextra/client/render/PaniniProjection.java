@@ -28,7 +28,7 @@ public class PaniniProjection {
     private static int postChainWidth = -1;
     private static int postChainHeight = -1;
 
-    public static void process(Minecraft minecraft, RenderTarget mainTarget, float tickDelta) {
+    public static void process(Minecraft minecraft, RenderTarget mainTarget, float tickDelta, double fieldOfView) {
         Window window = minecraft.getWindow();
         if (!shouldApply(minecraft) || !hasValidWindow(window)) {
             close();
@@ -40,7 +40,7 @@ public class PaniniProjection {
             return;
         }
 
-        if (updateUniforms(postChain, window)) {
+        if (updateUniforms(postChain, window, fieldOfView)) {
             RenderSystem.disableBlend();
             RenderSystem.disableDepthTest();
             RenderSystem.resetTextureMatrix();
@@ -97,15 +97,21 @@ public class PaniniProjection {
         return postChain;
     }
 
-    private static boolean updateUniforms(PostChain postChain, Window window) {
+    private static boolean updateUniforms(PostChain postChain, Window window, double fieldOfView) {
         List<PostPass> passes = ((AccessorPostChain) postChain).sodiumExtra$getPasses();
         for (PostPass pass : passes) {
             var configUniform = pass.getEffect().getUniform(CONFIG_UNIFORM);
             if (configUniform != null) {
                 SodiumExtraGameOptions.ExtraSettings settings = SodiumExtraClientMod.options().extraSettings;
                 float strength = settings.paniniProjectionStrength / 100.0F;
-                float aspect = window.getWidth() / (float) window.getHeight();
-                configUniform.set(strength, aspect, 0.0F, 0.0F);
+                float verticalExtent = (float) Math.tan(Math.toRadians(fieldOfView) * 0.5);
+                float horizontalExtent = verticalExtent * window.getWidth() / (float) window.getHeight();
+
+                if (!Float.isFinite(horizontalExtent) || !Float.isFinite(verticalExtent)) {
+                    return false;
+                }
+
+                configUniform.set(strength, horizontalExtent, verticalExtent, 0.0F);
                 return true;
             }
         }
