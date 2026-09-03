@@ -15,7 +15,7 @@ val PARCHMENT_VERSION by extra { null }
 val MAVEN_GROUP by extra { "me.flashyreese.mods" }
 val ARCHIVE_NAME by extra { "sodium-extra" }
 val MOD_VERSION by extra { "0.9.3" }
-val SODIUM_VERSION by extra { "0.8.13+mc1.21.11" }
+val SODIUM_VERSION by extra { "0.8.14+mc1.21.11" }
 val GREENLIGHT_VERSION by extra { "0.1.0+mc1.21.11" }
 
 allprojects {
