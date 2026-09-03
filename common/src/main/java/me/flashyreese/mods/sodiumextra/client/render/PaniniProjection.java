@@ -29,7 +29,7 @@ public class PaniniProjection {
     private static final AtomicBoolean WARNED_MISSING_CHAIN = new AtomicBoolean(false);
     private static final AtomicBoolean WARNED_MISSING_UNIFORM = new AtomicBoolean(false);
 
-    public static void process(Minecraft minecraft, RenderTarget mainTarget, GraphicsResourceAllocator resourceAllocator) {
+    public static void process(Minecraft minecraft, RenderTarget mainTarget, GraphicsResourceAllocator resourceAllocator, float fieldOfView) {
         Window window = minecraft.getWindow();
         if (!shouldApply(minecraft) || !hasValidWindow(window)) {
             return;
@@ -43,7 +43,7 @@ public class PaniniProjection {
             return;
         }
 
-        if (updateUniforms(postChain, window)) {
+        if (updateUniforms(postChain, window, fieldOfView)) {
             postChain.process(mainTarget, resourceAllocator);
         }
     }
@@ -63,15 +63,14 @@ public class PaniniProjection {
         return window != null && window.getWidth() > 0 && window.getHeight() > 0 && !window.isMinimized();
     }
 
-    private static boolean updateUniforms(PostChain postChain, Window window) {
+    private static boolean updateUniforms(PostChain postChain, Window window, float fieldOfView) {
         List<PostPass> passes = ((AccessorPostChain) postChain).sodiumExtra$getPasses();
         for (PostPass pass : passes) {
             Map<String, GpuBuffer> customUniforms = ((AccessorPostPass) pass).sodiumExtra$getCustomUniforms();
             GpuBuffer configUniform = customUniforms.get(CONFIG_UNIFORM);
             if (configUniform != null) {
                 configUniform = prepareConfigUniform(customUniforms, configUniform);
-                writeConfigUniform(configUniform, window);
-                return true;
+                return writeConfigUniform(configUniform, window, fieldOfView);
             }
         }
 
@@ -92,7 +91,7 @@ public class PaniniProjection {
             replacement = RenderSystem.getDevice().createBuffer(
                     () -> "Sodium Extra Panini projection config",
                     GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
-                    createConfigBuffer(memoryStack, 0.0F, 1.0F)
+                    createConfigBuffer(memoryStack, 0.0F, 1.0F, 1.0F)
             );
         }
 
@@ -105,19 +104,30 @@ public class PaniniProjection {
         return replacement;
     }
 
-    private static void writeConfigUniform(GpuBuffer configUniform, Window window) {
+    private static boolean writeConfigUniform(GpuBuffer configUniform, Window window, float fieldOfView) {
         SodiumExtraGameOptions.ExtraSettings settings = SodiumExtraClientMod.options().extraSettings;
         float strength = settings.paniniProjectionStrength / 100.0F;
-        float aspect = window.getWidth() / (float) window.getHeight();
+
+        float verticalExtent = (float) Math.tan(Math.toRadians(fieldOfView) * 0.5);
+        float horizontalExtent = verticalExtent * window.getWidth() / (float) window.getHeight();
+
+        if (!Float.isFinite(horizontalExtent) || !Float.isFinite(verticalExtent)) {
+            return false;
+        }
 
         try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(configUniform.slice(), createConfigBuffer(memoryStack, strength, aspect));
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(
+                    configUniform.slice(),
+                    createConfigBuffer(memoryStack, strength, horizontalExtent, verticalExtent)
+            );
         }
+
+        return true;
     }
 
-    private static ByteBuffer createConfigBuffer(MemoryStack memoryStack, float strength, float aspect) {
+    private static ByteBuffer createConfigBuffer(MemoryStack memoryStack, float strength, float horizontalExtent, float verticalExtent) {
         return Std140Builder.onStack(memoryStack, 16)
-                .putVec4(strength, aspect, 0.0F, 0.0F)
+                .putVec4(strength, horizontalExtent, verticalExtent, 0.0F)
                 .get();
     }
 }

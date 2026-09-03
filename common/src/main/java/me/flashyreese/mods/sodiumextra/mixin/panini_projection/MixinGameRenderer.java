@@ -1,5 +1,6 @@
 package me.flashyreese.mods.sodiumextra.mixin.panini_projection;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.resource.CrossFrameResourcePool;
 import me.flashyreese.mods.sodiumextra.client.render.PaniniProjection;
 import net.minecraft.client.DeltaTracker;
@@ -27,7 +28,7 @@ public class MixinGameRenderer {
     // main target by this point, so it gets re-projected, while the hand is drawn
     // afterwards and stays in the normal projection.
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(FZLorg/joml/Matrix4f;)V"))
-    private void sodiumExtra$applyPaniniProjection(DeltaTracker deltaTracker, CallbackInfo ci) {
-        PaniniProjection.process(this.minecraft, this.minecraft.getMainRenderTarget(), this.resourcePool);
+    private void sodiumExtra$applyPaniniProjection(DeltaTracker deltaTracker, CallbackInfo ci, @Local(ordinal = 1) float fieldOfView) {
+        PaniniProjection.process(this.minecraft, this.minecraft.getMainRenderTarget(), this.resourcePool, fieldOfView);
     }
 }
