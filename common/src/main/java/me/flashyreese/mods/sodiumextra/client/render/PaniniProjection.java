@@ -43,7 +43,7 @@ public class PaniniProjection {
             return;
         }
 
-        if (updateUniforms(postChain, windowRenderState)) {
+        if (updateUniforms(postChain, cameraRenderState)) {
             postChain.process(mainTarget, resourceAllocator);
         }
     }
@@ -66,15 +66,14 @@ public class PaniniProjection {
         return windowRenderState != null && windowRenderState.width > 0 && windowRenderState.height > 0 && !windowRenderState.isMinimized;
     }
 
-    private static boolean updateUniforms(PostChain postChain, WindowRenderState windowRenderState) {
+    private static boolean updateUniforms(PostChain postChain, CameraRenderState cameraRenderState) {
         List<PostPass> passes = ((AccessorPostChain) postChain).sodiumExtra$getPasses();
         for (PostPass pass : passes) {
             Map<String, GpuBuffer> customUniforms = ((AccessorPostPass) pass).sodiumExtra$getCustomUniforms();
             GpuBuffer configUniform = customUniforms.get(CONFIG_UNIFORM);
             if (configUniform != null) {
                 configUniform = prepareConfigUniform(customUniforms, configUniform);
-                writeConfigUniform(configUniform, windowRenderState);
-                return true;
+                return writeConfigUniform(configUniform, cameraRenderState);
             }
         }
 
@@ -95,7 +94,7 @@ public class PaniniProjection {
             replacement = RenderSystem.getDevice().createBuffer(
                     () -> "Sodium Extra Panini projection config",
                     GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
-                    createConfigBuffer(memoryStack, 0.0F, 1.0F)
+                    createConfigBuffer(memoryStack, 0.0F, 1.0F, 1.0F)
             );
         }
 
@@ -108,19 +107,35 @@ public class PaniniProjection {
         return replacement;
     }
 
-    private static void writeConfigUniform(GpuBuffer configUniform, WindowRenderState windowRenderState) {
+    private static boolean writeConfigUniform(GpuBuffer configUniform, CameraRenderState cameraRenderState) {
         SodiumExtraGameOptions.ExtraSettings settings = SodiumExtraClientMod.options().extraSettings;
         float strength = settings.paniniProjectionStrength / 100.0F;
-        float aspect = windowRenderState.width / (float) windowRenderState.height;
+
+        // Perspective m00/m11 are the reciprocal tangent half-extents of the rendered view.
+        float horizontalExtent = reciprocalMagnitude(cameraRenderState.projectionMatrix.m00());
+        float verticalExtent = reciprocalMagnitude(cameraRenderState.projectionMatrix.m11());
+
+        if (!Float.isFinite(horizontalExtent) || !Float.isFinite(verticalExtent)) {
+            return false;
+        }
 
         try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(configUniform.slice(), createConfigBuffer(memoryStack, strength, aspect));
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(
+                    configUniform.slice(),
+                    createConfigBuffer(memoryStack, strength, horizontalExtent, verticalExtent)
+            );
         }
+
+        return true;
     }
 
-    private static ByteBuffer createConfigBuffer(MemoryStack memoryStack, float strength, float aspect) {
+    private static float reciprocalMagnitude(float value) {
+        return 1.0F / Math.abs(value);
+    }
+
+    private static ByteBuffer createConfigBuffer(MemoryStack memoryStack, float strength, float horizontalExtent, float verticalExtent) {
         return Std140Builder.onStack(memoryStack, 16)
-                .putVec4(strength, aspect, 0.0F, 0.0F)
+                .putVec4(strength, horizontalExtent, verticalExtent, 0.0F)
                 .get();
     }
 }

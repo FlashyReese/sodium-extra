@@ -9,7 +9,8 @@
             "inputs": [
                 {
                     "sampler_name": "In",
-                    "target": "minecraft:main"
+                    "target": "minecraft:main",
+                    "bilinear": true
                 }
             ],
             "output": "panini_swap",
@@ -18,7 +19,7 @@
                     {
                         "name": "Params",
                         "type": "vec4",
-                        "value": [ 0.0, 1.0, 1.0, 1.0 ]
+                        "value": [ 0.0, 1.0, 1.0, 0.0 ]
                     }
                 ]
             }

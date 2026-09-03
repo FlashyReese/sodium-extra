@@ -17,14 +17,16 @@ out vec4 fragColor;
 
 void main() {
     float paniniD = clamp(Params.x, 0.0, 1.0);
-    float aspect = max(Params.y, 0.0001);
+    vec2 sourceExtent = max(Params.yz, vec2(0.0001));
 
-    float cosLonEdge = 1.0 / sqrt(1.0 + aspect * aspect);
+    // Scale the Panini lens from the actual perspective projection so the
+    // horizontal FOV remains stable across FOV effects and aspect ratios.
+    float cosLonEdge = inversesqrt(1.0 + sourceExtent.x * sourceExtent.x);
     float edgeScale = (paniniD + 1.0) / (paniniD + cosLonEdge);
-    float fitZoom = 1.0 / max(edgeScale * cosLonEdge, 0.0001);
+    float fitScale = max(edgeScale * cosLonEdge, 0.0001);
 
     vec2 ndc = texCoord * 2.0 - 1.0;
-    vec2 paniniPlane = vec2(ndc.x * aspect, ndc.y) / fitZoom;
+    vec2 paniniPlane = ndc * sourceExtent * fitScale;
 
     float dPlusOne = paniniD + 1.0;
     float normalizedPaniniX = paniniPlane.x / dPlusOne;
@@ -34,10 +36,8 @@ void main() {
     float paniniScale = dPlusOne / (paniniD + cosLon);
     float projectionDivisor = max(paniniScale * cosLon, 0.0001);
 
-    vec2 sourceNdc = vec2((paniniPlane.x / projectionDivisor) / aspect, paniniPlane.y / projectionDivisor);
-    vec2 sourceUv = sourceNdc * 0.5 + 0.5;
-    ivec2 sourceSize = textureSize(InSampler, 0);
-    ivec2 sourceTexel = ivec2(clamp(sourceUv, 0.0, 1.0) * vec2(sourceSize - 1));
+    vec2 sourceNdc = paniniPlane / (projectionDivisor * sourceExtent);
+    vec2 sourceUv = clamp(sourceNdc * 0.5 + 0.5, 0.0, 1.0);
 
-    fragColor = texelFetch(InSampler, sourceTexel, 0);
+    fragColor = texture(InSampler, sourceUv);
 }
