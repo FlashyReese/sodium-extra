@@ -40,6 +40,7 @@ public final class FogDistanceHelper {
     private static final float RADIAL_RENDER_DISTANCE_OFFSET = 1_048_576.0F;
     private static final float PLANAR_RENDER_DISTANCE_OFFSET = 2_097_152.0F;
     private static final float CYLINDRICAL_RENDER_DISTANCE_OFFSET = 3_145_728.0F;
+    private static final float RENDER_DISTANCE_SHAPE_BAND_SIZE = RADIAL_RENDER_DISTANCE_OFFSET;
     private static final float CYLINDRICAL_CULL_DISTANCE_MARKER = 0.75F;
     private static final float CHUNK_SIZE = 16F;
     public static final float CYLINDRICAL_VERTICAL_SCALE = 16.0F;
@@ -203,7 +204,8 @@ public final class FogDistanceHelper {
 
     public static void applyRenderDistanceShape(FogData fog, SodiumExtraGameOptions.AtmosphericFogSettings settings) {
         // VANILLA uses the unmodified shader path. If the transformer failed, skip custom shape offsets too.
-        if (fog.renderDistanceEnd == Float.MAX_VALUE || !FogShaderTransformer.isShapeSupported()) {
+        if (!canEncodeRenderDistanceShape(fog.renderDistanceStart, fog.renderDistanceEnd)
+                || !FogShaderTransformer.isShapeSupported()) {
             return;
         }
 
@@ -218,6 +220,14 @@ public final class FogDistanceHelper {
             fog.renderDistanceStart += offset;
             fog.renderDistanceEnd += offset;
         }
+    }
+
+    public static float decodeRenderDistanceStart(float renderDistanceStart, float renderDistanceEnd) {
+        return renderDistanceStart - getRenderDistanceShapeOffset(renderDistanceStart, renderDistanceEnd);
+    }
+
+    public static float decodeRenderDistanceEnd(float renderDistanceStart, float renderDistanceEnd) {
+        return renderDistanceEnd - getRenderDistanceShapeOffset(renderDistanceStart, renderDistanceEnd);
     }
 
     public static float expandCylindricalCullDistance(float currentDistance, float renderDistanceStart, float renderDistanceEnd, float renderDistance) {
@@ -260,10 +270,42 @@ public final class FogDistanceHelper {
 
     private static boolean isCylindricalRenderDistanceEncoded(float renderDistanceStart, float renderDistanceEnd) {
         return FogShaderTransformer.isShapeSupported()
-                && Float.isFinite(renderDistanceStart)
+                && isRenderDistanceShapeEncoded(renderDistanceStart, renderDistanceEnd, CYLINDRICAL_RENDER_DISTANCE_OFFSET);
+    }
+
+    private static float getRenderDistanceShapeOffset(float renderDistanceStart, float renderDistanceEnd) {
+        if (isRenderDistanceShapeEncoded(renderDistanceStart, renderDistanceEnd, CYLINDRICAL_RENDER_DISTANCE_OFFSET)) {
+            return CYLINDRICAL_RENDER_DISTANCE_OFFSET;
+        }
+
+        if (isRenderDistanceShapeEncoded(renderDistanceStart, renderDistanceEnd, PLANAR_RENDER_DISTANCE_OFFSET)) {
+            return PLANAR_RENDER_DISTANCE_OFFSET;
+        }
+
+        if (isRenderDistanceShapeEncoded(renderDistanceStart, renderDistanceEnd, RADIAL_RENDER_DISTANCE_OFFSET)) {
+            return RADIAL_RENDER_DISTANCE_OFFSET;
+        }
+
+        return 0.0F;
+    }
+
+    private static boolean canEncodeRenderDistanceShape(float renderDistanceStart, float renderDistanceEnd) {
+        return Float.isFinite(renderDistanceStart)
                 && Float.isFinite(renderDistanceEnd)
-                && renderDistanceStart >= CYLINDRICAL_RENDER_DISTANCE_OFFSET
-                && renderDistanceEnd >= CYLINDRICAL_RENDER_DISTANCE_OFFSET;
+                && renderDistanceStart >= 0.0F
+                && renderDistanceStart < RENDER_DISTANCE_SHAPE_BAND_SIZE
+                && renderDistanceEnd >= 0.0F
+                && renderDistanceEnd < RENDER_DISTANCE_SHAPE_BAND_SIZE;
+    }
+
+    private static boolean isRenderDistanceShapeEncoded(float renderDistanceStart, float renderDistanceEnd, float offset) {
+        float bandEnd = offset + RENDER_DISTANCE_SHAPE_BAND_SIZE;
+        return Float.isFinite(renderDistanceStart)
+                && Float.isFinite(renderDistanceEnd)
+                && renderDistanceStart >= offset
+                && renderDistanceStart < bandEnd
+                && renderDistanceEnd >= offset
+                && renderDistanceEnd < bandEnd;
     }
 
     // distanceLimit carries the marker fraction and is compared by raw bits: the value fed back to the

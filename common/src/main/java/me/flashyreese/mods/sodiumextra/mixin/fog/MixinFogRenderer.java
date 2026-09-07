@@ -18,8 +18,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.List;
 
@@ -68,5 +70,19 @@ public class MixinFogRenderer {
         }
 
         return false;
+    }
+
+    @ModifyArgs(
+            method = "setupFog",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/fog/FogRenderer;updateBuffer(Ljava/nio/ByteBuffer;ILorg/joml/Vector4f;FFFFFF)V"
+            )
+    )
+    private void sodiumExtra$decodeRenderDistanceForVanillaShaders(Args args) {
+        float renderDistanceStart = args.get(5);
+        float renderDistanceEnd = args.get(6);
+        args.set(5, FogDistanceHelper.decodeRenderDistanceStart(renderDistanceStart, renderDistanceEnd));
+        args.set(6, FogDistanceHelper.decodeRenderDistanceEnd(renderDistanceStart, renderDistanceEnd));
     }
 }
