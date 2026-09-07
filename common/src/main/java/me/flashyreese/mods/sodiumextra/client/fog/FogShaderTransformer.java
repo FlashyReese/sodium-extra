@@ -22,6 +22,7 @@ public final class FogShaderTransformer {
     private static final String SHAPE_HELPER = """
             const float SODIUM_EXTRA_PLANAR_FOG_OFFSET = 2097152.0;
             const float SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET = 3145728.0;
+            const float SODIUM_EXTRA_FOG_SHAPE_BAND_SIZE = 1048576.0;
             const float SODIUM_EXTRA_CYLINDRICAL_VERTICAL_SCALE = %s;
 
             float sodiumExtra_planarDistance = 0.0;
@@ -31,40 +32,40 @@ public final class FogShaderTransformer {
                 return max(horizontalDistance, verticalDistance / SODIUM_EXTRA_CYLINDRICAL_VERTICAL_SCALE);
             }
 
+            bool sodiumExtra_isShapeEncoded(float fogStart, float fogEnd, float offset) {
+                float bandEnd = offset + SODIUM_EXTRA_FOG_SHAPE_BAND_SIZE;
+                return fogStart >= offset && fogStart < bandEnd && fogEnd >= offset && fogEnd < bandEnd;
+            }
+
             float sodiumExtra_fogDistance(float fragDistance, float fogStart, float fogEnd) {
-                if (fogStart >= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET && fogEnd >= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET) {
+                if (sodiumExtra_isShapeEncoded(fogStart, fogEnd, SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET)) {
                     return sodiumExtra_cylindricalFogDistance(sodiumExtra_cylindricalDistance.x, sodiumExtra_cylindricalDistance.y);
                 }
 
-                if (fogStart >= SODIUM_EXTRA_PLANAR_FOG_OFFSET && fogEnd >= SODIUM_EXTRA_PLANAR_FOG_OFFSET) {
+                if (sodiumExtra_isShapeEncoded(fogStart, fogEnd, SODIUM_EXTRA_PLANAR_FOG_OFFSET)) {
                     return sodiumExtra_planarDistance;
                 }
 
                 return fragDistance;
             }
 
-            float sodiumExtra_fogStart(float fogStart) {
-                if (fogStart >= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET) {
-                    return fogStart - SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
+            float sodiumExtra_fogOffset(float fogStart, float fogEnd) {
+                if (sodiumExtra_isShapeEncoded(fogStart, fogEnd, SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET)) {
+                    return SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
                 }
-
-                return fogStart >= SODIUM_EXTRA_PLANAR_FOG_OFFSET ? fogStart - SODIUM_EXTRA_PLANAR_FOG_OFFSET : fogStart;
-            }
-
-            float sodiumExtra_fogEnd(float fogEnd) {
-                if (fogEnd >= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET) {
-                    return fogEnd - SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
+                if (sodiumExtra_isShapeEncoded(fogStart, fogEnd, SODIUM_EXTRA_PLANAR_FOG_OFFSET)) {
+                    return SODIUM_EXTRA_PLANAR_FOG_OFFSET;
                 }
-
-                return fogEnd >= SODIUM_EXTRA_PLANAR_FOG_OFFSET ? fogEnd - SODIUM_EXTRA_PLANAR_FOG_OFFSET : fogEnd;
+                return 0.0;
             }
 
             """.formatted(Float.toString(FogDistanceHelper.CYLINDRICAL_VERTICAL_SCALE));
 
     private static final String LINEAR_FOG_SETUP = """
                 fragDistance = sodiumExtra_fogDistance(fragDistance, fogStart, fogEnd);
-                fogStart = sodiumExtra_fogStart(fogStart);
-                fogEnd = sodiumExtra_fogEnd(fogEnd);
+                float fogOffset = sodiumExtra_fogOffset(fogStart, fogEnd);
+                fogStart -= fogOffset;
+                fogEnd -= fogOffset;
             """;
 
     private static final String VERTEX_PLANAR_DECL = "\nout float v_PlanarDistance;";
