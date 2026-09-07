@@ -34,6 +34,7 @@ public final class FogShaderTransformer {
             const float SODIUM_EXTRA_RADIAL_FOG_OFFSET = 1048576.0;
             const float SODIUM_EXTRA_PLANAR_FOG_OFFSET = 2097152.0;
             const float SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET = 3145728.0;
+            const float SODIUM_EXTRA_FOG_SHAPE_BAND_SIZE = 1048576.0;
             const float SODIUM_EXTRA_CYLINDRICAL_VERTICAL_SCALE = %s;
 
             float sodiumExtra_planarDistance = 0.0;
@@ -44,8 +45,14 @@ public final class FogShaderTransformer {
                 return linear_fog_value(scaledDistance, fogStart, fogEnd);
             }
 
+            bool sodium_extra_is_shape_encoded(float renderDistanceStart, float renderDistanceEnd, float offset) {
+                float bandEnd = offset + SODIUM_EXTRA_FOG_SHAPE_BAND_SIZE;
+                return renderDistanceStart >= offset && renderDistanceStart < bandEnd
+                    && renderDistanceEnd >= offset && renderDistanceEnd < bandEnd;
+            }
+
             float sodium_extra_total_fog_value(float sphericalVertexDistance, float cylindricalVertexDistance, float environmentalStart, float environmentalEnd, float renderDistanceStart, float renderDistanceEnd) {
-                if (renderDistanceStart >= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET && renderDistanceEnd >= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET) {
+                if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET)) {
                     float decodedRenderDistanceStart = renderDistanceStart - SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
                     float decodedRenderDistanceEnd = renderDistanceEnd - SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
                     float horizontalDistance = sodiumExtra_cylindricalDistance.x;
@@ -55,11 +62,11 @@ public final class FogShaderTransformer {
                     return max(environmentalFog, renderDistanceFog);
                 }
 
-                if (renderDistanceStart >= SODIUM_EXTRA_PLANAR_FOG_OFFSET && renderDistanceEnd >= SODIUM_EXTRA_PLANAR_FOG_OFFSET) {
+                if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_PLANAR_FOG_OFFSET)) {
                     return max(linear_fog_value(sphericalVertexDistance, environmentalStart, environmentalEnd), linear_fog_value(sodiumExtra_planarDistance, renderDistanceStart - SODIUM_EXTRA_PLANAR_FOG_OFFSET, renderDistanceEnd - SODIUM_EXTRA_PLANAR_FOG_OFFSET));
                 }
 
-                if (renderDistanceStart >= SODIUM_EXTRA_RADIAL_FOG_OFFSET && renderDistanceEnd >= SODIUM_EXTRA_RADIAL_FOG_OFFSET) {
+                if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_RADIAL_FOG_OFFSET)) {
                     return max(linear_fog_value(sphericalVertexDistance, environmentalStart, environmentalEnd), linear_fog_value(sphericalVertexDistance, renderDistanceStart - SODIUM_EXTRA_RADIAL_FOG_OFFSET, renderDistanceEnd - SODIUM_EXTRA_RADIAL_FOG_OFFSET));
                 }
 
