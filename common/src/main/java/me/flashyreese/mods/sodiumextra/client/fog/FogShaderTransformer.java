@@ -67,7 +67,7 @@ public final class FogShaderTransformer {
                 }
 
                 if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_PLANAR_FOG_OFFSET)) {
-                    return max(linear_fog_value(sphericalVertexDistance, environmentalStart, environmentalEnd), linear_fog_value(sodiumExtra_planarDistance, renderDistanceStart - SODIUM_EXTRA_PLANAR_FOG_OFFSET, renderDistanceEnd - SODIUM_EXTRA_PLANAR_FOG_OFFSET));
+                    return max(linear_fog_value(sodiumExtra_planarDistance, environmentalStart, environmentalEnd), linear_fog_value(sodiumExtra_planarDistance, renderDistanceStart - SODIUM_EXTRA_PLANAR_FOG_OFFSET, renderDistanceEnd - SODIUM_EXTRA_PLANAR_FOG_OFFSET));
                 }
 
                 if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_RADIAL_FOG_OFFSET)) {
