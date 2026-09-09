@@ -3,11 +3,11 @@ package me.flashyreese.mods.sodiumextra.mixin.adaptive_sync;
 import com.mojang.blaze3d.platform.Window;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 @Mixin(Window.class)
 public class MixinWindow {
@@ -17,13 +17,13 @@ public class MixinWindow {
                 && SodiumExtraGameOptions.VerticalSyncOption.isAdaptiveSyncSupported();
     }
 
-    @Redirect(method = "updateVsync", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwSwapInterval(I)V", remap = false))
-    private void setSwapInterval(int interval) {
+    @WrapOperation(method = "updateVsync", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwSwapInterval(I)V", remap = false))
+    private void setSwapInterval(int interval, Operation<Void> original) {
         if (interval > 0 && sodiumExtra$usesAdaptiveSync()) {
-            GLFW.glfwSwapInterval(-1);
+            original.call(-1);
             return;
         }
 
-        GLFW.glfwSwapInterval(interval);
+        original.call(interval);
     }
 }
