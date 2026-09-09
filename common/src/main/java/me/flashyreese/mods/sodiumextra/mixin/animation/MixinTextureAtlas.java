@@ -1,5 +1,8 @@
 package me.flashyreese.mods.sodiumextra.mixin.animation;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.common.util.AnimationStateExtended;
@@ -13,7 +16,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -83,16 +85,14 @@ public class MixinTextureAtlas {
             )
     );
 
-    @Redirect(method = "cycleAnimationFrames", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;tick()V"))
-    public void cycleAnimationFrames(SpriteContents.AnimationState instance) {
-        if (instance instanceof AnimationStateExtended extended && SodiumExtraClientMod.options().animationSettings.animation && this.shouldAnimate(extended.sodium_extra$getSprite().contents().name())) {
-            instance.tick();
-        }
+    @WrapWithCondition(method = "cycleAnimationFrames", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;tick()V"))
+    public boolean cycleAnimationFrames(SpriteContents.AnimationState instance) {
+        return instance instanceof AnimationStateExtended extended && SodiumExtraClientMod.options().animationSettings.animation && this.shouldAnimate(extended.sodium_extra$getSprite().contents().name());
     }
 
-    @Redirect(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
-    public SpriteContents.AnimationState upload(TextureAtlasSprite instance, GpuBufferSlice gpuBufferSlice, int i) {
-        SpriteContents.AnimationState state = instance.createAnimationState(gpuBufferSlice, i);
+    @WrapOperation(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
+    public SpriteContents.AnimationState upload(TextureAtlasSprite instance, GpuBufferSlice gpuBufferSlice, int i, Operation<SpriteContents.AnimationState> original) {
+        SpriteContents.AnimationState state = original.call(instance, gpuBufferSlice, i);
         ((AnimationStateExtended) state).sodium_extra$setSprite(instance);
         return state;
     }
