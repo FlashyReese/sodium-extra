@@ -9,7 +9,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -43,22 +44,22 @@ public abstract class MixinDebugScreenOverlay {
         }
     }
 
-    @Redirect(method = "drawGameInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
-    public void sodiumExtra$redirectDrawLeftText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left) {
+    @WrapOperation(method = "drawGameInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
+    public void sodiumExtra$redirectDrawLeftText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left, Operation<Void> original) {
         if (this.rebuild) {
             this.leftTextCache.clear();
             this.leftTextCache.addAll(text);
         }
-        this.renderLines(guiGraphics, this.leftTextCache, left);
+        original.call(instance, guiGraphics, this.leftTextCache, left);
     }
 
-    @Redirect(method = "drawSystemInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
-    public void sodiumExtra$redirectDrawRightText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left) {
+    @WrapOperation(method = "drawSystemInformation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"))
+    public void sodiumExtra$redirectDrawRightText(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> text, boolean left, Operation<Void> original) {
         if (this.rebuild) {
             this.rightTextCache.clear();
             this.rightTextCache.addAll(text);
         }
-        this.renderLines(guiGraphics, this.rightTextCache, left);
+        original.call(instance, guiGraphics, this.rightTextCache, left);
     }
 
     @Inject(method = "drawGameInformation", at = @At("HEAD"), cancellable = true)

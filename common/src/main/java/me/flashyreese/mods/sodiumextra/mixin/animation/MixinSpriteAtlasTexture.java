@@ -8,7 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import java.util.List;
 import java.util.Map;
@@ -72,9 +73,9 @@ public abstract class MixinSpriteAtlasTexture extends AbstractTexture {
             )
     );
 
-    @Redirect(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createTicker()Lnet/minecraft/client/renderer/texture/TextureAtlasSprite$Ticker;"))
-    public TextureAtlasSprite.Ticker sodiumExtra$tickAnimatedSprites(TextureAtlasSprite instance) {
-        TextureAtlasSprite.Ticker tickableAnimation = instance.createTicker();
+    @WrapOperation(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createTicker()Lnet/minecraft/client/renderer/texture/TextureAtlasSprite$Ticker;"))
+    public TextureAtlasSprite.Ticker sodiumExtra$tickAnimatedSprites(TextureAtlasSprite instance, Operation<TextureAtlasSprite.Ticker> original) {
+        TextureAtlasSprite.Ticker tickableAnimation = original.call(instance);
         if (tickableAnimation != null && SodiumExtraClientMod.options().animationSettings.animation && this.shouldAnimate(instance.contents().name()))
             return tickableAnimation;
         return null;
