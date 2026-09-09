@@ -1,5 +1,7 @@
 package me.flashyreese.mods.sodiumextra.mixin.fog;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
@@ -30,10 +32,10 @@ public class MixinFogRenderer {
         this.sodiumExtra$usingAtmosphericFog = false;
     }
 
-    @Redirect(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/environment/FogEnvironment;setupFog(Lnet/minecraft/client/renderer/fog/FogData;Lnet/minecraft/client/Camera;Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/DeltaTracker;)V"))
-    private void captureFogEnvironment(FogEnvironment fogEnvironment, FogData fogData, Camera camera, ClientLevel level, float viewDistance, DeltaTracker deltaTracker) {
+    @WrapOperation(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/environment/FogEnvironment;setupFog(Lnet/minecraft/client/renderer/fog/FogData;Lnet/minecraft/client/Camera;Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/DeltaTracker;)V"))
+    private void captureFogEnvironment(FogEnvironment fogEnvironment, FogData fogData, Camera camera, ClientLevel level, float viewDistance, DeltaTracker deltaTracker, Operation<Void> original) {
         this.sodiumExtra$usingAtmosphericFog = fogEnvironment instanceof AtmosphericFogEnvironment;
-        fogEnvironment.setupFog(fogData, camera, level, viewDistance, deltaTracker);
+        original.call(fogEnvironment, fogData, camera, level, viewDistance, deltaTracker);
     }
 
     @Inject(method = "setupFog", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/fog/FogData;renderDistanceEnd:F", ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))

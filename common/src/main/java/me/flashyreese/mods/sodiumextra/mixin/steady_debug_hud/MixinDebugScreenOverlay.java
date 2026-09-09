@@ -1,5 +1,7 @@
 package me.flashyreese.mods.sodiumextra.mixin.steady_debug_hud;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Util;
@@ -9,7 +11,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -44,21 +45,21 @@ public abstract class MixinDebugScreenOverlay {
         }
     }
 
-    @Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V", ordinal = 0))
-    public void sodiumExtra$redirectDrawLeftText(DebugScreenOverlay instance, GuiGraphicsExtractor guiGraphics, List<String> text, boolean left) {
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V", ordinal = 0))
+    public void sodiumExtra$wrapDrawLeftText(DebugScreenOverlay instance, GuiGraphicsExtractor guiGraphics, List<String> text, boolean left, Operation<Void> original) {
         if (this.rebuild) {
             this.leftTextCache.clear();
             this.leftTextCache.addAll(text);
         }
-        this.extractLines(guiGraphics, this.leftTextCache, left);
+        original.call(instance, guiGraphics, this.leftTextCache, left);
     }
 
-    @Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V", ordinal = 1))
-    public void sodiumExtra$redirectDrawRightText(DebugScreenOverlay instance, GuiGraphicsExtractor guiGraphics, List<String> text, boolean left) {
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V", ordinal = 1))
+    public void sodiumExtra$wrapDrawRightText(DebugScreenOverlay instance, GuiGraphicsExtractor guiGraphics, List<String> text, boolean left, Operation<Void> original) {
         if (this.rebuild) {
             this.rightTextCache.clear();
             this.rightTextCache.addAll(text);
         }
-        this.extractLines(guiGraphics, this.rightTextCache, left);
+        original.call(instance, guiGraphics, this.rightTextCache, left);
     }
 }
