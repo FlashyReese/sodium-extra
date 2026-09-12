@@ -56,6 +56,7 @@ public class PaniniProjection {
                 && minecraft.player != null
                 && !minecraft.player.isScoping()
                 && !minecraft.gameRenderer.isPanoramicMode()
+                && (minecraft.levelRenderer == null || minecraft.levelRenderer.getCapturedFrustum() == null)
                 && !IrisCompat.isShaderPackInUse();
     }
 
