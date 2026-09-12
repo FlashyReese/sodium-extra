@@ -62,7 +62,7 @@
   "depends": {
     "fabricloader": ">=0.19",
     "sodium": ">=0.9.1+mc26.1.2",
-    "minecraft": ">=26.1.2"
+    "minecraft": "${minecraft_version}"
   },
   "breaks": {
     "iris": "<1.7.0",
