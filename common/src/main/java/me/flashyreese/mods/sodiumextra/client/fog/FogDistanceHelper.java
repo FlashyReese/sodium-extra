@@ -30,7 +30,6 @@ public final class FogDistanceHelper {
     public static final ResourceLocation SODIUM_RENDER_DISTANCE_OPTION_ID = ResourceLocation.parse("sodium:general.render_distance");
     public static final int FOG_DISTANCE_OFF = -1;
     public static final int FOG_DISTANCE_VANILLA = 0;
-    private static final int LEGACY_FOG_DISTANCE_OFF = 33;
     // The cloud shader fades clouds from the camera to cloudEnd; 100% puts the fade end at the
     // cloud render edge, which is vanilla's own formula.
     public static final int VANILLA_CLOUD_FOG_PERCENT = 100;
@@ -75,10 +74,6 @@ public final class FogDistanceHelper {
         return fogSettings.getAtmospheric(dimensionEffectsId);
     }
 
-    public static int normalizeFogDistance(int fogDistance) {
-        return fogDistance == LEGACY_FOG_DISTANCE_OFF ? FOG_DISTANCE_OFF : fogDistance;
-    }
-
     public static Range getFogDistanceRange(ConfigState state) {
         return new Range(FOG_DISTANCE_OFF, getMaxFogDistance(state), 1);
     }
@@ -107,9 +102,9 @@ public final class FogDistanceHelper {
         maxFogDistance = Math.max(maxFogDistance, getSodiumRenderDistanceMax(state, maxFogDistance));
 
         SodiumExtraGameOptions.FogSettings fogSettings = getFogSettings();
-        maxFogDistance = Math.max(maxFogDistance, normalizeFogDistance(fogSettings.atmospheric.distanceChunks));
+        maxFogDistance = Math.max(maxFogDistance, fogSettings.atmospheric.distanceChunks);
         for (SodiumExtraGameOptions.AtmosphericFogSettings settings : fogSettings.dimensionOverrides.values()) {
-            maxFogDistance = Math.max(maxFogDistance, normalizeFogDistance(settings.distanceChunks));
+            maxFogDistance = Math.max(maxFogDistance, settings.distanceChunks);
         }
 
         return maxFogDistance;
@@ -342,8 +337,6 @@ public final class FogDistanceHelper {
     }
 
     public static void applyProtectedGameplayFog(int distanceBlocks, float startMultiplier, float endMultiplier) {
-        distanceBlocks = normalizeFogDistance(distanceBlocks);
-
         if (distanceBlocks == FOG_DISTANCE_VANILLA) {
             return;
         }
