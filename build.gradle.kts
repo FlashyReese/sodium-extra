@@ -49,8 +49,11 @@ subprojects {
     java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
     tasks.processResources {
+        inputs.property("version", project.version)
+        inputs.property("minecraft_version", MINECRAFT_VERSION)
+
         filesMatching("META-INF/neoforge.mods.toml") {
-            expand(mapOf("version" to createVersionString()))
+            expand(mapOf("version" to project.version, "minecraft_version" to MINECRAFT_VERSION))
         }
     }
 

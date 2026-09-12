@@ -104,9 +104,10 @@ tasks {
         from(project(":common").sourceSets.main.get().resources)
 
         inputs.property("version", project.version)
+        inputs.property("minecraft_version", MINECRAFT_VERSION)
 
         filesMatching("fabric.mod.json") {
-            expand(mapOf("version" to project.version))
+            expand(mapOf("version" to project.version, "minecraft_version" to MINECRAFT_VERSION))
         }
     }
 
