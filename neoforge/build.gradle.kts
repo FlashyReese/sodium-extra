@@ -60,6 +60,9 @@ neoForge {
             val sodiumRuntime = project.dependencies.create("net.caffeinemc:sodium-neoforge:$SODIUM_VERSION") as ExternalModuleDependency
             sodiumRuntime.isTransitive = false
             getAdditionalRuntimeClasspathConfiguration().dependencies.add(sodiumRuntime)
+            getAdditionalRuntimeClasspathConfiguration().dependencies.add(
+                project.dependencies.create("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+            )
         }
     }
 

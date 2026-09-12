@@ -41,7 +41,7 @@ side = "CLIENT"
 config = "sodium-extra.mixins.json"
 
 [[accessTransformers]]
-file="accesstransformer.cfg"
+file = "META-INF/accesstransformer.cfg"
 
 [modproperties.sodium_extra]
 "sodium:config_api_user" = "me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfig"
