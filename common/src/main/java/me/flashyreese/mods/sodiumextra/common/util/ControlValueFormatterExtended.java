@@ -22,8 +22,13 @@ public interface ControlValueFormatterExtended extends ControlValueFormatter {
                 int w = mode.getWidth();
                 int h = mode.getHeight();
                 int g = gcd(w, h);
+                int bitsPerPixel = mode.getRedBits()
+                        + mode.getGreenBits()
+                        + mode.getBlueBits();
+
                 String ratio = (w / g) + ":" + (h / g);
-                String formatted = w + "x" + h + "@" + mode.getRefreshRate() + " (" + ratio + " | " + mode.getBitsPerPixel() + "bit)";
+                String formatted = w + "x" + h + "@" + mode.getRefreshRate()
+                        + " (" + ratio + " | " + bitsPerPixel + "bit)";
                 return Component.literal(formatted);
             }
         };
