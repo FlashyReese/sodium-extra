@@ -20,9 +20,10 @@ architectury {
     injectInjectables = false
 }
 
-// LWJGL 3.4.3 includes inactive Java 27 classes in its multi-release JAR. Architectury Transformer 5.2.91
-// scans those entries while producing the NeoForge common JAR unless LWJGL is removed from its analysis classpath.
-configurations.named("architecturyTransformerClasspath") {
+// LWJGL 3.4.3 includes inactive Java 27 classes in its multi-release JAR. With compileOnly()
+// Architectury does not create its dedicated transformer classpath, so provide one that omits LWJGL.
+configurations.maybeCreate("architecturyTransformerClasspath").apply {
+    extendsFrom(configurations.getByName("compileClasspath"))
     exclude(group = "org.lwjgl")
 }
 
