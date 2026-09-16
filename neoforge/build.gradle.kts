@@ -29,7 +29,7 @@ repositories {
 
 loom {
     neoForge {
-        accessTransformer("src/main/resources/META-INF/accesstransformer.cfg")
+        //accessTransformer("src/main/resources/META-INF/accesstransformer.cfg")
     }
 
     mods {

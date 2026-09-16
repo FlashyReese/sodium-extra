@@ -15,8 +15,7 @@ val GREENLIGHT_VERSION = rootProject.extra["GREENLIGHT_VERSION"] as String
 architectury {
     compileOnly()
     common(
-        "fabric",
-        // "neoforge",
+        "fabric", "neoforge",
     )
     injectInjectables = false
 }

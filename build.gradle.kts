@@ -5,17 +5,17 @@ plugins {
     id("com.gradleup.shadow") version "9.6.1" apply false
 }
 
-val MINECRAFT_VERSION = "26.3-rc-2"
-val NEOFORGE_VERSION = "26.2.0.6-beta"
+val MINECRAFT_VERSION = "26.3"
+val NEOFORGE_VERSION = "26.3.0.1-beta"
 val FABRIC_LOADER_VERSION = "0.19.5"
-val FABRIC_API_VERSION = "0.160.4+26.3"
-val GREENLIGHT_VERSION = "0.1.0+mc26.2"
+val FABRIC_API_VERSION = "0.160.5+26.3"
+val GREENLIGHT_VERSION = "0.1.0+mc26.3"
 
 // https://semver.org/
 val MAVEN_GROUP = providers.gradleProperty("maven_group").get()
 val ARCHIVE_NAME = providers.gradleProperty("archives_name").get()
 val MOD_VERSION = "0.9.3"
-val SODIUM_VERSION = "0.9.2-beta.2+mc26.3r1"
+val SODIUM_VERSION = "0.9.2+mc26.3"
 
 extra["MINECRAFT_VERSION"] = MINECRAFT_VERSION
 extra["NEOFORGE_VERSION"] = NEOFORGE_VERSION
