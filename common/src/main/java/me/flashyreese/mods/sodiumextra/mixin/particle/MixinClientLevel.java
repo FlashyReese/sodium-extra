@@ -21,8 +21,8 @@ public class MixinClientLevel {
         }
     }
 
-    @Inject(method = "addBreakingBlockEffect", at = @At(value = "HEAD"), cancellable = true)
-    public void addBlockBreakingParticles(BlockPos blockPos, Direction direction, CallbackInfo ci) {
+    @Inject(method = "addBreakingParticles", at = @At(value = "HEAD"), cancellable = true)
+    public void addBlockBreakingParticles(BlockPos blockPos, Direction direction, BlockState blockState, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().particleSettings.particles || !SodiumExtraClientMod.options().particleSettings.blockBreaking) {
             ci.cancel();
         }

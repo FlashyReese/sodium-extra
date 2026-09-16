@@ -5,6 +5,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(targets = "net.minecraft.client.server.IntegratedServer")
 public interface AccessorIntegratedServer {
-    @Invoker("commandsAllowedForOtherPlayers")
-    boolean sodiumExtra$commandsAllowedForOtherPlayers();
+    @Invoker("getGuestCommandAccess")
+    boolean sodiumExtra$getGuestCommandAccess();
 }

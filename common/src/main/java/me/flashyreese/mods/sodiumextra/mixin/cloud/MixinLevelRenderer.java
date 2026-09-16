@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
-    @WrapOperation(method = "lambda$addCloudsPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/CloudRenderer;render(ILnet/minecraft/client/CloudStatus;FILnet/minecraft/world/phys/Vec3;JF)V"))
+    @WrapOperation(method = "prepareTranslucents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/CloudRenderer;prepare(ILnet/minecraft/client/CloudStatus;FILnet/minecraft/world/phys/Vec3;JF)V"))
     private void modifyCloudHeight(CloudRenderer instance, int i, CloudStatus cloudStatus, float f, int j, Vec3 vec3, long l, float g, Operation<Void> original) {
         float cloudHeight = SodiumExtraClientMod.options().extraSettings.cloudHeightOverride
                 ? SodiumExtraClientMod.options().extraSettings.cloudHeight + 0.33F

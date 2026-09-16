@@ -14,7 +14,9 @@ val GREENLIGHT_VERSION = rootProject.extra["GREENLIGHT_VERSION"] as String
 
 architectury {
     compileOnly()
-    common("fabric", "neoforge")
+    common(
+        "fabric", "neoforge",
+    )
     injectInjectables = false
 }
 
@@ -30,9 +32,9 @@ loom {
 dependencies {
     minecraft("net.minecraft:minecraft:$MINECRAFT_VERSION")
 
-    compileOnly("io.github.llamalad7:mixinextras-common:0.5.4")
-    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4")
-    compileOnly("net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7")
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.5")
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.5")
+    compileOnly("net.fabricmc:sponge-mixin:0.17.4+mixin.0.8.7")
     compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addDependentFabricModule(name: String) {

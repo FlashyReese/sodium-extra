@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 /**
  * Applies the fog-shape transform only to Sodium's terrain shader after vanilla resolves the source.
  */
-@Mixin(ShaderManager.class)
+@Mixin(ShaderManager.Configs.class)
 public class MixinShaderManager {
     private static final Identifier SODIUM_TERRAIN_SHADER = Identifier.fromNamespaceAndPath("sodium", "blocks/block_layer_opaque");
 

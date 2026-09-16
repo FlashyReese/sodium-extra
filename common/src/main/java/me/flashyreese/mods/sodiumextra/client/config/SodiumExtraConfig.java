@@ -1,11 +1,6 @@
 package me.flashyreese.mods.sodiumextra.client.config;
 
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.Monitor;
-import com.mojang.blaze3d.platform.VideoMode;
-import com.mojang.blaze3d.platform.Window;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
-import me.flashyreese.mods.sodiumextra.client.gui.FullscreenResolutionConfirmation;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import me.flashyreese.mods.sodiumextra.client.fog.FogShaderTransformer;
 import me.flashyreese.mods.sodiumextra.common.util.ControlValueFormatterExtended;
@@ -19,8 +14,6 @@ import net.caffeinemc.mods.sodium.api.config.structure.IntegerOptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionGroupBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.StatefulOptionBuilder;
-import net.caffeinemc.mods.sodium.client.gui.FullscreenResolutionRange;
-import net.caffeinemc.mods.sodium.client.gui.options.FullscreenMode;
 import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatterImpls;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.debug.DebugOptionsScreen;
@@ -28,9 +21,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.function.Function;
@@ -44,11 +35,8 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static final Identifier ADVANCED_FOG_OPTION_ID = id("advanced_fog_settings");
     private static final Identifier MULTI_DIMENSION_FOG_OPTION_ID = id("multi_dimension_fog");
     private static final Identifier PROTECTED_GAMEPLAY_FOG_OPTION_ID = id("protected_gameplay_fog");
-    private static final Identifier WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID = id("wayland_fullscreen_resolution");
     private static final Identifier CLOUD_HEIGHT_OVERRIDE_OPTION_ID = id("cloud_height_override");
     private static final Identifier PANINI_PROJECTION_OPTION_ID = id("panini_projection");
-    private static final Identifier SODIUM_FULLSCREEN_MODE_OPTION_ID = Identifier.parse("sodium:general.fullscreen_mode");
-    private static final Identifier SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID = Identifier.parse("sodium:general.fullscreen_resolution");
     private static final Identifier SODIUM_VSYNC_OPTION_ID = Identifier.parse("sodium:general.vsync");
     private static final List<Identifier> DEFAULT_DIMENSION_EFFECT_IDS = List.of(
             Level.OVERWORLD.identifier(),
@@ -198,99 +186,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
 
     private static String capitalizeNamespacePart(String part) {
         return part.substring(0, 1).toUpperCase(Locale.ROOT) + part.substring(1).toLowerCase(Locale.ROOT);
-    }
-
-    private static Boolean isFullscreenResolutionOptionEnabled(ConfigState state) {
-        Monitor monitor = getMonitor();
-        if (monitor == null || monitor.modeCount() <= 0) {
-            return false;
-        }
-
-        return state.readEnumOption(SODIUM_FULLSCREEN_MODE_OPTION_ID, FullscreenMode.class) == FullscreenMode.EXCLUSIVE
-                && canUseFullscreenResolution(state);
-    }
-
-    private static boolean canUseFullscreenResolution(ConfigState state) {
-        return canUseFullscreenResolution(state.readBooleanOption(WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID));
-    }
-
-    private static boolean canUseFullscreenResolution() {
-        return canUseFullscreenResolution(SodiumExtraClientMod.options().extraSettings.waylandFullscreenResolution);
-    }
-
-    private static boolean canUseFullscreenResolution(boolean waylandFullscreenResolution) {
-        Util.OS os = Util.getPlatform();
-        return os == Util.OS.WINDOWS
-                || os == Util.OS.OSX
-                || isX11()
-                || (isWaylandOrXWayland() && waylandFullscreenResolution);
-    }
-
-    private static boolean isX11() {
-        return Util.getPlatform() == Util.OS.LINUX
-                && GLX.getGlfwPlatform() == GLFW.GLFW_PLATFORM_X11
-                && !isWaylandSession();
-    }
-
-    private static boolean isWaylandOrXWayland() {
-        return Util.getPlatform() == Util.OS.LINUX
-                && (GLX.getGlfwPlatform() == GLFW.GLFW_PLATFORM_WAYLAND || isWaylandSession());
-    }
-
-    private static boolean isWaylandSession() {
-        String sessionType = System.getenv("XDG_SESSION_TYPE");
-        return System.getenv("WAYLAND_DISPLAY") != null || "wayland".equalsIgnoreCase(sessionType);
-    }
-
-    private static Monitor getMonitor() {
-        Window window = Minecraft.getInstance().getWindow();
-        return window == null ? null : window.findBestMonitor();
-    }
-
-    private static Integer getFullscreenResolution() {
-        Monitor monitor = getMonitor();
-        if (monitor == null) {
-            return 0;
-        }
-
-        return Minecraft.getInstance().getWindow().getPreferredFullscreenVideoMode()
-                .map(monitor::indexOfMode)
-                .map(value -> value + 1)
-                .orElse(0);
-    }
-
-    private static void setFullscreenResolution(Integer value) {
-        Monitor monitor = getMonitor();
-        if (monitor == null || monitor.modeCount() <= 0) {
-            return;
-        }
-
-        Window window = Minecraft.getInstance().getWindow();
-        Optional<VideoMode> previousMode = window.getPreferredFullscreenVideoMode();
-        if (!canUseFullscreenResolution() || value == 0) {
-            window.setPreferredFullscreenVideoMode(Optional.empty());
-            SodiumExtraClientMod.disarmWaylandFullscreenResolutionRecovery();
-            return;
-        }
-
-        // Arm recovery before the video-mode reload; the prompt handles bad switches that return, and
-        // pre-launch recovery handles hangs before the prompt can open.
-        if (isWaylandOrXWayland()) {
-            SodiumExtraClientMod.armWaylandFullscreenResolutionRecovery();
-            FullscreenResolutionConfirmation.request(previousMode);
-        } else {
-            SodiumExtraClientMod.disarmWaylandFullscreenResolutionRecovery();
-        }
-
-        int modeIndex = Math.clamp(value - 1, 0, monitor.modeCount() - 1);
-        window.setPreferredFullscreenVideoMode(Optional.of(monitor.mode(modeIndex)));
-    }
-
-    private static void clearPreferredFullscreenVideoMode() {
-        Window window = Minecraft.getInstance().getWindow();
-        if (window != null && window.getPreferredFullscreenVideoMode().isPresent()) {
-            window.setPreferredFullscreenVideoMode(Optional.empty());
-        }
     }
 
     private static Component parseVanillaString(String key) {
@@ -870,22 +765,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                                 .setBinding((value) -> SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac = value, () -> SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac)
                                 .setStorageHandler(SodiumExtraClientMod.options())
                                 .setDefaultValue(false)
-                        )
-                        .addOption(builder.createBooleanOption(WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID)
-                                .setEnabled(isWaylandOrXWayland())
-                                .setName(Component.translatable("sodium-extra.option.wayland_fullscreen_resolution"))
-                                .setTooltip(Component.translatable("sodium-extra.option.wayland_fullscreen_resolution.tooltip"))
-                                .setImpact(OptionImpact.MEDIUM)
-                                .setBinding((value) -> {
-                                    SodiumExtraClientMod.options().extraSettings.waylandFullscreenResolution = value;
-                                    // Drop any stored exclusive resolution once the feature is turned off
-                                    if (!value) {
-                                        clearPreferredFullscreenVideoMode();
-                                        SodiumExtraClientMod.disarmWaylandFullscreenResolutionRecovery();
-                                    }
-                                }, () -> SodiumExtraClientMod.options().extraSettings.waylandFullscreenResolution)
-                                .setStorageHandler(SodiumExtraClientMod.options())
-                                .setDefaultValue(false)
                         ))
                 .addOptionGroup(builder.createOptionGroup()
                         .addOption(builder.createEnumOption(id("overlay_corner"), SodiumExtraGameOptions.OverlayCorner.class)
@@ -1108,24 +987,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 });
     }
 
-    private IntegerOptionBuilder createFullscreenResolutionOption(ConfigBuilder builder) {
-        return builder.createIntegerOption(SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID)
-                .setStorageHandler(() -> Minecraft.getInstance().options.save())
-                .setName(Component.translatable("options.fullscreen.resolution"))
-                .setTooltip(Component.translatable("sodium-extra.option.resolution.tooltip"))
-                .setValueFormatter(ControlValueFormatterExtended.resolution())
-                .setValidator(new FullscreenResolutionRange())
-                .setDefaultValue(0)
-                .setBinding(SodiumExtraConfig::setFullscreenResolution, SodiumExtraConfig::getFullscreenResolution)
-                .setFlags(OptionFlag.REQUIRES_VIDEOMODE_RELOAD)
-                .setEnabledProvider(
-                        SodiumExtraConfig::isFullscreenResolutionOptionEnabled,
-                        SODIUM_FULLSCREEN_MODE_OPTION_ID,
-                        WAYLAND_FULLSCREEN_RESOLUTION_OPTION_ID,
-                        ConfigState.UPDATE_ON_REBUILD
-                );
-    }
-
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
@@ -1135,7 +996,6 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .addPage(this.createDetailsPage(builder))
                 .addPage(this.createRenderPage(builder))
                 .addPage(this.createExtraPage(builder))
-                .registerOptionReplacement(SODIUM_FULLSCREEN_RESOLUTION_OPTION_ID, this.createFullscreenResolutionOption(builder))
                 .registerOptionReplacement(SODIUM_VSYNC_OPTION_ID, this.createVerticalSyncOption(builder));
     }
 }

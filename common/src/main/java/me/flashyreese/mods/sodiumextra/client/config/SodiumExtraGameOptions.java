@@ -5,9 +5,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
-import com.mojang.blaze3d.opengl.GlBackend;
-import com.mojang.blaze3d.systems.GpuSurface;
-import com.mojang.blaze3d.vulkan.VulkanBackend;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.device.GpuDevice;
+import com.mojang.renderpearl.api.device.GpuSurface;
 import it.unimi.dsi.fastutil.objects.Object2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
@@ -18,11 +18,13 @@ import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
+import org.lwjgl.system.MemoryStack;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -174,6 +176,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         ADAPTIVE("sodium-extra.option.use_adaptive_sync.name");
 
         private final Component name;
+        private static long adaptiveSyncContext;
+        private static boolean adaptiveSyncSupported;
 
         VerticalSyncOption(String name) {
             this.name = Component.translatable(name);
@@ -189,14 +193,36 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
                 return false;
             }
 
-            if (minecraft.getWindow().backend() instanceof GlBackend) {
-                return GLFW.glfwGetCurrentContext() != 0L
-                        && (GLFW.glfwExtensionSupported("GLX_EXT_swap_control_tear") || GLFW.glfwExtensionSupported("WGL_EXT_swap_control_tear"));
+            GpuDevice device = RenderSystem.tryGetDevice();
+            if (device == null) {
+                return false;
             }
 
-            if (minecraft.getWindow().backend() instanceof VulkanBackend) {
+            if ("OpenGL".equals(device.getDeviceInfo().backendName())) {
+                long context = SDLVideo.SDL_GL_GetCurrentContext();
+                if (context == 0L) {
+                    return false;
+                }
+
+                if (adaptiveSyncContext != context) {
+                    try (MemoryStack stack = MemoryStack.stackPush()) {
+                        IntBuffer interval = stack.mallocInt(1);
+                        if (!SDLVideo.SDL_GL_GetSwapInterval(interval)) {
+                            return false;
+                        }
+
+                        adaptiveSyncSupported = SDLVideo.SDL_GL_SetSwapInterval(-1);
+                        SDLVideo.SDL_GL_SetSwapInterval(interval.get(0));
+                        adaptiveSyncContext = context;
+                    }
+                }
+
+                return adaptiveSyncSupported;
+            }
+
+            if ("Vulkan".equals(device.getDeviceInfo().backendName())) {
                 GpuSurface surface = minecraft.windowSurface();
-                return surface != null && surface.supportedPresentModes().contains(GpuSurface.PresentMode.FIFO_RELAXED);
+                return surface.supportedPresentModes().contains(GpuSurface.PresentMode.FIFO_RELAXED);
             }
 
             return false;
@@ -508,10 +534,6 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean showFPSExtended;
         public boolean showCoords;
         public boolean reduceResolutionOnMac;
-        @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION)
-        public boolean waylandFullscreenResolution;
-        @SerializedName(SodiumExtraConfigKeys.WAYLAND_FULLSCREEN_RESOLUTION_RECOVERY_PENDING)
-        public boolean waylandFullscreenResolutionRecoveryPending;
         public boolean useAdaptiveSync;
         public boolean cloudHeightOverride;
         public int cloudHeight;
@@ -534,8 +556,6 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.showFPSExtended = true;
             this.showCoords = false;
             this.reduceResolutionOnMac = false;
-            this.waylandFullscreenResolution = false;
-            this.waylandFullscreenResolutionRecoveryPending = false;
             this.useAdaptiveSync = false;
             this.cloudHeightOverride = false;
             this.cloudHeight = 192;

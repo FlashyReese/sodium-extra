@@ -8,7 +8,7 @@ modId = "sodium_extra"
 version = "${version}"
 displayName = "Sodium Extra"
 
-logoFile = "assets/sodium-extra/textures/icon.png" #optional
+iconFile = "assets/sodium-extra/textures/icon.png" #optional
 
 authors = "FlashyReese"
 
@@ -26,7 +26,7 @@ side = "CLIENT"
 [[dependencies.sodium_extra]]
 modId = "sodium"
 type = "required"
-versionRange = "[0.9.1+mc26.2,)"
+versionRange = "[${sodium_version},)"
 ordering = "NONE"
 side = "CLIENT"
 
@@ -39,9 +39,6 @@ side = "CLIENT"
 
 [[mixins]]
 config = "sodium-extra.mixins.json"
-
-[[accessTransformers]]
-file="accesstransformer.cfg"
 
 [modproperties.sodium_extra]
 "sodium:config_api_user" = "me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfig"

@@ -1,6 +1,6 @@
 package me.flashyreese.mods.sodiumextra.compat;
 
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

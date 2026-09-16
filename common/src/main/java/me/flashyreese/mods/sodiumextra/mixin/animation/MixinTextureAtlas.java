@@ -3,7 +3,7 @@ package me.flashyreese.mods.sodiumextra.mixin.animation;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.common.util.AnimationStateExtended;
 import net.minecraft.client.renderer.texture.SpriteContents;
@@ -15,11 +15,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -87,10 +83,10 @@ public class MixinTextureAtlas {
 
     @WrapWithCondition(method = "cycleAnimationFrames", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;tick()V"))
     public boolean cycleAnimationFrames(SpriteContents.AnimationState instance) {
-        return instance instanceof AnimationStateExtended extended && SodiumExtraClientMod.options().animationSettings.animation && this.shouldAnimate(extended.sodium_extra$getSprite().contents().name());
+        return instance instanceof AnimationStateExtended extended && SodiumExtraClientMod.options().animationSettings.animation && this.sodium_extra$shouldAnimate(extended.sodium_extra$getSprite().contents().name());
     }
 
-    @WrapOperation(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createAnimationState(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
+    @WrapOperation(method = "upload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;createAnimationState(Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;I)Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;"))
     public SpriteContents.AnimationState upload(TextureAtlasSprite instance, GpuBufferSlice gpuBufferSlice, int i, Operation<SpriteContents.AnimationState> original) {
         SpriteContents.AnimationState state = original.call(instance, gpuBufferSlice, i);
         ((AnimationStateExtended) state).sodium_extra$setSprite(instance);
@@ -98,7 +94,7 @@ public class MixinTextureAtlas {
     }
 
     @Unique
-    private boolean shouldAnimate(Identifier identifier) {
+    private boolean sodium_extra$shouldAnimate(Identifier identifier) {
         if (identifier != null) {
             for (Map.Entry<Supplier<Boolean>, List<Identifier>> supplierListEntry : this.animatedSprites.entrySet()) {
                 if (supplierListEntry.getValue().contains(identifier)) {

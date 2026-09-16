@@ -388,7 +388,7 @@ public final class FogDistanceHelper {
         }
 
         Object server = ((AccessorMinecraft)minecraft).sodiumExtra$getSingleplayerServer();
-        return server instanceof AccessorIntegratedServer accessor && accessor.sodiumExtra$commandsAllowedForOtherPlayers();
+        return server instanceof AccessorIntegratedServer accessor && accessor.sodiumExtra$getGuestCommandAccess();
     }
 
     private static int getIntAccessor(Object object, String methodName, int fallback) {

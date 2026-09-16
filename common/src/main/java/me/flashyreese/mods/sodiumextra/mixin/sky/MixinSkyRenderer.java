@@ -1,9 +1,7 @@
 package me.flashyreese.mods.sodiumextra.mixin.sky;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import net.minecraft.client.renderer.SkyRenderer;
-import net.minecraft.world.level.MoonPhase;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +13,7 @@ public class MixinSkyRenderer {
             method = "renderSkyDisc",
             at = @At(value = "HEAD"), cancellable = true
     )
-    public void redirectRenderSkyDisc(int i, CallbackInfo ci) {
+    public void redirectRenderSkyDisc(CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sky) {
             ci.cancel();
         }
@@ -29,28 +27,28 @@ public class MixinSkyRenderer {
     }
 
     @Inject(method = "renderSun", at = @At(value = "HEAD"), cancellable = true)
-    private void renderSun(float f, PoseStack poseStack, CallbackInfo ci) {
+    private void renderSun(CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sun) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderMoon", at = @At(value = "HEAD"), cancellable = true)
-    private void renderMoon(MoonPhase moonPhase, float f, PoseStack poseStack, CallbackInfo ci) {
+    private void renderMoon(CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.moon) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderStars", at = @At(value = "HEAD"), cancellable = true)
-    private void renderStars(float f, PoseStack poseStack, CallbackInfo ci) {
+    private void renderStars(CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.stars) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderSunriseAndSunset", at = @At(value = "HEAD"), cancellable = true)
-    private void renderSunriseAndSunset(PoseStack poseStack, float f, int i, CallbackInfo ci) {
+    private void renderSunriseAndSunset(CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().detailSettings.sun) {
             ci.cancel();
         }

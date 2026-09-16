@@ -32,9 +32,6 @@
     "client": [
       "me.flashyreese.mods.sodiumextra.SodiumExtraFabricClientModInitializer"
     ],
-    "preLaunch": [
-      "me.flashyreese.mods.sodiumextra.SodiumExtraFabricPreLaunch"
-    ],
     "sodium:config_api_user": [
       "me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfig"
     ]
@@ -60,8 +57,8 @@
     "sodium-extra.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.19",
-    "sodium": ">=0.9.1+mc26.2",
+    "fabricloader": ">=${fabric_loader_version}",
+    "sodium": ">=${sodium_version}",
     "minecraft": "${minecraft_version}"
   },
   "breaks": {

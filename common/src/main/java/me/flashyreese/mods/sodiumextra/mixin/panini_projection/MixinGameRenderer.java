@@ -3,7 +3,6 @@ package me.flashyreese.mods.sodiumextra.mixin.panini_projection;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.resource.CrossFrameResourcePool;
 import me.flashyreese.mods.sodiumextra.client.render.PaniniProjection;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.state.GameRenderState;
@@ -36,8 +35,8 @@ public class MixinGameRenderer {
     // (terrain, entities, particles, clouds, weather) is fully rendered into the
     // main target by this point, so it gets re-projected, while the hand is drawn
     // afterwards and stays in the normal projection.
-    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/renderer/state/level/CameraRenderState;FLorg/joml/Matrix4fc;)V"))
-    private void sodiumExtra$applyPaniniProjection(DeltaTracker deltaTracker, CallbackInfo ci) {
+    @Inject(method = "render3dHud", at = @At("HEAD"))
+    private void sodiumExtra$applyPaniniProjection(CallbackInfo ci) {
         PaniniProjection.process(this.minecraft, this.mainRenderTarget, this.resourcePool, this.gameRenderState.levelRenderState.cameraRenderState, this.gameRenderState.windowRenderState);
     }
 }

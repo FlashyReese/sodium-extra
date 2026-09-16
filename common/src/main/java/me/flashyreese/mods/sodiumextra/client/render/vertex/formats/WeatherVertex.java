@@ -1,7 +1,7 @@
 package me.flashyreese.mods.sodiumextra.client.render.vertex.formats;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.ColorAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.LightAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;

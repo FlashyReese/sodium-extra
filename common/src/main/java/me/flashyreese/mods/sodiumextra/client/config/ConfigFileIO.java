@@ -17,15 +17,6 @@ public final class ConfigFileIO {
         writeBytesAtomically(path, contents.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static void writeLinesAtomically(Path path, Iterable<String> lines) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        for (String line : lines) {
-            builder.append(line).append(System.lineSeparator());
-        }
-
-        writeStringAtomically(path, builder.toString());
-    }
-
     public static void writeBytesAtomically(Path path, byte[] bytes) throws IOException {
         Path targetPath = path.toAbsolutePath();
         Path directory = targetPath.getParent();

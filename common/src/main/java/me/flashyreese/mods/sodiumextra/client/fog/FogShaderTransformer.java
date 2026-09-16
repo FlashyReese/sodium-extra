@@ -11,23 +11,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * latches unsupported and the Java side stops encoding offsets.
  */
 public final class FogShaderTransformer {
-    private static final String TOTAL_FOG_MARKER = "sodium_extra_total_fog_value";
     private static final String PLANAR_VARYING_MARKER = "v_PlanarDistance";
     private static final String CYLINDRICAL_VARYING_MARKER = "v_SodiumExtraCylindricalDistance";
-    private static final String TOTAL_FOG_DECL = "float total_fog_value(";
-
-    private static final String TOTAL_FOG_RETURN =
-            "return max(linear_fog_value(sphericalVertexDistance, environmentalStart, environmantalEnd), linear_fog_value(cylindricalVertexDistance, renderDistanceStart, renderDistanceEnd));";
-
-    private static final String TOTAL_FOG_CALL =
-            "return sodium_extra_total_fog_value(sphericalVertexDistance, cylindricalVertexDistance, environmentalStart, environmantalEnd, renderDistanceStart, renderDistanceEnd);";
-
-    private static final String VERTEX_DECL_ANCHOR = "out vec2 v_TexCoord;";
+    private static final String FOG_INCLUDE_ANCHOR = "#include <sodium:fog.glsl>";
+    private static final String VERTEX_DECL_ANCHOR = "layout(location = 1) out vec2 v_TexCoord;";
     private static final String VERTEX_COMPUTE_ANCHOR =
             "gl_Position = u_ProjectionMatrix * u_ModelViewMatrix * vec4(position, 1.0);";
 
-    private static final String FRAGMENT_DECL_ANCHOR = "in vec2 v_TexCoord;";
-    private static final String FRAGMENT_FOG_CALL_ANCHOR = "fragColor = _linearFog(";
+    private static final String FRAGMENT_DECL_ANCHOR = "layout(location = 1) in vec2 v_TexCoord;";
+    private static final String FRAGMENT_FOG_CALL_ANCHOR = "return _linearFog(";
+    private static final String FRAGMENT_FOG_CALL = "return sodium_extra_linear_fog(";
 
     // Keep these offsets in sync with FogDistanceHelper; they are encoded into FogData.renderDistanceStart/End.
     private static final String SHAPE_HELPER = """
@@ -37,52 +30,35 @@ public final class FogShaderTransformer {
             const float SODIUM_EXTRA_FOG_SHAPE_BAND_SIZE = 1048576.0;
             const float SODIUM_EXTRA_CYLINDRICAL_VERTICAL_SCALE = %s;
 
-            float sodiumExtra_planarDistance = 0.0;
-            vec2 sodiumExtra_cylindricalDistance = vec2(0.0);
-
-            float sodium_extra_cylindrical_fog_value(float horizontalDistance, float verticalDistance, float fogStart, float fogEnd) {
-                float scaledDistance = max(horizontalDistance, verticalDistance / SODIUM_EXTRA_CYLINDRICAL_VERTICAL_SCALE);
-                return linear_fog_value(scaledDistance, fogStart, fogEnd);
-            }
-
-            bool sodium_extra_is_shape_encoded(float renderDistanceStart, float renderDistanceEnd, float offset) {
+            bool sodium_extra_is_shape_encoded(vec2 renderFog, float offset) {
                 float bandEnd = offset + SODIUM_EXTRA_FOG_SHAPE_BAND_SIZE;
-                return renderDistanceStart >= offset && renderDistanceStart < bandEnd
-                    && renderDistanceEnd >= offset && renderDistanceEnd < bandEnd;
+                return renderFog.x >= offset && renderFog.x < bandEnd
+                    && renderFog.y >= offset && renderFog.y < bandEnd;
             }
 
-            float sodium_extra_total_fog_value(float sphericalVertexDistance, float cylindricalVertexDistance, float environmentalStart, float environmentalEnd, float renderDistanceStart, float renderDistanceEnd) {
-                if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET)) {
-                    float decodedRenderDistanceStart = renderDistanceStart - SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
-                    float decodedRenderDistanceEnd = renderDistanceEnd - SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
-                    float horizontalDistance = sodiumExtra_cylindricalDistance.x;
-                    float verticalDistance = sodiumExtra_cylindricalDistance.y;
-                    float environmentalFog = sodium_extra_cylindrical_fog_value(horizontalDistance, verticalDistance, environmentalStart, environmentalEnd);
-                    float renderDistanceFog = sodium_extra_cylindrical_fog_value(horizontalDistance, verticalDistance, decodedRenderDistanceStart, decodedRenderDistanceEnd);
-                    return max(environmentalFog, renderDistanceFog);
+            vec4 sodium_extra_linear_fog(vec4 fragColor, vec2 fragDistance, vec4 fogColor, vec2 environmentFog, vec2 renderFog, float fadeFactor) {
+                if (sodium_extra_is_shape_encoded(renderFog, SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET)) {
+                    fragDistance = vec2(max(v_SodiumExtraCylindricalDistance.x, v_SodiumExtraCylindricalDistance.y / SODIUM_EXTRA_CYLINDRICAL_VERTICAL_SCALE));
+                    renderFog -= SODIUM_EXTRA_CYLINDRICAL_FOG_OFFSET;
+                } else if (sodium_extra_is_shape_encoded(renderFog, SODIUM_EXTRA_PLANAR_FOG_OFFSET)) {
+                    fragDistance = vec2(v_PlanarDistance);
+                    renderFog -= SODIUM_EXTRA_PLANAR_FOG_OFFSET;
+                } else if (sodium_extra_is_shape_encoded(renderFog, SODIUM_EXTRA_RADIAL_FOG_OFFSET)) {
+                    fragDistance = vec2(fragDistance.y);
+                    renderFog -= SODIUM_EXTRA_RADIAL_FOG_OFFSET;
                 }
 
-                if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_PLANAR_FOG_OFFSET)) {
-                    return max(linear_fog_value(sodiumExtra_planarDistance, environmentalStart, environmentalEnd), linear_fog_value(sodiumExtra_planarDistance, renderDistanceStart - SODIUM_EXTRA_PLANAR_FOG_OFFSET, renderDistanceEnd - SODIUM_EXTRA_PLANAR_FOG_OFFSET));
-                }
-
-                if (sodium_extra_is_shape_encoded(renderDistanceStart, renderDistanceEnd, SODIUM_EXTRA_RADIAL_FOG_OFFSET)) {
-                    return max(linear_fog_value(sphericalVertexDistance, environmentalStart, environmentalEnd), linear_fog_value(sphericalVertexDistance, renderDistanceStart - SODIUM_EXTRA_RADIAL_FOG_OFFSET, renderDistanceEnd - SODIUM_EXTRA_RADIAL_FOG_OFFSET));
-                }
-
-                return max(linear_fog_value(sphericalVertexDistance, environmentalStart, environmentalEnd), linear_fog_value(cylindricalVertexDistance, renderDistanceStart, renderDistanceEnd));
+                return _linearFog(fragColor, fragDistance, fogColor, environmentFog, renderFog, fadeFactor);
             }
 
             """.formatted(Float.toString(FogDistanceHelper.CYLINDRICAL_VERTICAL_SCALE));
 
-    private static final String VERTEX_PLANAR_DECL = "\nout float v_PlanarDistance;";
+    private static final String VERTEX_PLANAR_DECL = "\nlayout(location = 4) out float v_PlanarDistance;";
     private static final String VERTEX_PLANAR_COMPUTE = "v_PlanarDistance = abs((u_ModelViewMatrix * vec4(position, 1.0)).z);\n\n    ";
-    private static final String VERTEX_CYLINDRICAL_DECL = "\nout vec2 v_SodiumExtraCylindricalDistance;";
+    private static final String VERTEX_CYLINDRICAL_DECL = "\nlayout(location = 5) out vec2 v_SodiumExtraCylindricalDistance;";
     private static final String VERTEX_CYLINDRICAL_COMPUTE = "v_SodiumExtraCylindricalDistance = vec2(length(position.xz), abs(position.y));\n    ";
-    private static final String FRAGMENT_PLANAR_DECL = "\nin float v_PlanarDistance;";
-    private static final String FRAGMENT_PLANAR_ASSIGN = "sodiumExtra_planarDistance = v_PlanarDistance;\n    ";
-    private static final String FRAGMENT_CYLINDRICAL_DECL = "\nin vec2 v_SodiumExtraCylindricalDistance;";
-    private static final String FRAGMENT_CYLINDRICAL_ASSIGN = "sodiumExtra_cylindricalDistance = v_SodiumExtraCylindricalDistance;\n    ";
+    private static final String FRAGMENT_PLANAR_DECL = "\nlayout(location = 4) in float v_PlanarDistance;";
+    private static final String FRAGMENT_CYLINDRICAL_DECL = "\nlayout(location = 5) in vec2 v_SodiumExtraCylindricalDistance;";
 
     private static final AtomicBoolean WARNED = new AtomicBoolean(false);
 
@@ -94,70 +70,31 @@ public final class FogShaderTransformer {
     }
 
     public static String injectRenderDistanceShape(String source) {
-        if (source == null || !source.contains(TOTAL_FOG_DECL)) {
+        if (source == null) {
             return source;
         }
 
-        String result = source;
-
-        if (!result.contains(TOTAL_FOG_MARKER)) {
-            if (!result.contains(TOTAL_FOG_RETURN)) {
-                warnDrift();
-                return source;
-            }
-
-            // Replace before injecting the helper; the helper contains the same fallback expression.
-            result = result
-                    .replace(TOTAL_FOG_RETURN, TOTAL_FOG_CALL)
-                    .replace(TOTAL_FOG_DECL, SHAPE_HELPER + TOTAL_FOG_DECL);
+        if (source.contains(PLANAR_VARYING_MARKER) && source.contains(CYLINDRICAL_VARYING_MARKER)) {
+            return source;
         }
 
-        boolean needsPlanarVarying = !result.contains(PLANAR_VARYING_MARKER);
-        boolean needsCylindricalVarying = !result.contains(CYLINDRICAL_VARYING_MARKER);
-        if (needsPlanarVarying || needsCylindricalVarying) {
-            boolean isVertexShader = result.contains(VERTEX_DECL_ANCHOR) && result.contains(VERTEX_COMPUTE_ANCHOR);
-            boolean isFragmentShader = result.contains(FRAGMENT_DECL_ANCHOR) && result.contains(FRAGMENT_FOG_CALL_ANCHOR);
+        if (source.contains(FOG_INCLUDE_ANCHOR)) {
+            if (source.contains(VERTEX_DECL_ANCHOR) && source.contains(VERTEX_COMPUTE_ANCHOR)) {
+                return source
+                        .replace(VERTEX_DECL_ANCHOR, VERTEX_DECL_ANCHOR + VERTEX_PLANAR_DECL + VERTEX_CYLINDRICAL_DECL)
+                        .replace(VERTEX_COMPUTE_ANCHOR, VERTEX_PLANAR_COMPUTE + VERTEX_CYLINDRICAL_COMPUTE + VERTEX_COMPUTE_ANCHOR);
+            }
 
-            if (isVertexShader) {
-                String declarations = "";
-                String computations = "";
-
-                if (needsPlanarVarying) {
-                    declarations += VERTEX_PLANAR_DECL;
-                    computations += VERTEX_PLANAR_COMPUTE;
-                }
-
-                if (needsCylindricalVarying) {
-                    declarations += VERTEX_CYLINDRICAL_DECL;
-                    computations += VERTEX_CYLINDRICAL_COMPUTE;
-                }
-
-                result = result
-                        .replace(VERTEX_DECL_ANCHOR, VERTEX_DECL_ANCHOR + declarations)
-                        .replace(VERTEX_COMPUTE_ANCHOR, computations + VERTEX_COMPUTE_ANCHOR);
-            } else if (isFragmentShader) {
-                String declarations = "";
-                String assignments = "";
-
-                if (needsPlanarVarying) {
-                    declarations += FRAGMENT_PLANAR_DECL;
-                    assignments += FRAGMENT_PLANAR_ASSIGN;
-                }
-
-                if (needsCylindricalVarying) {
-                    declarations += FRAGMENT_CYLINDRICAL_DECL;
-                    assignments += FRAGMENT_CYLINDRICAL_ASSIGN;
-                }
-
-                result = result
-                        .replace(FRAGMENT_DECL_ANCHOR, FRAGMENT_DECL_ANCHOR + declarations)
-                        .replace(FRAGMENT_FOG_CALL_ANCHOR, assignments + FRAGMENT_FOG_CALL_ANCHOR);
-            } else {
-                warnDrift();
+            if (source.contains(FRAGMENT_DECL_ANCHOR) && source.contains(FRAGMENT_FOG_CALL_ANCHOR)) {
+                // Replace before injecting the helper; the helper contains the same fallback expression.
+                return source
+                        .replace(FRAGMENT_FOG_CALL_ANCHOR, FRAGMENT_FOG_CALL)
+                        .replace(FRAGMENT_DECL_ANCHOR, FRAGMENT_DECL_ANCHOR + FRAGMENT_PLANAR_DECL + FRAGMENT_CYLINDRICAL_DECL + "\n" + SHAPE_HELPER);
             }
         }
 
-        return result;
+        warnDrift();
+        return source;
     }
 
     private static void warnDrift() {

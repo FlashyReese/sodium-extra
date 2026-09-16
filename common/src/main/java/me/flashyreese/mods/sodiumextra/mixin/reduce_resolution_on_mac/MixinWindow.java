@@ -1,14 +1,12 @@
 package me.flashyreese.mods.sodiumextra.mixin.reduce_resolution_on_mac;
 
 import com.mojang.blaze3d.platform.Window;
-import me.flashyreese.mods.sodiumextra.client.util.MacReducedResolution;
-import org.objectweb.asm.Opcodes;
+import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
+import net.minecraft.util.Util;
+import org.lwjgl.sdl.SDLVideo;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 /**
  * Approach is based on that used by RetiNo, by Julian Dunskus
@@ -21,63 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Window.class)
 public class MixinWindow {
-    @Shadow
-    private int width;
-
-    @Shadow
-    private int height;
-
-    @Shadow
-    private int framebufferWidth;
-
-    @Shadow
-    private int framebufferHeight;
-
-    @Inject(at = @At(value = "RETURN"), method = "refreshFramebufferSize")
-    private void afterUpdateFrameBufferSize(CallbackInfo ci) {
-        this.scaleInitialFramebufferSize();
-    }
-
-    @Inject(method = "onFramebufferResize", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/platform/Window;framebufferHeight:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
-    private void afterFramebufferResize(long handle, int newWidth, int newHeight, CallbackInfo ci) {
-        this.scaleFramebufferSize();
-    }
-
-    @Unique
-    private void scaleInitialFramebufferSize() {
-        MacReducedResolution.rememberWindowSize(this.width, this.height);
-
-        /*
-         * OpenGL only: the Cocoa non-Retina window hint gives us the correct
-         * reduced drawable, but the first refreshFramebufferSize() during startup
-         * can leave Minecraft's Window framebuffer fields at the Retina backing
-         * size. A manual resize fixes it through the normal callback path; pinning
-         * the initial values to the logical window size avoids the startup-only
-         * stretched/offset GUI without changing resize behavior.
-         */
-        if (MacReducedResolution.shouldUseWindowSizeForInitialFramebuffer()) {
-            this.framebufferWidth = Math.max(1, this.width);
-            this.framebufferHeight = Math.max(1, this.height);
-            return;
+    @ModifyArg(method = "createWindow", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/device/GpuBackend;createWindow(Ljava/lang/String;IIJ)J"), index = 3)
+    private long reduceWindowPixelDensity(long flags) {
+        if (Util.getPlatform() == Util.OS.OSX && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac) {
+            return flags & ~SDLVideo.SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
 
-        this.scaleFramebufferSize();
-    }
-
-    @Unique
-    private void scaleFramebufferSize() {
-        MacReducedResolution.rememberWindowSize(this.width, this.height);
-
-        /*
-         * Vulkan/MoltenVK still needs Window's framebuffer dimensions reduced.
-         * OpenGL is excluded here because GLFW already provided the reduced
-         * drawable and a second halving was confirmed to render 1440p as 720p.
-         */
-        if (!MacReducedResolution.shouldReduceFramebuffer(this.framebufferWidth, this.framebufferHeight, this.width, this.height)) {
-            return;
-        }
-
-        this.framebufferWidth = MacReducedResolution.reduce(this.framebufferWidth);
-        this.framebufferHeight = MacReducedResolution.reduce(this.framebufferHeight);
+        return flags;
     }
 }

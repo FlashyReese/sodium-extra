@@ -1,7 +1,7 @@
 package me.flashyreese.mods.sodiumextra.client.render.vertex.formats;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
