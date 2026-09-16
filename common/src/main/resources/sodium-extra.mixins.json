@@ -13,6 +13,7 @@
     "fog.MixinLevelRenderer",
     "fog.MixinOcclusionCuller",
     "fog.MixinRenderSectionManager",
+    "fog.MixinShaderInstance",
     "fog.MixinSodiumShaderLoader",
     "fog.MixinTraversableTree",
     "fps.MixinGameRenderer",
