@@ -16,7 +16,7 @@ val PARCHMENT_VERSION: String? = null
 // https://semver.org/
 val MAVEN_GROUP = providers.gradleProperty("maven_group").get()
 val ARCHIVE_NAME = providers.gradleProperty("archives_name").get()
-val MOD_VERSION = "0.9.3"
+val MOD_VERSION = "0.9.4"
 val SODIUM_VERSION = "0.8.13+mc1.21.1"
 val GREENLIGHT_VERSION = "0.1.0+mc1.21.10"
 
