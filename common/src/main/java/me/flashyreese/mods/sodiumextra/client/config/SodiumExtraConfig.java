@@ -317,8 +317,9 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static Component translatableTooltip(Identifier identifier, String category) {
         String key = identifier.toLanguageKey("options.".concat(category)).concat(".tooltip");
         Component translatable = Component.translatable(key);
+        String tooltip = translatable.getString().replaceAll("§.", "");
 
-        if (!ComponentUtils.isTranslationResolvable(translatable)) {
+        if (!ComponentUtils.isTranslationResolvable(translatable) || tooltip.isBlank()) {
             translatable = Component.translatable(
                     "sodium-extra.option.".concat(category).concat(".tooltips"),
                     translatableName(identifier, category)

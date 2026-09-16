@@ -1,26 +1,69 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom-remap") version ("1.17.13")
+    id("dev.architectury.loom")
+    id("architectury-plugin")
+    id("com.gradleup.shadow")
 }
 
-val MINECRAFT_VERSION: String by rootProject.extra
-val PARCHMENT_VERSION: String? by rootProject.extra
-val FABRIC_LOADER_VERSION: String by rootProject.extra
-val FABRIC_API_VERSION: String by rootProject.extra
-val MOD_VERSION: String by rootProject.extra
+val MINECRAFT_VERSION = rootProject.extra["MINECRAFT_VERSION"] as String
+val PARCHMENT_VERSION = rootProject.extra["PARCHMENT_VERSION"] as String?
+val FABRIC_LOADER_VERSION = rootProject.extra["FABRIC_LOADER_VERSION"] as String
+val FABRIC_API_VERSION = rootProject.extra["FABRIC_API_VERSION"] as String
 
-val SODIUM_VERSION: String by rootProject.extra
-val GREENLIGHT_VERSION: String by rootProject.extra
-val ARCHIVE_NAME: String by rootProject.extra
+val SODIUM_VERSION = rootProject.extra["SODIUM_VERSION"] as String
+val GREENLIGHT_VERSION = rootProject.extra["GREENLIGHT_VERSION"] as String
 
 base {
-    archivesName.set("$ARCHIVE_NAME-fabric")
+    archivesName.set("${rootProject.name}-fabric")
 }
 
-val embeddedGreenlightApi by configurations.creating {
-    isCanBeConsumed = false
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+loom {
+    accessWidenerPath.set(project(":common").file("src/main/resources/${rootProject.name}.accesswidener"))
+
+    mods {
+        create("sodium-extra") {
+            sourceSet("main")
+            sourceSet("main", ":common")
+        }
+    }
+
+    runs {
+        named("client") {
+            client()
+            configName = "Fabric Client"
+            ideConfigGenerated(true)
+            runDir("run")
+        }
+        named("server") {
+            server()
+            configName = "Fabric Server"
+            ideConfigGenerated(true)
+            runDir("run")
+        }
+    }
+}
+
+val common = configurations.create("common") {
     isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+val shadowBundle = configurations.create("shadowBundle") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+val embeddedGreenlightApi = configurations.create("embeddedGreenlightApi") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
     isTransitive = false
 }
 
@@ -40,8 +83,16 @@ configurations.named("testRuntimeOnly") {
     extendsFrom(embeddedGreenlightApi)
 }
 
+configurations.named("compileClasspath") {
+    extendsFrom(common)
+}
+
+configurations.named("developmentFabric") {
+    extendsFrom(common)
+}
+
 dependencies {
-    minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
+    minecraft("com.mojang:minecraft:$MINECRAFT_VERSION")
     mappings(loom.layered {
         officialMojangMappings()
         if (PARCHMENT_VERSION != null) {
@@ -61,63 +112,67 @@ dependencies {
     //addEmbeddedFabricModule("fabric-renderer-api-v1")
     addEmbeddedFabricModule("fabric-rendering-fluids-v1")
     addEmbeddedFabricModule("fabric-resource-loader-v0")
-    compileOnly(project(":common"))
     modImplementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
     add(embeddedGreenlightApi.name, "me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    add("common", project(path = ":common", configuration = "namedElements")) {
+        isTransitive = false
+    }
+    add("shadowBundle", project(path = ":common", configuration = "transformProductionFabric")) {
+        isTransitive = false
+    }
 }
 
 tasks.test {
     failOnNoDiscoveredTests = false
 }
 
-loom {
-    accessWidenerPath.set(project(":common").file("src/main/resources/${rootProject.name}.accesswidener"))
-
-    @Suppress("UnstableApiUsage")
-    mixin { defaultRefmapName.set("${rootProject.name}.refmap.json") }
-
-    runs {
-        named("client") {
-            client()
-            displayName.set("Fabric Client")
-            generateRunConfig.set(true)
-            runDirectory.set(layout.projectDirectory.dir("run"))
-        }
-        named("server") {
-            server()
-            displayName.set("Fabric Server")
-            generateRunConfig.set(true)
-            runDirectory.set(layout.projectDirectory.dir("run"))
-        }
-    }
+tasks.matching { it.name == "runClient" || it.name == "runServer" }.configureEach {
+    dependsOn("generateRemapClasspath")
 }
 
 tasks {
-    withType<JavaCompile> {
-        source(project(":common").sourceSets.main.get().allSource)
-    }
-
-    javadoc { source(project(":common").sourceSets.main.get().allJava) }
-
     processResources {
-        from(project(":common").sourceSets.main.get().resources)
-
         inputs.property("version", project.version)
+        inputs.property("minecraft_version", MINECRAFT_VERSION)
 
         filesMatching("fabric.mod.json") {
-            expand(mapOf("version" to project.version))
+            expand(mapOf(
+                "version" to project.version,
+                "minecraft_version" to MINECRAFT_VERSION
+            ))
         }
     }
 
     jar {
+        archiveClassifier.set("dev")
         from(rootDir.resolve("LICENSE.txt"))
-
-        // The Greenlight API is published in the named namespace. Merge it into this
-        // input jar so Loom remaps its Minecraft references alongside Sodium Extra.
-        from({ embeddedGreenlightApi.map { zipTree(it) } }) {
-            exclude("META-INF/MANIFEST.MF")
-        }
     }
+}
+
+tasks.named<ShadowJar>("shadowJar") {
+    configurations = listOf(shadowBundle)
+    archiveClassifier.set("dev-shadow")
+    from(rootDir.resolve("LICENSE.txt"))
+
+    // The Greenlight API is published in the named namespace. Merge it into this
+    // input jar so Loom remaps its Minecraft references alongside Sodium Extra.
+    from({ embeddedGreenlightApi.map { zipTree(it) } }) {
+        exclude("META-INF/MANIFEST.MF")
+    }
+}
+
+tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
+    dependsOn(tasks.named("shadowJar"))
+    inputFile.set(tasks.named<ShadowJar>("shadowJar").flatMap { it.archiveFile })
+    archiveClassifier.set("")
+}
+
+configurations.named("runtimeElements") {
+    outgoing.artifacts.clear()
+}
+
+artifacts {
+    add("runtimeElements", tasks.named("remapJar"))
 }
 
 publishing {
