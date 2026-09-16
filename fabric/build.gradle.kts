@@ -1,50 +1,40 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version ("1.17.13")
+    id("dev.architectury.loom-no-remap")
+    id("architectury-plugin")
+    id("com.gradleup.shadow")
 }
 
-val MINECRAFT_VERSION: String by rootProject.extra
-val PARCHMENT_VERSION: String? by rootProject.extra
-val FABRIC_LOADER_VERSION: String by rootProject.extra
-val FABRIC_API_VERSION: String by rootProject.extra
-val MOD_VERSION: String by rootProject.extra
+val MINECRAFT_VERSION = rootProject.extra["MINECRAFT_VERSION"] as String
+val FABRIC_LOADER_VERSION = rootProject.extra["FABRIC_LOADER_VERSION"] as String
+val FABRIC_API_VERSION = rootProject.extra["FABRIC_API_VERSION"] as String
 
-val SODIUM_VERSION: String by rootProject.extra
-val GREENLIGHT_VERSION: String by rootProject.extra
-val ARCHIVE_NAME: String by rootProject.extra
+val SODIUM_VERSION = rootProject.extra["SODIUM_VERSION"] as String
+val GREENLIGHT_VERSION = rootProject.extra["GREENLIGHT_VERSION"] as String
 
 base {
-    archivesName.set("$ARCHIVE_NAME-fabric")
+    archivesName.set("${rootProject.name}-fabric")
 }
 
-dependencies {
-    minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
-    compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
-    runtimeOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
-    testCompileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
-
-    fun addEmbeddedFabricModule(name: String) {
-        val module = fabricApi.module(name, FABRIC_API_VERSION)
-        implementation(module)
-    }
-
-    // Fabric API modules
-    addEmbeddedFabricModule("fabric-api-base")
-    addEmbeddedFabricModule("fabric-block-getter-api-v2")
-    addEmbeddedFabricModule("fabric-rendering-v1")
-    compileOnly(project(":common"))
-    implementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
-    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
-    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
-}
-
-tasks.test {
-    failOnNoDiscoveredTests = false
+architectury {
+    platformSetupLoomIde()
+    compileOnly()
+    fabric()
 }
 
 loom {
     accessWidenerPath.set(project(":common").file("src/main/resources/${rootProject.name}.accesswidener"))
+    nestJars(tasks.named<ShadowJar>("shadowJar"), configurations.named("include"))
+
+    mods {
+        create("sodium-extra") {
+            sourceSet("main")
+            sourceSet("main", ":common")
+        }
+    }
 
     runs {
         named("client") {
@@ -62,32 +52,91 @@ loom {
     }
 }
 
-val modVersion = project.version.toString()
+val common = configurations.create("common") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
 
-tasks {
-    withType<JavaCompile> {
-        source(project(":common").sourceSets.main.get().allSource)
+val shadowBundle = configurations.create("shadowBundle") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+configurations.named("compileClasspath") {
+    extendsFrom(common)
+}
+
+configurations.named("runtimeClasspath") {
+    extendsFrom(common)
+}
+
+dependencies {
+    minecraft("net.minecraft:minecraft:$MINECRAFT_VERSION")
+    implementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+
+    fun addEmbeddedFabricModule(name: String) {
+        val module = fabricApi.module(name, FABRIC_API_VERSION)
+        implementation(module)
     }
 
-    javadoc { source(project(":common").sourceSets.main.get().allJava) }
+    // Fabric API modules
+    addEmbeddedFabricModule("fabric-api-base")
+    addEmbeddedFabricModule("fabric-block-getter-api-v2")
+    addEmbeddedFabricModule("fabric-rendering-v1")
+    implementation("net.caffeinemc:sodium-fabric:$SODIUM_VERSION")
+    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    add("common", project(":common")) {
+        isTransitive = false
+    }
+    add("shadowBundle", project(path = ":common", configuration = "runtimeElements")) {
+        isTransitive = false
+    }
+}
 
+tasks.test {
+    failOnNoDiscoveredTests = false
+}
+
+tasks {
     processResources {
-        from(project(":common").sourceSets.main.get().resources)
-
-        inputs.property("version", modVersion)
+        inputs.property("version", project.version)
+        inputs.property("minecraft_version", MINECRAFT_VERSION)
+        inputs.property("sodium_version", SODIUM_VERSION)
 
         filesMatching("fabric.mod.json") {
-            expand(mapOf("version" to modVersion))
+            expand(mapOf(
+                "version" to project.version,
+                "minecraft_version" to MINECRAFT_VERSION,
+                "sodium_version" to SODIUM_VERSION
+            ))
         }
     }
 
     jar {
+        archiveClassifier.set("dev")
         from(rootDir.resolve("LICENSE.txt"))
     }
 }
 
-tasks.named("validateAccessWidener").configure {
-    dependsOn(":common:genSourcesWithVineflower")
+tasks.named<ShadowJar>("shadowJar") {
+    configurations = listOf(shadowBundle)
+    archiveClassifier.set("")
+    from(rootDir.resolve("LICENSE.txt"))
+    manifest.attributes("Fabric-Mapping-Namespace" to "official")
+}
+
+configurations.named("apiElements") {
+    outgoing.artifacts.clear()
+}
+
+configurations.named("runtimeElements") {
+    outgoing.artifacts.clear()
+}
+
+artifacts {
+    add("apiElements", tasks.named("shadowJar"))
+    add("runtimeElements", tasks.named("shadowJar"))
 }
 
 publishing {

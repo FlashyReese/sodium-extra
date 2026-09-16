@@ -30,7 +30,7 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
       - name: Publish NeoForge to Modrinth, CurseForge & GitHub
-        uses: Kira-NT/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659 # v3.3.0
+        uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075 # v3.3.1
         with:
           modrinth-id: PtjYWJkn
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
           name: '[NeoForge] ${{ github.event.release.name }}'
           version: '${{ github.event.release.tag_name }}+neoforge'
           version-type: release
-          game-versions: '26.2'
+          environment: client
           loaders: neoforge
           dependencies: |
             sodium
@@ -52,7 +52,7 @@ jobs:
             neoforge/build/libs/!(*-@(dev|sources|javadoc|dev-shadow)).jar
             neoforge/build/libs/*-@(dev|sources|javadoc|dev-shadow).jar
       - name: Publish Fabric to Modrinth, CurseForge & GitHub
-        uses: Kira-NT/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659 # v3.3.0
+        uses: Kira-NT/mc-publish@52307b03863581dec6b652b83e597aec02ebb075 # v3.3.1
         with:
           modrinth-id: PtjYWJkn
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
@@ -62,7 +62,7 @@ jobs:
           name: '[Fabric] ${{ github.event.release.name }}'
           version: '${{ github.event.release.tag_name }}+fabric'
           version-type: release
-          game-versions: '26.2'
+          environment: client
           loaders: fabric
           dependencies: |
             sodium
