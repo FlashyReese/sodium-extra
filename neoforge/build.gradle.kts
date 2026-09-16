@@ -1,113 +1,133 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("idea")
-    id("net.neoforged.moddev") version "2.0.141"
     id("java-library")
+    id("dev.architectury.loom-no-remap")
+    id("architectury-plugin")
+    id("com.gradleup.shadow")
 }
 
-val MINECRAFT_VERSION: String by rootProject.extra
-val PARCHMENT_VERSION: String? by rootProject.extra
-val NEOFORGE_VERSION: String by rootProject.extra
-val MOD_VERSION: String by rootProject.extra
-
-val SODIUM_VERSION: String by rootProject.extra
-val GREENLIGHT_VERSION: String by rootProject.extra
-val ARCHIVE_NAME: String by rootProject.extra
+val MINECRAFT_VERSION = rootProject.extra["MINECRAFT_VERSION"] as String
+val NEOFORGE_VERSION = rootProject.extra["NEOFORGE_VERSION"] as String
+val SODIUM_VERSION = rootProject.extra["SODIUM_VERSION"] as String
+val GREENLIGHT_VERSION = rootProject.extra["GREENLIGHT_VERSION"] as String
 
 base {
-    archivesName = "$ARCHIVE_NAME-neoforge"
+    archivesName.set("${rootProject.name}-neoforge")
+}
+
+architectury {
+    compileOnly()
+    platformSetupLoomIde()
+    neoForge()
 }
 
 repositories {
-    maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
-    maven("https://maven.caffeinemc.net/releases")
-    maven("https://maven.caffeinemc.net/snapshots")
-
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "Modrinth"
-                url = uri("https://api.modrinth.com/maven")
-            }
-        }
-        filter {
-            includeGroup("maven.modrinth")
-        }
-    }
 }
 
-tasks.jar {
-    from(rootDir.resolve("LICENSE.txt"))
-
-    filesMatching("neoforge.mods.toml") {
-        expand(mapOf("version" to MOD_VERSION))
+loom {
+    mods {
+        named("main") {
+            sourceSet(project(":common").sourceSets.main.get())
+        }
     }
-}
-
-neoForge {
-    // Specify the version of NeoForge to use.
-    version = NEOFORGE_VERSION
-
-    /*parchment {
-        mappingsVersion = PARCHMENT_VERSION
-        minecraftVersion = MINECRAFT_VERSION
-    }*/
 
     runs {
-        create("client") {
+        named("client") {
             client()
-            ideName = "NeoForge/Client"
-        }
-    }
-
-    mods {
-        create(project.name) {
-            sourceSet(sourceSets.main.get())
+            displayName.set("NeoForge Client")
+            runDirectory.set(layout.projectDirectory.dir("run"))
         }
     }
 }
 
-fun includeDep(dependency: String, closure: Action<ExternalModuleDependency>) {
-    dependencies.implementation(dependency, closure)
-    dependencies.jarJar(dependency, closure)
+val common = configurations.create("common") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
 }
 
-fun includeDep(dependency: String) {
-    dependencies.implementation(dependency)
-    dependencies.jarJar(dependency)
+val shadowBundle = configurations.create("shadowBundle") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+configurations.named("compileClasspath") {
+    extendsFrom(common)
+}
+
+configurations.named("runtimeClasspath") {
+    extendsFrom(common)
+}
+
+dependencies {
+    minecraft("net.minecraft:minecraft:$MINECRAFT_VERSION")
+    // Specify the version of NeoForge to use.
+    add("neoForge", "net.neoforged:neoforge:$NEOFORGE_VERSION")
+
+    implementation("net.caffeinemc:sodium-neoforge:$SODIUM_VERSION")
+    implementation("net.caffeinemc:sodium-neoforge-api:$SODIUM_VERSION")
+    implementation("net.caffeinemc:sodium-neoforge-mod:$SODIUM_VERSION")
+    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    add("common", project(":common")) {
+        isTransitive = false
+    }
+    add("shadowBundle", project(path = ":common", configuration = "runtimeElements")) {
+        isTransitive = false
+    }
 }
 
 tasks.named("compileTestJava").configure {
     enabled = false
 }
 
-dependencies {
-    compileOnly(project(":common"))
-    implementation("net.caffeinemc:sodium-neoforge-mod:$SODIUM_VERSION")
-    implementation("net.caffeinemc:sodium-neoforge-api:${SODIUM_VERSION}")
-    implementation("net.caffeinemc:sodium-neoforge:${SODIUM_VERSION}")
-    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
-    jarJar("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+tasks.test {
+    failOnNoDiscoveredTests = false
 }
 
-// NeoGradle compiles the game, but we don't want to add our common code to the game's code
-val notNeoTask: (Task) -> Boolean = { it: Task ->
-    !it.name.startsWith("neo") && !it.name.startsWith("compileService")
+tasks {
+    processResources {
+        inputs.property("version", project.version)
+        inputs.property("minecraft_version", MINECRAFT_VERSION)
+        inputs.property("sodium_version", SODIUM_VERSION)
+
+        filesMatching("META-INF/neoforge.mods.toml") {
+            expand(mapOf(
+                "version" to project.version,
+                "minecraft_version" to MINECRAFT_VERSION,
+                "sodium_version" to SODIUM_VERSION
+            ))
+        }
+    }
+
+    jar {
+        archiveClassifier.set("dev")
+        from(rootDir.resolve("LICENSE.txt"))
+    }
 }
 
-tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
-    source(project(":common").sourceSets.main.get().allSource)
+tasks.named<ShadowJar>("shadowJar") {
+    configurations = listOf(shadowBundle)
+    archiveClassifier.set("")
+    from(rootDir.resolve("LICENSE.txt"))
 }
 
-tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
-    source(project(":common").sourceSets.main.get().allJava)
+loom.nestJars(tasks.named<ShadowJar>("shadowJar"), configurations.named("include"))
+
+configurations.named("apiElements") {
+    outgoing.artifacts.clear()
 }
 
-tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
-    from(project(":common").sourceSets.main.get().resources)
+configurations.named("runtimeElements") {
+    outgoing.artifacts.clear()
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+artifacts {
+    add("apiElements", tasks.named("shadowJar"))
+    add("runtimeElements", tasks.named("shadowJar"))
+}
 
 publishing {
     publications {

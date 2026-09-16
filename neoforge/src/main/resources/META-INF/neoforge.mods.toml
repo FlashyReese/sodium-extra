@@ -19,14 +19,14 @@ Features that shouldn't be in Sodium.
 [[dependencies.sodium_extra]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.1.2,)"
+versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.sodium_extra]]
 modId = "sodium"
 type = "required"
-versionRange = "[0.9.1+mc26.1.2,)"
+versionRange = "[0.9.2+mc26.1.2,)"
 ordering = "NONE"
 side = "CLIENT"
 
@@ -39,9 +39,6 @@ side = "CLIENT"
 
 [[mixins]]
 config = "sodium-extra.mixins.json"
-
-[[accessTransformers]]
-file="accesstransformer.cfg"
 
 [modproperties.sodium_extra]
 "sodium:config_api_user" = "me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfig"
