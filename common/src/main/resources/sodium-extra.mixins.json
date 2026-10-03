@@ -32,6 +32,7 @@
     "panini_projection.AccessorPostChain",
     "panini_projection.AccessorPostPass",
     "panini_projection.MixinGameRenderer",
+    "panini_projection.MixinLevelRenderer",
     "particle.MixinClientLevel",
     "particle.MixinFireworkParticle",
     "particle.MixinLevelRenderer",

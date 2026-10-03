@@ -45,6 +45,13 @@ public class PaniniProjection {
 
         if (updateUniforms(postChain, window, fieldOfView)) {
             postChain.process(mainTarget, resourceAllocator);
+
+            // Vanilla composites glowing outlines after the hand, so re-project
+            // their separate target with the same uniforms before that composite.
+            EntityOutlineTarget levelRenderer = (EntityOutlineTarget) minecraft.levelRenderer;
+            if (levelRenderer.sodiumExtra$hasEntityOutline()) {
+                postChain.process(levelRenderer.sodiumExtra$getEntityOutlineTarget(), resourceAllocator);
+            }
         }
     }
 
