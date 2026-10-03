@@ -1,5 +1,6 @@
 package me.flashyreese.mods.sodiumextra.mixin.panini_projection;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.culling.Frustum;
 import org.spongepowered.asm.mixin.Mixin;
@@ -9,4 +10,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface AccessorLevelRenderer {
     @Accessor("capturedFrustum")
     Frustum sodiumExtra$getCapturedFrustum();
+
+    @Accessor("entityTarget")
+    RenderTarget sodiumExtra$getEntityOutlineTarget();
 }

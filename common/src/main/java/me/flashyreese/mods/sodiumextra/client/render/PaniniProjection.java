@@ -24,6 +24,11 @@ public class PaniniProjection {
     private static final AtomicBoolean WARNED_MISSING_CHAIN = new AtomicBoolean(false);
     private static final AtomicBoolean WARNED_MISSING_UNIFORM = new AtomicBoolean(false);
     private static PostChain postChain;
+    private static PostChain outlinePostChain;
+    private static RenderTarget outlineTarget;
+    private static int outlineWidth = -1;
+    private static int outlineHeight = -1;
+    private static boolean outlinePostChainUnavailable;
     private static boolean postChainUnavailable;
     private static int postChainWidth = -1;
     private static int postChainHeight = -1;
@@ -45,6 +50,16 @@ public class PaniniProjection {
             RenderSystem.disableDepthTest();
             RenderSystem.resetTextureMatrix();
             postChain.process(tickDelta);
+
+            // Vanilla composites glowing outlines after the hand, so re-project
+            // their separate target with the same uniforms before that composite.
+            if (((EntityOutlineState) minecraft.levelRenderer).sodiumExtra$hasEntityOutline()) {
+                RenderTarget target = ((AccessorLevelRenderer) minecraft.levelRenderer).sodiumExtra$getEntityOutlineTarget();
+                PostChain outlineChain = getOrCreateOutlinePostChain(minecraft, target);
+                if (outlineChain != null && updateUniforms(outlineChain, window, fieldOfView)) {
+                    outlineChain.process(tickDelta);
+                }
+            }
             mainTarget.bindWrite(true);
         }
     }
@@ -97,6 +112,36 @@ public class PaniniProjection {
         return postChain;
     }
 
+    private static PostChain getOrCreateOutlinePostChain(Minecraft minecraft, RenderTarget target) {
+        if (outlineTarget != target) {
+            closeOutline();
+            outlineTarget = target;
+        }
+        if (target == null || outlinePostChainUnavailable) {
+            return null;
+        }
+
+        if (outlinePostChain == null) {
+            try {
+                // In 1.21.1 a PostChain owns fixed input/output targets, so the
+                // outline needs its own chain rather than reusing the main one.
+                outlinePostChain = new PostChain(minecraft.getTextureManager(), minecraft.getResourceManager(), target, POST_CHAIN_ID);
+            } catch (IOException | JsonSyntaxException exception) {
+                outlinePostChainUnavailable = true;
+                SodiumExtraClientMod.logger().warn("Unable to apply Panini Projection to glowing outlines because the post effect '{}' is unavailable", POST_CHAIN_ID, exception);
+                return null;
+            }
+        }
+
+        if (outlineWidth != target.viewWidth || outlineHeight != target.viewHeight) {
+            outlinePostChain.resize(target.viewWidth, target.viewHeight);
+            outlineWidth = target.viewWidth;
+            outlineHeight = target.viewHeight;
+        }
+
+        return outlinePostChain;
+    }
+
     private static boolean updateUniforms(PostChain postChain, Window window, double fieldOfView) {
         List<PostPass> passes = ((AccessorPostChain) postChain).sodiumExtra$getPasses();
         for (PostPass pass : passes) {
@@ -124,11 +169,23 @@ public class PaniniProjection {
     }
 
     private static void close() {
+        closeOutline();
         if (postChain != null) {
             postChain.close();
             postChain = null;
             postChainWidth = -1;
             postChainHeight = -1;
         }
+    }
+
+    private static void closeOutline() {
+        if (outlinePostChain != null) {
+            outlinePostChain.close();
+            outlinePostChain = null;
+        }
+        outlineTarget = null;
+        outlineWidth = -1;
+        outlineHeight = -1;
+        outlinePostChainUnavailable = false;
     }
 }
