@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import me.flashyreese.mods.sodiumextra.client.SodiumExtraClientMod;
 import me.flashyreese.mods.sodiumextra.client.config.SodiumExtraGameOptions;
 import me.flashyreese.mods.sodiumextra.compat.IrisCompat;
+import me.flashyreese.mods.sodiumextra.mixin.panini_projection.AccessorLevelRenderer;
 import me.flashyreese.mods.sodiumextra.mixin.panini_projection.AccessorPostChain;
 import me.flashyreese.mods.sodiumextra.mixin.panini_projection.AccessorPostPass;
 import net.minecraft.client.Minecraft;
@@ -45,6 +46,13 @@ public class PaniniProjection {
 
         if (updateUniforms(postChain, cameraRenderState)) {
             postChain.process(mainTarget, resourceAllocator);
+
+            // Vanilla composites glowing outlines after the hand, so re-project
+            // their separate target with the same uniforms before that composite.
+            AccessorLevelRenderer levelRenderer = (AccessorLevelRenderer) minecraft.levelRenderer;
+            if (((OutlineRenderState) minecraft.levelRenderer).sodiumExtra$hasEntityOutline()) {
+                postChain.process(levelRenderer.sodiumExtra$getEntityOutlineTarget(), resourceAllocator);
+            }
         }
     }
 
