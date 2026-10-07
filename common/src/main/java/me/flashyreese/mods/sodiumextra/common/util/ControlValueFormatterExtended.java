@@ -1,10 +1,49 @@
 package me.flashyreese.mods.sodiumextra.common.util;
 
+import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.VideoMode;
 import me.flashyreese.mods.sodiumextra.client.fog.FogDistanceHelper;
 import net.caffeinemc.mods.sodium.api.config.option.ControlValueFormatter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 public interface ControlValueFormatterExtended extends ControlValueFormatter {
+    static ControlValueFormatter resolution() {
+        return (v) -> {
+            Monitor monitor = Minecraft.getInstance().getWindow().findBestMonitor();
+            if (monitor == null || monitor.modeCount() <= 0) {
+                return Component.translatable("options.fullscreen.unavailable");
+            } else {
+                int modeIndex = Math.clamp(v - 1, 0, monitor.modeCount() - 1);
+                if (v == 0) {
+                    return Component.translatable("options.fullscreen.current");
+                }
+
+                VideoMode mode = monitor.mode(modeIndex);
+                int w = mode.getWidth();
+                int h = mode.getHeight();
+                int g = gcd(w, h);
+                String ratio = (w / g) + ":" + (h / g);
+                int bitsPerPixel = mode.getRedBits()
+                        + mode.getGreenBits()
+                        + mode.getBlueBits();
+
+                String formatted = w + "x" + h + "@" + mode.getRefreshRate()
+                        + " (" + ratio + " | " + bitsPerPixel + "bit)";
+                return Component.literal(formatted);
+            }
+        };
+    }
+
+    private static int gcd(int a, int b) {
+        while (b != 0) {
+            int remainder = a % b;
+            a = b;
+            b = remainder;
+        }
+        return a;
+    }
+
     static ControlValueFormatter fogDistance() {
         return (v) -> {
             if (v == FogDistanceHelper.FOG_DISTANCE_VANILLA) {
