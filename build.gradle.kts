@@ -15,7 +15,7 @@ val GREENLIGHT_VERSION = "0.1.0+mc26.2"
 val MAVEN_GROUP = providers.gradleProperty("maven_group").get()
 val ARCHIVE_NAME = providers.gradleProperty("archives_name").get()
 val MOD_VERSION = "0.9.4"
-val SODIUM_VERSION = "0.9.1+mc26.2"
+val SODIUM_VERSION = "0.9.2+mc26.2"
 
 extra["MINECRAFT_VERSION"] = MINECRAFT_VERSION
 extra["NEOFORGE_VERSION"] = NEOFORGE_VERSION
