@@ -2,6 +2,8 @@ package me.flashyreese.mods.sodiumextra.mixin.reduce_resolution_on_mac;
 
 import com.mojang.blaze3d.platform.Window;
 import me.flashyreese.mods.sodiumextra.client.util.MacReducedResolution;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryStack;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,12 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public class MixinWindow {
     @Shadow
-    private int width;
-
-    @Shadow
-    private int height;
-
-    @Shadow
     private int framebufferWidth;
 
     @Shadow
@@ -35,7 +31,7 @@ public class MixinWindow {
 
     @Inject(at = @At(value = "RETURN"), method = "refreshFramebufferSize")
     private void afterUpdateFrameBufferSize(CallbackInfo ci) {
-        this.scaleInitialFramebufferSize();
+        this.scaleFramebufferSize();
     }
 
     @Inject(method = "onFramebufferResize", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/platform/Window;framebufferHeight:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
@@ -44,40 +40,35 @@ public class MixinWindow {
     }
 
     @Unique
-    private void scaleInitialFramebufferSize() {
-        MacReducedResolution.rememberWindowSize(this.width, this.height);
-
-        /*
-         * OpenGL only: the Cocoa non-Retina window hint gives us the correct
-         * reduced drawable, but the first refreshFramebufferSize() during startup
-         * can leave Minecraft's Window framebuffer fields at the Retina backing
-         * size. A manual resize fixes it through the normal callback path; pinning
-         * the initial values to the logical window size avoids the startup-only
-         * stretched/offset GUI without changing resize behavior.
-         */
-        if (MacReducedResolution.shouldUseWindowSizeForInitialFramebuffer()) {
-            this.framebufferWidth = Math.max(1, this.width);
-            this.framebufferHeight = Math.max(1, this.height);
-            return;
-        }
-
-        this.scaleFramebufferSize();
-    }
-
-    @Unique
     private void scaleFramebufferSize() {
-        MacReducedResolution.rememberWindowSize(this.width, this.height);
-
-        /*
-         * Vulkan/MoltenVK still needs Window's framebuffer dimensions reduced.
-         * OpenGL is excluded here because GLFW already provided the reduced
-         * drawable and a second halving was confirmed to render 1440p as 720p.
-         */
-        if (!MacReducedResolution.shouldReduceFramebuffer(this.framebufferWidth, this.framebufferHeight, this.width, this.height)) {
+        if (!MacReducedResolution.isEnabled()) {
             return;
         }
 
-        this.framebufferWidth = MacReducedResolution.reduce(this.framebufferWidth);
-        this.framebufferHeight = MacReducedResolution.reduce(this.framebufferHeight);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            var windowWidth = stack.mallocInt(1);
+            var windowHeight = stack.mallocInt(1);
+            GLFW.glfwGetWindowSize(((Window) (Object) this).handle(), windowWidth, windowHeight);
+
+            // Cocoa can deliver the framebuffer callback before Minecraft's
+            // window-size callback. Use the live size for both backends and
+            // Vulkan's later swapchain configuration.
+            int width = windowWidth.get(0);
+            int height = windowHeight.get(0);
+            MacReducedResolution.rememberWindowSize(width, height);
+            if (width <= 0 || height <= 0) {
+                return;
+            }
+
+            if (MacReducedResolution.shouldUseWindowSizeForFramebuffer()) {
+                // NeoForge can reuse a Retina early-loading window. Limit every
+                // update without halving an already reduced OpenGL drawable.
+                this.framebufferWidth = MacReducedResolution.limitToWindowSize(this.framebufferWidth, width);
+                this.framebufferHeight = MacReducedResolution.limitToWindowSize(this.framebufferHeight, height);
+            } else if (MacReducedResolution.shouldReduceFramebuffer(this.framebufferWidth, this.framebufferHeight, width, height)) {
+                this.framebufferWidth = MacReducedResolution.reduce(this.framebufferWidth);
+                this.framebufferHeight = MacReducedResolution.reduce(this.framebufferHeight);
+            }
+        }
     }
 }

@@ -9,9 +9,9 @@ public final class MacReducedResolution {
      * This is intentionally backend-specific. On macOS, the "reduce resolution"
      * option cannot be treated as one generic framebuffer rule:
      *
-     * - OpenGL honors GLFW_COCOA_RETINA_FRAMEBUFFER=false and already gives us a
-     *   logical-size drawable. Halving Window.framebufferWidth/Height again makes
-     *   a 1440p Retina setup render as 720p.
+     * - OpenGL requests GLFW_COCOA_RETINA_FRAMEBUFFER=false, but NeoForge can
+     *   reuse an early-loading window. Limit rendering to the logical window
+     *   size without halving an already reduced drawable.
      * - Vulkan/MoltenVK still needs Minecraft's Window framebuffer dimensions to
      *   be reduced, and its swapchain should be reduced to match. Rendering into a
      *   reduced texture and scaling it into a full-size swapchain fixed the border
@@ -24,11 +24,12 @@ public final class MacReducedResolution {
     }
 
     private static Backend backend = Backend.UNKNOWN;
+    private static boolean enabledForWindow;
     private static int windowWidth = -1;
     private static int windowHeight = -1;
 
     public static boolean isEnabled() {
-        return Util.getPlatform() == Util.OS.OSX && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac;
+        return enabledForWindow;
     }
 
     public static int reduce(int value) {
@@ -36,11 +37,22 @@ public final class MacReducedResolution {
     }
 
     public static void useOpenGlBackend() {
-        backend = Backend.OPENGL;
+        useBackend(Backend.OPENGL);
     }
 
     public static void useVulkanBackend() {
-        backend = Backend.VULKAN;
+        useBackend(Backend.VULKAN);
+    }
+
+    private static void useBackend(Backend selectedBackend) {
+        backend = selectedBackend;
+        // Snapshot this restart-required option when window hints are prepared.
+        // Reading the live setting during presentation can disable upscaling
+        // while the current window still uses a reduced render target.
+        enabledForWindow = Util.getPlatform() == Util.OS.OSX
+                && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac;
+        windowWidth = -1;
+        windowHeight = -1;
     }
 
     public static void rememberWindowSize(int width, int height) {
@@ -52,7 +64,7 @@ public final class MacReducedResolution {
         return isEnabled() && backend != Backend.OPENGL && isHighDpiFramebuffer(framebufferWidth, framebufferHeight, windowWidth, windowHeight);
     }
 
-    public static boolean shouldUseWindowSizeForInitialFramebuffer() {
+    public static boolean shouldUseWindowSizeForFramebuffer() {
         return isEnabled() && backend == Backend.OPENGL;
     }
 
@@ -62,6 +74,10 @@ public final class MacReducedResolution {
         }
 
         return new GpuSurface.Configuration(reduce(config.width()), reduce(config.height()), config.presentMode());
+    }
+
+    public static int limitToWindowSize(int framebufferSize, int windowSize) {
+        return Math.max(1, Math.min(framebufferSize, windowSize));
     }
 
     public static boolean shouldScalePresentation(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight) {
