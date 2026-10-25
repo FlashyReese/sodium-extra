@@ -14,6 +14,7 @@ import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.config.structure.Config;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
+import net.caffeinemc.mods.sodium.client.services.PlatformRuntimeInformation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,6 +26,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public final class FogDistanceHelper {
     public static final ResourceLocation SODIUM_RENDER_DISTANCE_OPTION_ID = ResourceLocation.parse("sodium:general.render_distance");
@@ -42,10 +45,10 @@ public final class FogDistanceHelper {
     private static final float CYLINDRICAL_CULL_DISTANCE_MARKER = 0.75F;
     private static final float CHUNK_SIZE = 16F;
     public static final float CYLINDRICAL_VERTICAL_SCALE = 16.0F;
-    private static final ClientFeature<ProtectedGameplayFogPolicy> PROTECTED_GAMEPLAY_FOG = Greenlight
-            .feature(ResourceLocation.fromNamespaceAndPath("sodium-extra", "protected_gameplay_fog"))
-            .decoder(1, ProtectedGameplayFogPolicy::fromJson)
-            .register();
+    private static final Supplier<Optional<ProtectedGameplayFogPolicy>> PROTECTED_GAMEPLAY_FOG =
+            PlatformRuntimeInformation.getInstance().isModInLoadingList("greenlight")
+                    ? GreenlightIntegration.register()
+                    : Optional::empty;
     // Snapshot of the currently-active expanded cylindrical cull. Published on the render thread by
     // expandCylindricalCullDistance and read lock-free during occlusion traversal. Only one is ever
     // active because every cull distance in a frame derives from the same render distance.
@@ -307,7 +310,7 @@ public final class FogDistanceHelper {
         SodiumExtraGameOptions.FogSettings fogSettings = getFogSettings();
         return fogSettings.advanced
                 && fogSettings.protectedGameplay.enabledWhenAllowed
-                && (isLocalWorldAllowedForProtectedGameplayFog() || PROTECTED_GAMEPLAY_FOG.policy().isPresent());
+                && (isLocalWorldAllowedForProtectedGameplayFog() || PROTECTED_GAMEPLAY_FOG.get().isPresent());
     }
 
     public static int getProtectedGameplayFogDistance(ProtectedFogType type) {
@@ -321,7 +324,7 @@ public final class FogDistanceHelper {
             return distanceBlocks;
         }
 
-        return PROTECTED_GAMEPLAY_FOG.policy()
+        return PROTECTED_GAMEPLAY_FOG.get()
                 .map(policy -> policy.clamp(type, distanceBlocks))
                 .orElse(FOG_DISTANCE_VANILLA);
     }
@@ -383,6 +386,17 @@ public final class FogDistanceHelper {
             return result instanceof Integer value ? value : fallback;
         } catch (ReflectiveOperationException | RuntimeException ignored) {
             return fallback;
+        }
+    }
+
+    // Keep API references in a separate class so NeoForge can load this helper without Greenlight installed.
+    private static final class GreenlightIntegration {
+        private static Supplier<Optional<ProtectedGameplayFogPolicy>> register() {
+            ClientFeature<ProtectedGameplayFogPolicy> feature = Greenlight
+                    .feature(ResourceLocation.fromNamespaceAndPath("sodium-extra", "protected_gameplay_fog"))
+                    .decoder(1, ProtectedGameplayFogPolicy::fromJson)
+                    .register();
+            return feature::policy;
         }
     }
 

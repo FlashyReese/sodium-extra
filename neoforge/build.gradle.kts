@@ -88,8 +88,8 @@ dependencies {
     add("forgeRuntimeLibrary", "net.caffeinemc:sodium-neoforge:$SODIUM_VERSION") {
         isTransitive = false
     }
-    implementation("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
-    include("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
+    // The optional Greenlight mod supplies its API. Bundling another copy creates split packages on NeoForge.
+    compileOnly("me.flashyreese.mods:greenlight-api:$GREENLIGHT_VERSION")
     SODIUM_NEOFORGE_RUNTIME_MODS.forEach {
         modRuntimeOnly(it)
     }

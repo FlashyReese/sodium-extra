@@ -60,8 +60,8 @@
     "sodium-extra.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.18",
-    "sodium": ">=0.8.13+mc1.21.1",
+    "fabricloader": ">=${fabric_loader_version}",
+    "sodium": "${sodium_version}",
     "minecraft": "${minecraft_version}"
   },
   "breaks": {

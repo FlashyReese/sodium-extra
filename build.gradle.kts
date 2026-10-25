@@ -1,14 +1,14 @@
 plugins {
     id("java")
-    id("dev.architectury.loom") version "1.17.483" apply false
+    id("dev.architectury.loom") version "1.17.493" apply false
     id("architectury-plugin") version "3.5.169"
-    id("com.gradleup.shadow") version "9.3.0" apply false
+    id("com.gradleup.shadow") version "9.6.1" apply false
 }
 
 val MINECRAFT_VERSION = "1.21.1"
-val NEOFORGE_VERSION = "21.1.230"
-val FABRIC_LOADER_VERSION = "0.19.2"
-val FABRIC_API_VERSION = "0.116.12+1.21.1"
+val NEOFORGE_VERSION = "21.1.265"
+val FABRIC_LOADER_VERSION = "0.20.1"
+val FABRIC_API_VERSION = "0.116.17+1.21.1"
 
 // This value can be set to null to disable Parchment.
 val PARCHMENT_VERSION: String? = null
@@ -16,7 +16,7 @@ val PARCHMENT_VERSION: String? = null
 // https://semver.org/
 val MAVEN_GROUP = providers.gradleProperty("maven_group").get()
 val ARCHIVE_NAME = providers.gradleProperty("archives_name").get()
-val MOD_VERSION = "0.9.4"
+val MOD_VERSION = "0.9.5"
 val SODIUM_VERSION = "0.8.13+mc1.21.1"
 val GREENLIGHT_VERSION = "0.1.0+mc1.21.10"
 
