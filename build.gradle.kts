@@ -1,20 +1,20 @@
 plugins {
     id("java")
-    id("dev.architectury.loom-no-remap") version "1.17.483" apply false
+    id("dev.architectury.loom-no-remap") version "1.17.493" apply false
     id("architectury-plugin") version "3.5.169"
-    id("com.gradleup.shadow") version "9.3.0" apply false
+    id("com.gradleup.shadow") version "9.6.1" apply false
 }
 
 val MINECRAFT_VERSION = "26.1.2"
-val NEOFORGE_VERSION = "26.1.2.76"
-val FABRIC_LOADER_VERSION = "0.19.3"
-val FABRIC_API_VERSION = "0.153.0+26.1.2"
+val NEOFORGE_VERSION = "26.1.2.124"
+val FABRIC_LOADER_VERSION = "0.20.1"
+val FABRIC_API_VERSION = "0.155.3+26.1.2"
 val GREENLIGHT_VERSION = "0.1.0+mc26.2"
 
 // https://semver.org/
 val MAVEN_GROUP = providers.gradleProperty("maven_group").get()
 val ARCHIVE_NAME = providers.gradleProperty("archives_name").get()
-val MOD_VERSION = "0.9.4"
+val MOD_VERSION = "0.9.5"
 val SODIUM_VERSION = "0.9.2+mc26.1.2"
 
 extra["MINECRAFT_VERSION"] = MINECRAFT_VERSION

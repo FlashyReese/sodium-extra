@@ -5,16 +5,16 @@ import net.minecraft.util.Util;
 
 public final class MacReducedResolution {
     /*
-     * This branch only has the OpenGL presentation path. On macOS, the reduced
-     * resolution option is handled by GLFW_COCOA_RETINA_FRAMEBUFFER=false, which
-     * gives Minecraft a logical-size drawable. Halving Window.framebufferWidth
-     * and Window.framebufferHeight after that makes a 1440p Retina setup render
-     * as 720p, so Window's framebuffer fields must not be reduced again.
+     * This branch only has the OpenGL presentation path. Request a non-Retina
+     * drawable when creating the window, but do not assume the hint was applied:
+     * NeoForge can reuse an early-loading window. Keep render dimensions no
+     * larger than the logical window and scale presentation when necessary.
      */
     private static boolean openGlBackend;
+    private static boolean enabledForWindow;
 
     public static boolean isEnabled() {
-        return Util.getPlatform() == Util.OS.OSX && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac;
+        return enabledForWindow;
     }
 
     public static int reduce(int value) {
@@ -23,14 +23,23 @@ public final class MacReducedResolution {
 
     public static void useOpenGlBackend() {
         openGlBackend = true;
+        // Snapshot this restart-required option when window hints are prepared.
+        // Reading the live setting during presentation can disable upscaling
+        // while the current window still uses a reduced render target.
+        enabledForWindow = Util.getPlatform() == Util.OS.OSX
+                && SodiumExtraClientMod.options().extraSettings.reduceResolutionOnMac;
     }
 
     public static boolean shouldReduceFramebuffer() {
         return isEnabled() && !openGlBackend;
     }
 
-    public static boolean shouldUseWindowSizeForInitialFramebuffer() {
+    public static boolean shouldUseWindowSizeForFramebuffer() {
         return isEnabled() && openGlBackend;
+    }
+
+    public static int limitToWindowSize(int framebufferSize, int windowSize) {
+        return Math.max(1, Math.min(framebufferSize, windowSize));
     }
 
     public static boolean shouldScalePresentation(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight) {
