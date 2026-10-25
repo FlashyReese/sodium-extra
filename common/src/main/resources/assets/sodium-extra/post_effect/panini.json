@@ -9,7 +9,7 @@
             "inputs": [
                 {
                     "sampler_name": "In",
-                    "target": "minecraft:main",
+                    "target": "sodium-extra:panini_source",
                     "bilinear": true
                 }
             ],
