@@ -346,6 +346,8 @@
   "sodium-extra.option.paintings.tooltip": "Renders paintings.",
   "sodium-extra.option.panini_projection": "Panini Projection",
   "sodium-extra.option.panini_projection.tooltip": "Applies an experimental Panini screen projection to world rendering only. Disabled while Iris shader packs or Prevent Shaders are active.",
+  "sodium-extra.option.panini_projection_quality": "Panini Quality",
+  "sodium-extra.option.panini_projection_quality.tooltip": "Sets the world rendering width and height as a percentage of the window resolution while Panini is active. Higher settings improve detail, especially during movement, at a higher GPU cost.\n100%: Native resolution\n150%: 2.25× as many world pixels\n200%: 4× as many world pixels\n400%: 16× as many world pixels\nThe hand and interface keep their normal resolution.",
   "sodium-extra.option.panini_projection_strength": "Panini Projection Strength",
   "sodium-extra.option.panini_projection_strength.tooltip": "Controls the Panini projection argument used to remap the world image after rendering.",
   "sodium-extra.option.particles.tooltips": "Processes %s particles.",

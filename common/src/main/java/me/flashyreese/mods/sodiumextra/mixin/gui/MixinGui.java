@@ -12,10 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Gui.class)
 public class MixinGui {
-    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    // Render with the HUD so screens and toasts remain above our overlay.
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Hud;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V", shift = At.Shift.AFTER))
     private void onRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded, CallbackInfo ci, @Local GuiGraphicsExtractor guiGraphics) {
-        if (shouldRenderLevel) {
-            SodiumExtraClientMod.onHudRender(guiGraphics, deltaTracker);
-        }
+        SodiumExtraClientMod.onHudRender(guiGraphics, deltaTracker);
     }
 }
