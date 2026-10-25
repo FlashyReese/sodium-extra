@@ -21,6 +21,7 @@ base {
 }
 
 architectury {
+    compileOnly()
     platformSetupLoomIde()
     fabric()
 }
@@ -87,7 +88,7 @@ configurations.named("compileClasspath") {
     extendsFrom(common)
 }
 
-configurations.named("developmentFabric") {
+configurations.named("runtimeClasspath") {
     extendsFrom(common)
 }
 
