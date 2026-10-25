@@ -21,6 +21,7 @@ base {
 }
 
 architectury {
+    compileOnly()
     platformSetupLoomIde()
     fabric()
 }
@@ -87,7 +88,7 @@ configurations.named("compileClasspath") {
     extendsFrom(common)
 }
 
-configurations.named("developmentFabric") {
+configurations.named("runtimeClasspath") {
     extendsFrom(common)
 }
 
@@ -134,11 +135,15 @@ tasks {
     processResources {
         inputs.property("version", project.version)
         inputs.property("minecraft_version", MINECRAFT_VERSION)
+        inputs.property("fabric_loader_version", FABRIC_LOADER_VERSION)
+        inputs.property("sodium_version", SODIUM_VERSION)
 
         filesMatching("fabric.mod.json") {
             expand(mapOf(
                 "version" to project.version,
-                "minecraft_version" to MINECRAFT_VERSION
+                "minecraft_version" to MINECRAFT_VERSION,
+                "fabric_loader_version" to FABRIC_LOADER_VERSION,
+                "sodium_version" to SODIUM_VERSION
             ))
         }
     }

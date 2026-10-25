@@ -512,6 +512,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
         public boolean preventShaders;
         public boolean paniniProjection;
         public int paniniProjectionStrength;
+        public int paniniProjectionQuality;
         public boolean steadyDebugHud;
         public int steadyDebugHudRefreshInterval;
 
@@ -536,6 +537,7 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             this.preventShaders = false;
             this.paniniProjection = false;
             this.paniniProjectionStrength = 25;
+            this.paniniProjectionQuality = 150;
             this.steadyDebugHud = true;
             this.steadyDebugHudRefreshInterval = 1;
         }
@@ -550,6 +552,8 @@ public class SodiumExtraGameOptions implements StorageEventHandler {
             }
 
             this.paniniProjectionStrength = Math.clamp(this.paniniProjectionStrength, 0, 100);
+
+            this.paniniProjectionQuality = Math.clamp(this.paniniProjectionQuality, 100, 400);
 
             if (this.steadyDebugHudRefreshInterval < 1) {
                 this.steadyDebugHudRefreshInterval = 1;
