@@ -39,7 +39,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           name: '[NeoForge] ${{ github.event.release.name }}'
           version: '${{ github.event.release.tag_name }}+neoforge'
-          version-type: release
           environment: client
           loaders: neoforge
           dependencies: |
@@ -61,7 +60,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           name: '[Fabric] ${{ github.event.release.name }}'
           version: '${{ github.event.release.tag_name }}+fabric'
-          version-type: release
           environment: client
           loaders: fabric
           dependencies: |
