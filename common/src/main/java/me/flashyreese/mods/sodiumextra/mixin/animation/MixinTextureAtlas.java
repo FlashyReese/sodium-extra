@@ -29,8 +29,19 @@ public class MixinTextureAtlas {
     @Shadow
     @Final
     private Identifier location;
+    // Upstream Mixin (which Forge ships) merges instance field initialisers into the target's
+    // constructor, and refuses AASTORE while doing so. Map.of/List.of with this many entries compile
+    // to array construction, so the map is built lazily instead: no initialiser left to merge.
     @Unique
-    private final Map<Supplier<Boolean>, List<Identifier>> animatedSprites = Map.of(
+    private Map<Supplier<Boolean>, List<Identifier>> animatedSprites;
+
+    @Unique
+    private Map<Supplier<Boolean>, List<Identifier>> sodium_extra$animatedSprites() {
+        if (this.animatedSprites != null) {
+            return this.animatedSprites;
+        }
+
+        return this.animatedSprites = Map.of(
             () -> SodiumExtraClientMod.options().animationSettings.water, List.of(
                     Identifier.fromNamespaceAndPath("minecraft", "block/water_still"),
                     Identifier.fromNamespaceAndPath("minecraft", "block/water_flow")
@@ -83,7 +94,8 @@ public class MixinTextureAtlas {
                     Identifier.fromNamespaceAndPath("minecraft", "block/sculk_sensor_tendril_active"),
                     Identifier.fromNamespaceAndPath("minecraft", "vibration")
             )
-    );
+        );
+    }
 
     @WrapWithCondition(method = "cycleAnimationFrames", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/SpriteContents$AnimationState;tick()V"))
     public boolean cycleAnimationFrames(SpriteContents.AnimationState instance) {
@@ -100,7 +112,7 @@ public class MixinTextureAtlas {
     @Unique
     private boolean shouldAnimate(Identifier identifier) {
         if (identifier != null) {
-            for (Map.Entry<Supplier<Boolean>, List<Identifier>> supplierListEntry : this.animatedSprites.entrySet()) {
+            for (Map.Entry<Supplier<Boolean>, List<Identifier>> supplierListEntry : this.sodium_extra$animatedSprites().entrySet()) {
                 if (supplierListEntry.getValue().contains(identifier)) {
                     return supplierListEntry.getKey().get();
                 }

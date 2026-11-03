@@ -21,7 +21,11 @@ public class MixinClientLevel {
         }
     }
 
-    @Inject(method = "addBreakingBlockEffect", at = @At(value = "HEAD"), cancellable = true)
+    // Forge keeps both overloads, addBreakingBlockEffect(BlockPos, BlockHitResult) and
+    // (BlockPos, Direction), so a bare-name selector matches both and fails on the one whose
+    // descriptor does not fit this handler. The BlockHitResult form delegates to the Direction one,
+    // so pinning to that signature still covers every path.
+    @Inject(method = "addBreakingBlockEffect(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;)V", at = @At(value = "HEAD"), cancellable = true)
     public void addBlockBreakingParticles(BlockPos blockPos, Direction direction, CallbackInfo ci) {
         if (!SodiumExtraClientMod.options().particleSettings.particles || !SodiumExtraClientMod.options().particleSettings.blockBreaking) {
             ci.cancel();

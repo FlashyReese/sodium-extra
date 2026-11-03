@@ -1,0 +1,50 @@
+modLoader = "javafml"
+loaderVersion = "[65,)"
+license = "LGPLv3"
+
+# Forge's @Mod takes no dist attribute, unlike NeoForge's @Mod(dist = Dist.CLIENT).
+clientSideOnly = true
+
+[[mods]]
+modId = "sodium_extra"
+version = "${version}"
+displayName = "Sodium Extra"
+logoFile = "assets/sodium-extra/textures/icon.png"
+authors = "FlashyReese"
+description = '''
+Features that shouldn't be in Sodium.
+'''
+
+[modproperties.sodium_extra]
+"sodium:config_api_user" = "me.flashyreese.mods.sodiumextra.client.config.SodiumExtraConfig"
+
+[[dependencies.sodium_extra]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[${minecraft_version}]"
+    ordering = "NONE"
+    side = "CLIENT"
+
+[[dependencies.sodium_extra]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[65,)"
+    ordering = "NONE"
+    side = "CLIENT"
+
+[[dependencies.sodium_extra]]
+    modId = "sodium"
+    mandatory = true
+    versionRange = "[${sodium_version}]"
+    ordering = "AFTER"
+    side = "CLIENT"
+
+[[dependencies.sodium_extra]]
+    modId = "greenlight"
+    mandatory = false
+    versionRange = "[0.1.0,)"
+    ordering = "AFTER"
+    side = "CLIENT"
+
+# Mixin configs live in the jar manifest on Forge, and META-INF/accesstransformer.cfg is picked up
+# automatically.

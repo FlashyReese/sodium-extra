@@ -1,0 +1,109 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8)'
+}
+
+evaluationDependsOn(':common')
+
+def commonProject = project(':common')
+def minecraftVersion = rootProject.ext.MINECRAFT_VERSION
+def sodiumVersion = rootProject.ext.SODIUM_VERSION
+
+minecraft {
+    accessTransformers.from file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        register('client') {
+            workingDir = layout.projectDirectory.dir('run')
+            systemProperty 'eventbus.api.strictRuntimeChecks', 'true'
+        }
+    }
+}
+
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+}
+
+configurations {
+    // Nested in the jar with Jar-in-Jar, like the include() calls of the other loaders.
+    bundled {
+        transitive = false
+    }
+}
+
+dependencies {
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraftVersion}-65.1.0")
+
+    // There is no Sodium build for MinecraftForge. Sodium Extra only uses Sodium's common code,
+    // which every Sodium jar contains, so it compiles against the NeoForge one (the -mod artifact:
+    // sodium-neoforge itself only wraps it with Jar-in-Jar).
+    compileOnly("net.caffeinemc:sodium-neoforge-mod:${sodiumVersion}") {
+        transitive = false
+    }
+    compileOnly "me.flashyreese.mods:greenlight-api:${rootProject.ext.GREENLIGHT_VERSION}"
+    bundled "me.flashyreese.mods:greenlight-api:${rootProject.ext.GREENLIGHT_VERSION}"
+}
+
+// Forge reads Jar-in-Jar metadata from the same META-INF/jarjar/metadata.json as NeoForge, but
+// ForgeGradle 7 has no task to write it, so this one does.
+def jarJarMetadata = tasks.register('jarJarMetadata') {
+    def output = layout.buildDirectory.file('jarjar/metadata.json')
+    inputs.files configurations.bundled
+    outputs.file output
+
+    doLast {
+        def jars = configurations.bundled.resolvedConfiguration.resolvedArtifacts.collect { artifact ->
+            def id = artifact.moduleVersion.id
+            [
+                identifier: [group: id.group, artifact: id.name],
+                version   : [range: "[${id.version},)", artifactVersion: id.version],
+                path      : "META-INF/jars/${artifact.file.name}"
+            ]
+        }
+        output.get().asFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([jars: jars]))
+    }
+}
+
+tasks.named('compileJava', JavaCompile) {
+    source commonProject.sourceSets.main.allSource
+}
+
+tasks.named('processResources', ProcessResources) {
+    from commonProject.sourceSets.main.resources
+
+    def properties = ['version': project.version, 'minecraft_version': minecraftVersion, 'sodium_version': sodiumVersion]
+    inputs.properties properties
+
+    filesMatching('META-INF/mods.toml') {
+        expand properties
+    }
+
+    // Forge ships SpongePowered Mixin 0.8.7, whose CompatibilityLevel enum stops at JAVA_21 (the
+    // NeoForge fork accepts JAVA_25). An unknown level aborts Mixin startup, so the level is lowered
+    // for this jar only.
+    filesMatching('sodium-extra.mixins.json') {
+        filter { line -> line.replace('"JAVA_25"', '"JAVA_21"') }
+    }
+
+    exclude 'META-INF/neoforge.mods.toml'
+    exclude 'fabric.mod.json'
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from rootProject.file('LICENSE.txt')
+
+    from(configurations.bundled) {
+        into 'META-INF/jars'
+    }
+    from(jarJarMetadata) {
+        into 'META-INF/jarjar'
+    }
+
+    // Forge reads mixin configs from the jar manifest, not from mods.toml.
+    manifest.attributes 'MixinConfigs': 'sodium-extra.mixins.json'
+}
