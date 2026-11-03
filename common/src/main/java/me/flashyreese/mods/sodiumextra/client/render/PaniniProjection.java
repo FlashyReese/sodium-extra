@@ -181,6 +181,10 @@ public class PaniniProjection {
 
     public void finish(Minecraft minecraft, RenderTarget nativeMain, GraphicsResourceAllocator resourceAllocator,
                        CameraRenderState cameraRenderState) {
+        if (!isEnabled()) {
+            this.releaseTargets(resourceAllocator);
+            return;
+        }      
         this.renderingWorld = false;
         this.restoreScreenSize();
         if (this.framePostChain == null) {
