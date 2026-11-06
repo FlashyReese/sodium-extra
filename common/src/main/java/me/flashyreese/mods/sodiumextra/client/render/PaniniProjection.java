@@ -181,15 +181,11 @@ public class PaniniProjection {
 
     public void finish(Minecraft minecraft, RenderTarget nativeMain, GraphicsResourceAllocator resourceAllocator,
                        CameraRenderState cameraRenderState) {
-        if (!isEnabled()) {
-            this.releaseTargets(resourceAllocator);
-            return;
-        }      
-        this.renderingWorld = false;
-        this.restoreScreenSize();
         if (this.framePostChain == null) {
             return;
         }
+        this.restoreScreenSize();
+        this.renderingWorld = false;
 
         // Without a world target, source and output are the same image. That is
         // safe because the chain warps into its own swap target before blitting.
