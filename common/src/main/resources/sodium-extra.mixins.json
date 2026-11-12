@@ -21,6 +21,7 @@
     "fog.MixinPowderedSnowFogEnvironment",
     "fog.MixinRenderSectionManager",
     "fog.MixinShaderManager",
+    "fog.MixinSodiumOptions",
     "fog.MixinTraversableTree",
     "fog.MixinWaterFogEnvironment",
     "fps.MixinGameRenderer",
