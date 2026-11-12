@@ -11,6 +11,7 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.EnumOptionBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.IntegerOptionBuilder;
+import net.caffeinemc.mods.sodium.api.config.structure.ModOptionsBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionGroupBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.OptionPageBuilder;
 import net.caffeinemc.mods.sodium.api.config.structure.StatefulOptionBuilder;
@@ -38,6 +39,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
     private static final Identifier CLOUD_HEIGHT_OVERRIDE_OPTION_ID = id("cloud_height_override");
     private static final Identifier PANINI_PROJECTION_OPTION_ID = id("panini_projection");
     private static final Identifier SODIUM_VSYNC_OPTION_ID = Identifier.parse("sodium:general.vsync");
+    private static final Identifier SODIUM_SPHERICAL_FOG_OPTION_ID = Identifier.parse("sodium:performance.use_spherical_render_fog");
     private static final List<Identifier> DEFAULT_DIMENSION_EFFECT_IDS = List.of(
             Level.OVERWORLD.identifier(),
             Level.NETHER.identifier(),
@@ -1001,7 +1003,7 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
 
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
-        builder.registerOwnModOptions()
+        ModOptionsBuilder options = builder.registerOwnModOptions()
                 .setIcon(Identifier.parse("sodium-extra:textures/icon.png"))
                 .addPage(this.createAnimationsPage(builder))
                 .addPage(this.createParticlesPage(builder))
@@ -1009,5 +1011,13 @@ public class SodiumExtraConfig implements ConfigEntryPoint {
                 .addPage(this.createRenderPage(builder))
                 .addPage(this.createExtraPage(builder))
                 .registerOptionReplacement(SODIUM_VSYNC_OPTION_ID, this.createVerticalSyncOption(builder));
+
+        if (isFogMixinEnabled()) {
+            options.registerOptionOverlay(SODIUM_SPHERICAL_FOG_OPTION_ID,
+                    builder.createBooleanOption(SODIUM_SPHERICAL_FOG_OPTION_ID)
+                            .setEnabled(false)
+                            .setControlHiddenWhenDisabled(true)
+                            .setTooltip(Component.translatable("sodium-extra.option.use_spherical_render_fog.tooltip")));
+        }
     }
 }

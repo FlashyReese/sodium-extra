@@ -284,6 +284,7 @@
   "sodium-extra.option.fog_shape.planar": "Planar",
   "sodium-extra.option.fog_shape.radial": "Radial",
   "sodium-extra.option.fog_shape.vanilla": "Vanilla",
+  "sodium-extra.option.use_spherical_render_fog.tooltip": "Use Sodium Extra's Fog Shape setting instead.\nSodium Extra > Render > Fog Shape\nChoose Radial for spherical fog. With per-dimension fog enabled, use that dimension's Fog Shape.",
   "sodium-extra.option.fog_start": "Fog Start",
   "sodium-extra.option.fog_start.tooltip": "Controls how close to the player atmospheric terrain fog begins.",
   "sodium-extra.option.fog_type.atmospheric": "Atmospheric Fog",
