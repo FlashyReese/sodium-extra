@@ -41,7 +41,7 @@ dependencies {
 
     compileOnly("io.github.llamalad7:mixinextras-common:0.5.5")
     annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.5")
-    compileOnly("net.fabricmc:sponge-mixin:0.17.4+mixin.0.8.7")
+    compileOnly("net.fabricmc:sponge-mixin:0.17.5+mixin.0.8.7")
     compileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addDependentFabricModule(name: String) {
