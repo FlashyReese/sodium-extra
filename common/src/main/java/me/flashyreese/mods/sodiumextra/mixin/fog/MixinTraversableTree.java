@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TraversableTree.class)
 public class MixinTraversableTree {
-    @Inject(method = "cylindricalDistanceTest", at = @At("HEAD"), cancellable = true)
-    private static void sodiumExtra$testExpandedCylindricalDistance(float dx, float dy, float dz, float distanceLimit, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "isWithinDistance", at = @At("HEAD"), cancellable = true)
+    private void sodiumExtra$isWithinDistance(float dx, float dy, float dz, float distanceLimit, CallbackInfoReturnable<Boolean> cir) {
         if (FogDistanceHelper.isExpandedCylindricalCullDistance(distanceLimit)) {
             cir.setReturnValue(FogDistanceHelper.testExpandedCylindricalCullDistance(dx * dx + dz * dz, dy, distanceLimit));
         }
