@@ -67,8 +67,8 @@ public class MixinOcclusionCuller {
         return directions;
     }
 
-    @Inject(method = "testDistance", at = @At("HEAD"), cancellable = true)
-    private static void sodiumExtra$testExpandedCylindricalDistance(float horizontalDistanceSquared, float verticalDistance, float distanceLimit, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "isWithinCylinderDistance", at = @At("HEAD"), cancellable = true)
+    private static void sodiumExtra$isWithinCylinderDistance(float horizontalDistanceSquared, float verticalDistance, float distanceLimit, CallbackInfoReturnable<Boolean> cir) {
         if (FogDistanceHelper.isExpandedCylindricalCullDistance(distanceLimit)) {
             cir.setReturnValue(FogDistanceHelper.testExpandedCylindricalCullDistance(horizontalDistanceSquared, verticalDistance, distanceLimit));
         }
