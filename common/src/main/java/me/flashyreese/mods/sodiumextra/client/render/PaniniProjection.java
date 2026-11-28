@@ -76,6 +76,10 @@ public class PaniniProjection {
     // the native target is only fetched once that redirect is inactive.
     public void begin(Minecraft minecraft) {
         this.abort();
+        // Panorama capture binds its own framebuffer for each face.
+        if (minecraft.gameRenderer.isPanoramicMode()) {
+            return;
+        }
         RenderTarget nativeMain = minecraft.getMainRenderTarget();
         try {
             if (!isEnabled()) {
@@ -374,7 +378,7 @@ public class PaniniProjection {
     }
 
     private static boolean shouldApply(Minecraft minecraft) {
-        return minecraft.player != null && !minecraft.player.isScoping() && !minecraft.gameRenderer.isPanoramicMode()
+        return minecraft.player != null && !minecraft.player.isScoping()
                 && !isFrustumCaptured(minecraft);
     }
 
